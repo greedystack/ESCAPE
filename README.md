@@ -32,6 +32,7 @@ Diese Kriterien wären allgemein wünschenswert und sind (vermutlich) nicht allz
 - Einfache Animationen [B]
 - Controllerunterstützung [B]
 - Betriebssystemunabhängigkeit [B]
+- Sound [C]
 
 ### Nice to have
 Diese Kriterien würden noch gut ins Spielkonzept passen, werde ich aber vermutlich aufgrund des begrenzten zeitlichen Rahmens und der Maßgabe Qualität > Quantität leider nicht umsetzen können.
