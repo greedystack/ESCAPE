@@ -4,9 +4,10 @@
 
 **/bin
 **/build
-.o
 **/cmake-build-debug
 lib
 
 example_*
 material
+
+launch.json
