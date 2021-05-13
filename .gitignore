@@ -1,2 +1,10 @@
-.DS_Store
 *.icloud
+.DS_Store
+*.idea
+*.o
+**/bin
+**/build
+.o
+**/cmake-build-debug
+example_*
+material

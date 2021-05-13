@@ -1,0 +1,31 @@
+cmake_minimum_required(VERSION 3.20.1) # CMAKE Version -> nicht erforderlich, aber sicherer
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pthread" )
+set(CMAKE_VERBOSE_MAKEFILE ON)
+project (first) # Projectname
+
+add_executable(first ${CMAKE_SOURCE_DIR}/src/main.cpp src/MapObject.cpp src/MapObject.h src/Tex.h src/Tex.cpp src/Game.cpp src/Game.h)
+
+include_directories(${CMAKE_SOURCE_DIR}/lib ${CMAKE_SOURCE_DIR}/include) #HEADER
+
+### SFML 
+
+# Good hint: https://remy-villulles.medium.com/compile-and-install-sfml-2-5-1-on-macos-with-clion-and-cmake-b4e52199db1c
+
+set(SFML_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/include/SFML")
+set(SFML_LIBRARY_DIR "${CMAKE_SOURCE_DIR}/lib/SFML-2.5.1/lib")
+link_directories(SFML_LIBRARY_DIR)
+include_directories(SFML_INCLUDE_DIR)
+
+find_package(SFML 2.5.1 COMPONENTS system window graphics network audio)
+
+#link_directories(${CMAKE_SOURCE_DIR}/lib/SFML-2.5.1/lib ${CMAKE_SOURCE_DIR}/include/SFML) #EXECUTABLES
+
+
+### LINKING:
+target_link_libraries(first sfml-system sfml-window sfml-graphics)
+
+
+
+## Auch interessant: CMakeCache.txt (zum debugging, enthält Linkings und so)
+
