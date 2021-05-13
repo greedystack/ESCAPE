@@ -7,9 +7,12 @@
 // in Pixel:
 const int OBJECTUNIT = 20;
 // in ObjectUnit:
-const int WINDOWSIZEX=30;
-const int WINDOWSIZEY=30;
-const int BGSIZE=20; // minimum half of screensize!! // must be divideable by 2
+const int WINDOWSIZEX=100;
+const int WINDOWSIZEY=100;
+const int BGSIZE=200; // minimum half of screensize!! // must be divideable by 2
+
+const sf::Time UPDATE_TIME = sf::milliseconds(30); // Latency
+
 
 Game::Game(uint64_t mX, uint64_t mY, int p)
 : mapsizex(mX), mapsizey(mY), playercount(p)
@@ -78,11 +81,59 @@ void Game::drawBackground(int bgRepeteAfter){
 
 void Game::start(){
     window = new sf::RenderWindow(sf::VideoMode(WINDOWSIZEX*OBJECTUNIT, WINDOWSIZEY*OBJECTUNIT), "SFML window");
+    sf::Clock clock;
+    sf::Time elapsed = clock.restart();
+    
+    // keep track if we have to redraw things. No need if nothing has been updated!
+    bool update = true;
+
     while (window->isOpen())
     {
-        catchEvents();
-        render();
+        // add the time passed since the last cycle
+        elapsed = elapsed + clock.restart();
+
+        //catchEvents();
+        sf::Event event;
+        while (window->pollEvent(event))
+        {
+            switch (event.type)
+            {
+            case sf::Event::Closed:
+                window->close();
+                break;
+            }
+        }
+
+        // make as many updates as needed for the elapsed time
+        while (elapsed > UPDATE_TIME)
+        {
+
+            // classical key pressed checks
+            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
+            {
+                player[0]->move(1);
+            }
+            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+            {
+                player[0]->move(2);
+            }
+            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+            {
+                player[0]->move(3);
+            }
+            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+            {
+                player[0]->move(4);
+            }
+
+            // don't forget to subtract the updateTime each cycle ;-)
+            elapsed -= UPDATE_TIME;
+            update = true;
+        }
+
+        if(update) render();
     }
+
     free(map);
     free(textures);
     free(player);

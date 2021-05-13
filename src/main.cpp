@@ -33,7 +33,7 @@ const int WINDOWSIZEY=100;
         // todo: Popup-Menu-Klasse (wie Itemlist) -> Verkettete Listen, aus denen man menus oder items wählen kann mit isVisible bool
         // todo: Item-Klasse für Items und settings -> individuelle action-Methode (Interface?)
 
-        Game game(64, 64, 1);
+        Game game(250, 250, 1);
         game.start();
 
 
