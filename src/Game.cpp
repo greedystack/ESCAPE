@@ -1,8 +1,6 @@
-//
-// Created by Marius on 08.01.20.
-//
 
 #include "Game.h"
+#include <iostream>
 
 // in Pixel:
 const int OBJECTUNIT = 20;
@@ -11,7 +9,7 @@ const int WINDOWSIZEX=100;
 const int WINDOWSIZEY=100;
 const int BGSIZE=200; // minimum half of screensize!! // must be divideable by 2
 
-const sf::Time UPDATE_TIME = sf::milliseconds(30); // Latency
+const sf::Time UPDATE_TIME = sf::milliseconds(60); // Latency
 
 
 Game::Game(uint64_t mX, uint64_t mY, int p)
@@ -23,7 +21,7 @@ Game::Game(uint64_t mX, uint64_t mY, int p)
 
     map = (MapObject**)(malloc(((mapsizex * mapsizey) + HEADER) * sizeof(MapObject *)));
     printf("Map allocated \n");
-    // Defining Map-Headers:
+    // Defining Map-Headers: (as bytes direct in map!)
     map[0]=(MapObject*)HEADER;      // 0: Header-Size
     map[1]=(MapObject*)mapsizey;    // 1: Y-Size of Map
 
@@ -86,6 +84,7 @@ void Game::start(){
     
     // keep track if we have to redraw things. No need if nothing has been updated!
     bool update = true;
+    bool paused = false;
 
     while (window->isOpen())
     {
@@ -101,9 +100,22 @@ void Game::start(){
             case sf::Event::Closed:
                 window->close();
                 break;
+            case sf::Event::GainedFocus:
+                std::cout << "gained focus" << std::endl;
+                paused = false;
+                break;
+            case sf::Event::LostFocus:
+                std::cout << "lost focus" << std::endl;
+                paused = true;
+                break;
+            case sf::Event::Resized:
+                std::cout << "new width: " << event.size.width << std::endl;
+                std::cout << "new height: " << event.size.height << std::endl;
             }
         }
 
+        if(paused) continue;
+        
         // make as many updates as needed for the elapsed time
         while (elapsed > UPDATE_TIME)
         {
@@ -112,26 +124,32 @@ void Game::start(){
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
             {
                 player[0]->move(1);
+                update = true;
             }
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
             {
                 player[0]->move(2);
+                update = true;
             }
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
             {
                 player[0]->move(3);
+                update = true;
             }
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
             {
                 player[0]->move(4);
+                update = true;
             }
 
             // don't forget to subtract the updateTime each cycle ;-)
             elapsed -= UPDATE_TIME;
-            update = true;
         }
 
-        if(update) render();
+        if(update){
+            render();
+            update = false;
+        } 
     }
 
     free(map);
@@ -183,8 +201,12 @@ void Game::render(){
             //usleep(10000);
         }
     } //*/
+
+    
     // Draw the string
     //window.draw(text);
+
+
     // Update the window
     window->display();
 }
