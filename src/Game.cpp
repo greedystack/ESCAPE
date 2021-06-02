@@ -11,6 +11,20 @@ const int BGSIZE=200; // minimum half of screensize!! // must be divideable by 2
 
 const sf::Time UPDATE_TIME = sf::milliseconds(60); // Latency
 
+void Game::allocateMap(){
+    int fields = ((mapsizex * mapsizey) + HEADER);
+    map = (MapObject**)(malloc(fields * sizeof(MapObject *)));
+
+    for(int i=0; i<fields; i++){
+        map[i] = nullptr;
+    }
+    
+    // Defining Map-Headers: (as bytes direct in map!)
+    map[0]=(MapObject*)HEADER;      // 0: Header-Size
+    map[1]=(MapObject*)mapsizey;    // 1: Y-Size of Map
+
+    printf("Map allocated \n");
+}
 
 Game::Game(uint64_t mX, uint64_t mY, int p)
 : mapsizex(mX), mapsizey(mY), playercount(p)
@@ -19,11 +33,7 @@ Game::Game(uint64_t mX, uint64_t mY, int p)
     loadTextures();
     loadFonts();
 
-    map = (MapObject**)(malloc(((mapsizex * mapsizey) + HEADER) * sizeof(MapObject *)));
-    printf("Map allocated \n");
-    // Defining Map-Headers: (as bytes direct in map!)
-    map[0]=(MapObject*)HEADER;      // 0: Header-Size
-    map[1]=(MapObject*)mapsizey;    // 1: Y-Size of Map
+    allocateMap();
 
     player = (MapObject**)(malloc(playercount * sizeof(MapObject *)));
     for(short i=0; i<playercount; i++) player[i] = new MapObject(map, getTexture('P', 0), 'P', 5, 10);
@@ -123,22 +133,22 @@ void Game::start(){
             // classical key pressed checks
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
             {
-                player[0]->move(1);
+                player[0]->moveLeft();
                 update = true;
             }
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
             {
-                player[0]->move(2);
+                player[0]->moveUp();
                 update = true;
             }
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
             {
-                player[0]->move(3);
+                player[0]->moveRight();
                 update = true;
             }
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
             {
-                player[0]->move(4);
+                player[0]->moveDown();
                 update = true;
             }
 
@@ -190,19 +200,10 @@ void Game::render(){
                 m->sprite.setPosition((float)x*OBJECTUNIT, (float)y*OBJECTUNIT);
                 window->draw(m->sprite);
             }
-
-            // draw also onMe Stack:
-            while (m->getOnMe() != nullptr) {
-                m=m->getOnMe();
-                if(!m->isVisible()) continue;
-                m->sprite.setPosition((float)x*OBJECTUNIT, (float)y*OBJECTUNIT);
-                window->draw(m->sprite);
-            }
-            //usleep(10000);
         }
     } //*/
 
-    
+
     // Draw the string
     //window.draw(text);
 
@@ -211,51 +212,4 @@ void Game::render(){
     window->display();
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////// EVENTS
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-void Game::catchEvents(){
-    sf::Event event;
-    while (window->pollEvent(event))
-    {
-        switch (event.type)
-        {
-            case sf::Event::Closed:
-                window->close();
-                break;
-
-            case sf::Event::KeyPressed:
-                switch(event.key.code)
-                {
-                    case sf::Keyboard::Escape:
-                        //test.setColor(sf::Color(255, 0, 0, 128));
-                        break;
-                    case sf::Keyboard::Space:
-                        //test.setColor(sf::Color(0, 255, 0, 128));
-                        break;
-                    case sf::Keyboard::Enter:
-                        //test.setColor(sf::Color(0, 0, 255, 128));
-                        break;
-                    case sf::Keyboard::Left:
-                        player[0]->move(1);
-                        break;
-                    case sf::Keyboard::Up:
-                        player[0]->move(2);
-                        break;
-                    case sf::Keyboard::Right:
-                        player[0]->move(3);
-                        break;
-                    case sf::Keyboard::Down:
-                        player[0]->move(4);
-                        break;
-                    default:
-                        break;
-                }
-                break;
-            default:
-                break;
-        }
-    }
-}
 

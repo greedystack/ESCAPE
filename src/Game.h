@@ -35,6 +35,8 @@ private:
 
     void buildBorders();
     void drawBackground(int);
+
+    void allocateMap();
 };
 
 
