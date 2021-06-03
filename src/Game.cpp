@@ -9,7 +9,7 @@ const int WINDOWSIZEX=100;
 const int WINDOWSIZEY=100;
 const int BGSIZE=200; // minimum half of screensize!! // must be divideable by 2
 
-const sf::Time UPDATE_TIME = sf::milliseconds(60); // Latency
+const sf::Time UPDATE_TIME = sf::milliseconds(40); // Latency
 
 
 Game::Game(){
@@ -25,7 +25,7 @@ void Game::start(){
     bool update = true;
     bool paused = false;
 
-    level = new Level(500, 500);
+    level = new Level(200, 200);
 
     while (window->isOpen())
     {
@@ -65,22 +65,22 @@ void Game::start(){
             // classical key pressed checks
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
             {
-                //level->getPlayer()->moveLeft();
+                level->stepLeft(level->getPlayer());
                 update = true;
             }
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
             {
-                //level->getPlayer()->moveUp();
+                level->stepUp(level->getPlayer());
                 update = true;
             }
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
             {
-                //level->getPlayer()->moveRight();
+                level->stepRight(level->getPlayer());
                 update = true;
             }
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
             {
-                //level->getPlayer()->moveDown();
+                level->stepDown(level->getPlayer());
                 update = true;
             }
 
@@ -101,7 +101,6 @@ void Game::start(){
 ////////// RENDERING -> später eigener Fred, execution mit 60 FPS -> wichtig, um wenig Latenz zwischen Aktion und Rendering zu haben und auch Aktion durch System möglich zu machen (nicht nur durch Usereingabe)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
 void Game::render(){
-
     // Clear screen
     window->clear();
     // Draw the bgSprite

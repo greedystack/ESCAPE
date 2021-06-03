@@ -16,14 +16,12 @@ Level::Level(int x, int y)
     textures = (Tex**)(malloc(5 * sizeof(uint8_t) * sizeof(Tex *)));
     loadTextures();
     loadFonts();
-    printf("Stuff der hier gar nicht hingehört loaded! \n");
     ////
 
-    placeObj(new Object(getTexture('P', 0),1 , 1), 1, 1);
-
+    createObj(5, 5);
+    player = createObj(2, 2);
+    
     // buildBorders();
-    //new Object(getTexture('P', 0), 'W', 7, 7);
-    //new Object(getTexture('P', 0), 'Q', 3, 3);
 }
 
 Level::~Level(){
@@ -72,30 +70,87 @@ Object* Level::getObject(int x, int y){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-// IDEE: createObject() mit Übergabe von Objecttype!
-
-bool Level::placeObj(Object obj, int setX, int setY, int dir){
-    printf("Placing Object to (%d, %d) \n", setX, setY);
-    
-    // Prüfe ob Bewegung erlaubt
-    for (int x=0; x < obj.x(); x++){
-        for (int y=0; y < obj.y(); y++){
-            if(getObject(setX+x, setY+y) != nullptr){
+// Prüft, ob Zielposition frei ist
+// Der Object-Parameter ist per default nullptr - wenn gesetzt, ist dies die erlaubte Objectinstanz, die sich auf dem Feld befinden darf (da gebe ich am schlauesten das zu bewegende objekt selbst an)
+bool Level::isFree(int pos_x, int pos_y, int offset_x, int offset_y, Object* obj){
+    for (int x=0; x < offset_x; x++){
+        for (int y=0; y < offset_y; y++){
+            if(getObject(pos_x+x, pos_y+y) != nullptr && getObject(pos_x+x, pos_y+y) != obj){
                 printf("ERROR: Zielposition bereits belegt! \n");
                 return false;
             }
         }
     }
+    return true;
+}
 
-    // Bewege
-    for (int x=0; x < obj.x(); x++){
-        for (int y=0; y < obj.y(); y++){
-            *getNode(setX+x, setY+y) = &obj;
+
+// "Konstruktor" für neue Objekte. Platziert Objekte direkt in der Map
+// IDEE: createObject() mit Übergabe von Objecttype!
+Object* Level::createObj(int setX, int setY, int sizeX, int sizeY){
+    printf("Creating Object to (%d, %d) \n", setX, setY);
+    
+    if(! isFree(setX, setY, sizeX, sizeY)) return nullptr;
+
+    Object *obj = new Object(getTexture('P', 0));
+    obj->posX = setX;
+    obj->posY = setY;
+    obj->sizeX = sizeX;
+    obj->sizeY = sizeY;
+
+    for (int x=0; x < obj->sizeX; x++){
+        for (int y=0; y < obj->sizeY; y++){
+            *getNode(setX+x, setY+y) = obj;
         }
     }
-
+    return obj;
 }
+
+// Objekte teleportieren
+bool Level::moveObj(Object *obj, int setX, int setY){
+    printf("Moving Object to (%d, %d) \n", setX, setY);
+    
+    if(! isFree(setX, setY, obj->sizeX, obj->sizeY, obj)) return false;
+
+    // Bewege
+    for (int x=0; x < obj->sizeX; x++){
+        for (int y=0; y < obj->sizeY; y++){
+            *getNode(obj->posX +x, obj->posY +y) = nullptr;
+            *getNode(setX+x, setY+y) = obj;
+        }
+    }
+    obj->posX = setX;
+    obj->posY = setY;
+
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool Level::stepRight(Object* obj){
+    // vorerst über moveObj() -> Bei größeren objekten ist es aber sinnvoller, nicht alle Felder jedes Mal neu zu belegen, sondern immer nur das erste Feld in die zu bewegende richtung.
+    obj->lookInDirection('r');
+    return moveObj(obj, obj->posX +1, obj->posY);
+}
+
+bool Level::stepLeft(Object* obj){
+    // vorerst über moveObj() -> Bei größeren objekten ist es aber sinnvoller, nicht alle Felder jedes Mal neu zu belegen, sondern immer nur das erste Feld in die zu bewegende richtung.
+    obj->lookInDirection('l');
+    return moveObj(obj, obj->posX -1, obj->posY);
+}
+
+bool Level::stepUp(Object* obj){
+    // vorerst über moveObj() -> Bei größeren objekten ist es aber sinnvoller, nicht alle Felder jedes Mal neu zu belegen, sondern immer nur das erste Feld in die zu bewegende richtung.
+    obj->lookInDirection('u');
+    return moveObj(obj, obj->posX, obj->posY -1);
+}
+
+bool Level::stepDown(Object* obj){
+    // vorerst über moveObj() -> Bei größeren objekten ist es aber sinnvoller, nicht alle Felder jedes Mal neu zu belegen, sondern immer nur das erste Feld in die zu bewegende richtung.
+    obj->lookInDirection('d');
+    return moveObj(obj, obj->posX, obj->posY +1);
+}
+
 
 
 ////////////////////////////////////////////////////////////////////////////////
