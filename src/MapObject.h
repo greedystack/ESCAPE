@@ -1,23 +1,18 @@
-//
-// Created by Marius on 02.01.20.
-//
-
 #ifndef FIRST_MAPOBJECT_H
 #define FIRST_MAPOBJECT_H
-
 
 #include <SFML/Graphics/Color.hpp>
 #include <SFML/Graphics/Texture.hpp>
 #include <SFML/Graphics/Sprite.hpp>
 #include "Tex.h"
-
+//#include "Game.h"
 
 class MapObject {
 public:
     sf::Sprite sprite;
     bool visible=false;
 
-    MapObject(MapObject** m, Tex* tex, char t=' ', int x=0, int y=0, int size_x=1, int size_y=1);
+    MapObject(Tex* tex, char t=' ', int x=0, int y=0, int size_x=1, int size_y=1);
 
     bool isVisible(){return visible;};
 
@@ -28,8 +23,11 @@ public:
         return false;
     };
     
-    MapObject** getMapNode(int x, int y);
-    MapObject* getMapObject(int x, int y);
+    
+    static MapObject** getMapNode(int x, int y);
+    static MapObject* getMapObject(int x, int y);
+    static void createMap(int, int);
+    static void freeMap();
 
     bool setPos(int, int);
     void unsetPos();
@@ -44,10 +42,15 @@ public:
 
 private:
     char type;
+    static MapObject** map;
+    static int mapsizex, mapsizey;
+
     int posX, posY, sizeX, sizeY; // Position ist immer oben links am Objekt. Size ist dessen Größe in Map-Nodes. 
 
-    MapObject** map; // TODO: Nur, um auf Map zugreifen zu können. Geht das nicht auch als globele Var des Games?
+    // MapObject** map; // TODO: Nur, um auf Map zugreifen zu können. Geht das nicht auch als globele Var des Games?
     Tex* texture;
 };
+
+
 
 #endif //FIRST_MAPOBJECT_H

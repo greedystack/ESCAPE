@@ -15,12 +15,13 @@ const int WINDOWSIZEY=100;
         // Create the main window
 
         // Load a bgSprite to display
+        /*
         sf::Texture texture;
         if (!texture.loadFromFile("../include/img/bg1.jpg"))
             return EXIT_FAILURE;
         texture.setRepeated(true);
         sf::Sprite bgSprite(texture);
-
+        */
 
 
 
@@ -32,8 +33,8 @@ const int WINDOWSIZEY=100;
 
         // todo: Popup-Menu-Klasse (wie Itemlist) -> Verkettete Listen, aus denen man menus oder items wählen kann mit isVisible bool
         // todo: Item-Klasse für Items und settings -> individuelle action-Methode (Interface?)
-
-        Game game(250, 250, 1);
+        
+        Game game;
         game.start();
 
 

@@ -7,7 +7,7 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 
 #######################
 
-add_executable(first ${CMAKE_SOURCE_DIR}/src/main.cpp src/MapObject.cpp src/MapObject.h src/Tex.h src/Tex.cpp src/Game.cpp src/Game.h)
+add_executable(first ${CMAKE_SOURCE_DIR}/src/main.cpp src/Object.cpp src/Object.h src/Tex.h src/Tex.cpp src/Game.cpp src/Game.h src/Level.h src/Level.cpp)
 
 include_directories(${CMAKE_SOURCE_DIR}/lib ${CMAKE_SOURCE_DIR}/include) #HEADER
 

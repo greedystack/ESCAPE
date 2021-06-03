@@ -1,24 +1,22 @@
-//
-// Created by Marius on 02.01.20.
-//
-
 #include "MapObject.h"
+// Statische Attribute werden außerhalb der Klasse initialisiert!
+MapObject** MapObject::map = nullptr;
+int MapObject::mapsizex, MapObject::mapsizey;
 
-MapObject::MapObject(MapObject** m, Tex* tex, char t, int x, int y, int size_x, int size_y)
-    : map(m), texture(tex), sizeX(size_x), sizeY(size_y), type(t), posX(x), posY(y){
-        if (map != nullptr) {
-            if(!setPos(posX, posY)){
-                // TODO ! alternative pos finden -> besser als exception throwen
-                printf("ERROR! Konnte Objekt bei erstellung nicht Positionieren, da Position besereits belegt!");
-            }
-            
-            if (texture != nullptr){
-                visible=true;
-                sprite.setTexture(texture->regular);
-                sprite.setOrigin(0.5, 0.5);
-                //sprite.setRotation((float) rotation*90);
-            }
-        }
+MapObject::MapObject(Tex* tex, char t, int x, int y, int size_x, int size_y)
+    : texture(tex), sizeX(size_x), sizeY(size_y), type(t), posX(x), posY(y)
+{
+    if(!setPos(posX, posY)){
+        // TODO ! alternative pos finden -> besser als exception throwen
+        printf("ERROR! Konnte Objekt bei erstellung nicht Positionieren, da Position bereits belegt!");
+    }
+    
+    if (texture != nullptr){
+        visible=true;
+        sprite.setTexture(texture->regular);
+        sprite.setOrigin(0.5, 0.5);
+        //sprite.setRotation((float) rotation*90);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -33,7 +31,7 @@ bool MapObject::setPos(int setX, int setY){
 
             // Teste ob Objekt dort platziert werden darf.
             if((*newnodes[x+y]) != nullptr){
-                printf("ERROR: Bewegung nicht erlaubt! \n");
+                printf("ERROR: Zielposition bereits belegt! \n");
                 return false;
             }
         }
@@ -82,10 +80,34 @@ bool MapObject::moveUp(){
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// Alt
-// Schaue in Map an Koordinate (ClassFunctions)
+// Mapverwaltung (Klassenmethoden)
+// Maybe in extra Map-Klasse auslagern? Aber dann müssen die MapObjects ja trotzdem irgendwie drauf zugreifen... Oder halt die Map macht alle Moves. z.B. mit move(player) anstatt player.move().
+
+void MapObject::createMap(int x, int y){
+    mapsizex = x;
+    mapsizey = y;
+    MapObject::map = (MapObject**)(malloc(x * y * sizeof(MapObject *)));
+
+    for(int i=0; i<(x*y); i++){
+        map[i] = nullptr;
+    }
+
+    printf("Map allocated \n");
+}
+
+void MapObject::freeMap(){
+    for(int i = 0; i < mapsizex*mapsizey; i++){
+        if(&map[i] != nullptr){
+            free(&map[i]);
+        }
+    }
+    free(map);
+    map = nullptr;
+    printf("Map freed \n");
+}
+
 MapObject** MapObject::getMapNode(int x, int y){
-    return &map[x * (uint64_t) map[1] + y + (uint64_t) map[0]];
+    return &map[x * mapsizey + y];
 }
 MapObject* MapObject::getMapObject(int x, int y){
     return *getMapNode(x, y);
