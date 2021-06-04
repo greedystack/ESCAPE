@@ -7,26 +7,25 @@
 #include "Tex.h"
 
 // Ein Objekt auf der Map. IDEE: Könnte von Sprite erben.
+// Problem: Da draw() von Sprite private... 
 
 class Object {
 public:
-    Object(Tex*); // eigentlich wärs ja besser, wenn der direkt ein Array seiner Standpositions-Nodes bekommt
+    Object(Tex* = nullptr);
 
     sf::Sprite sprite;
     int posX, posY, sizeX, sizeY; // Position ist immer oben links am Objekt. Size ist dessen Größe in Map-Nodes.
+    bool visible=false;
+    Tex *tex;
 
-    // Getter
-    int x(){return posX;};
-    int y(){return posY;};
-    int sizex(){return sizeX;};
-    int sizey(){return sizeY;};
-    bool isVisible(){return visible;};
     void lookInDirection(char);
 
 private:
-    
-    bool visible=false;
-    Tex *tex;
+
+};
+
+class Wall : Object {
+
 };
 
 #endif //OBJECT_H

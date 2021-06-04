@@ -47,7 +47,7 @@ Level::~Level(){
 
 void Level::loadTextures(){
     // backgrounds
-    loadTexture('b', 0, new Tex("../include/img/bg1.jpg", OBJECTUNIT, OBJECTUNIT)); // Testbackground
+    loadTexture('w', 0, new Tex("../include/img/wall0.png", OBJECTUNIT, OBJECTUNIT));
 
     // Player
     loadTexture('P', 0, new Tex("../include/img/mario.png", 20, 40));
@@ -108,6 +108,12 @@ Object* Level::createObj(int setX, int setY, int sizeX, int sizeY){
 
 // Objekte teleportieren
 bool Level::moveObj(Object *obj, int setX, int setY){
+    // ränder teleportieren
+    if(setX < 0) setX = mapsizex +setX;
+    if(setY < 0) setY = mapsizey +setY;
+    if(setX >= mapsizex) setX = setX - mapsizex;
+    if(setY >= mapsizey) setY = setY - mapsizey;
+
     printf("Moving Object to (%d, %d) \n", setX, setY);
     
     if(! isFree(setX, setY, obj->sizeX, obj->sizeY, obj)) return false;

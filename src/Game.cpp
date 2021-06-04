@@ -52,6 +52,7 @@ void Game::start(){
                 case sf::Event::Resized:
                     std::cout << "new width: " << event.size.width << std::endl;
                     std::cout << "new height: " << event.size.height << std::endl;
+                    //window->create());
                     break;
             }
         }
@@ -101,30 +102,30 @@ void Game::start(){
 ////////// RENDERING -> später eigener Fred, execution mit 60 FPS -> wichtig, um wenig Latenz zwischen Aktion und Rendering zu haben und auch Aktion durch System möglich zu machen (nicht nur durch Usereingabe)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
 void Game::render(){
+    // Ist das wirklich effizient so? Gehen Views nicht auch?
+    // https://www.sfml-dev.org/tutorials/2.2/graphics-view.php#showing-more-when-the-window-is-resized
+
     // Clear screen
     window->clear();
-    // Draw the bgSprite
-    //window->draw(bgSprite);
-    //window.draw(test);
 
-    int xfrom=level->getPlayer()->x()-(WINDOWSIZEX/2);
-    int yfrom=level->getPlayer()->y()-(WINDOWSIZEY/2);
+    int xfrom=level->getPlayer()->posX-(WINDOWSIZEX/2);
+    int yfrom=level->getPlayer()->posY-(WINDOWSIZEY/2);
     if(xfrom < 0) xfrom = 0;
     if(yfrom < 0) yfrom = 0;
     if(xfrom+WINDOWSIZEX >= level->getMapX()) xfrom = level->getMapX() - WINDOWSIZEX;
     if(yfrom+WINDOWSIZEY >= level->getMapY()) yfrom = level->getMapY() - WINDOWSIZEY;
 
-    //printf("refreshing window from (%d, %d) to (%d, %d)\n", xfrom, yfrom, xfrom+WINDOWSIZEX, yfrom+WINDOWSIZEY);
+    printf("refreshing window from (%d, %d) to (%d, %d)\n", xfrom, yfrom, xfrom+WINDOWSIZEX, yfrom+WINDOWSIZEY);
 
     for (int x = 0; x < WINDOWSIZEX; x++){
         for (int y = 0; y < WINDOWSIZEY; y++){
-            Object* m = level->getObject(x, y);
+            Object* m = level->getObject(x+xfrom, y+yfrom);
             if (m == nullptr) continue;
             //if (typeid(*n) != typeid(VisibleObject)) continue;
             //VisibleObject* m = (VisibleObject*)n;
             //printf("RENDERING (%d, %d, %d) [%d]\n", x, y, z, m);
 
-            if(m->isVisible()){
+            if(m->visible){
                 m->sprite.setPosition((float)x*OBJECTUNIT, (float)y*OBJECTUNIT);
                 window->draw(m->sprite);
             }
