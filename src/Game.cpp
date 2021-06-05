@@ -66,22 +66,22 @@ void Game::start(){
             // classical key pressed checks
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
             {
-                level->stepLeft(level->getPlayer());
+                level->getPlayer()->stepLeft();
                 update = true;
             }
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
             {
-                level->stepUp(level->getPlayer());
+                level->getPlayer()->stepUp();
                 update = true;
             }
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
             {
-                level->stepRight(level->getPlayer());
+                level->getPlayer()->stepRight();
                 update = true;
             }
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
             {
-                level->stepDown(level->getPlayer());
+                level->getPlayer()->stepDown();
                 update = true;
             }
 
@@ -106,7 +106,7 @@ void Game::render(){
     // https://www.sfml-dev.org/tutorials/2.2/graphics-view.php#showing-more-when-the-window-is-resized
 
     // Clear screen
-    window->clear();
+    window->clear(sf::Color::White);
 
     int xfrom=level->getPlayer()->posX-(WINDOWSIZEX/2);
     int yfrom=level->getPlayer()->posY-(WINDOWSIZEY/2);
@@ -125,6 +125,7 @@ void Game::render(){
             //VisibleObject* m = (VisibleObject*)n;
             //printf("RENDERING (%d, %d, %d) [%d]\n", x, y, z, m);
 
+            // TODO: Hier noch check, ob die Position auch die im Object bekannte Position. Sonst werden alle Sprites n mal angezeigt wenn Objekt größer als 1x1
             if(m->visible){
                 m->sprite.setPosition((float)x*OBJECTUNIT, (float)y*OBJECTUNIT);
                 window->draw(m->sprite);

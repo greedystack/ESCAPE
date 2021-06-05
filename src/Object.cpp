@@ -1,15 +1,29 @@
 #include "Object.h"
 
-Object::Object(Tex* t) 
-    : tex(t)
+Object::Object(Object** m, int setX, int setY, Tex* t) 
+    : map(m), posX(setX), posY(setY), tex(t)
 {
     sizeX =1;
     sizeY =1;
+    
     if (tex != nullptr){
         visible=true;
         sprite.setTexture(tex->regular);
         sprite.setOrigin(0.5, 0.5);
         //sprite.setRotation((float) rotation*90);
+    }
+
+    printf("Creating Object to (%d, %d) \n", setX, setY);
+    printf("MsX: %d \t MsY: %d\n\n", getMapsizeX() , getMapsizeY());
+    
+    if(! isFree(setX, setY, sizeX, sizeY)){
+        // @TODO
+    }
+
+    for (int x=0; x < sizeX; x++){
+        for (int y=0; y < sizeY; y++){
+            *getNode(setX+x, setY+y) = this;
+        }
     }
 }
 
@@ -32,70 +46,84 @@ void Object::lookInDirection(char dir){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// Map-Functions
 
-/*
+int Object::getMapsizeX(){
+    return (uint64_t) map[0];
+}
+int Object::getMapsizeY(){
+    return (uint64_t) map[1];
+}
+
 Object** Object::getNode(int x, int y){
-    return &map[x * map[0] + y +1];
+    return &map[x * getMapsizeY() + y +2];
 }
 Object* Object::getObject(int x, int y){
     return *getNode(x, y);
 }
 
-
-
-bool Object::setPos(int setX, int setY){
-    printf("Placing Object to (%d, %d) \n", setX, setY);
-    MapObject** newnodes[sizeX*sizeY];
-    for (int x=0; x<sizeX; x++){
-        for (int y=0; y<sizeY; y++){
-            newnodes[x+y] = getMapNode(setX+x, setY+y);
-
-            // Teste ob Objekt dort platziert werden darf.
-            if((*newnodes[x+y]) != nullptr){
+// Prüft, ob eine (Ziel-)position auf Map frei ist
+bool Object::isFree(int pos_x, int pos_y, int offset_x, int offset_y){
+    for (int x=0; x < offset_x; x++){
+        for (int y=0; y < offset_y; y++){
+            if(getObject(pos_x+x, pos_y+y) != nullptr && getObject(pos_x+x, pos_y+y) != this){
                 printf("ERROR: Zielposition bereits belegt! \n");
                 return false;
             }
         }
     }
+    return true;
+}
 
-    for (int i=0; i< sizeX*sizeY; i++){
-        *newnodes[i]=this;
+// Objekte teleportieren
+bool Object::move(int setX, int setY){
+    // ränder teleportieren
+    if(setX < 0) setX = getMapsizeX() +setX;
+    if(setY < 0) setY = getMapsizeY() +setY;
+    if(setX >= getMapsizeX()) setX = setX - getMapsizeX();
+    if(setY >= getMapsizeY()) setY = setY - getMapsizeY();
+
+    printf("Moving Object to (%d, %d) \n", setX, setY);
+    
+    if(! isFree(setX, setY, sizeX, sizeY)) return false;
+
+    // Bewege
+    for (int x=0; x < sizeX; x++){
+        for (int y=0; y < sizeY; y++){
+            *getNode(posX +x, posY +y) = nullptr;
+            *getNode(setX+x, setY+y) = this;
+        }
     }
+    posX = setX;
+    posY = setY;
 
     return true;
 }
 
-void Object::unsetPos(){
-    for (int x=0; x<sizeX; x++){
-        for (int y=0; y<sizeY; y++){
-            *getMapNode(posX+x, posY+y)=nullptr;
-        }
-    }
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool Object::stepRight(){
+    // vorerst über moveObj() -> Bei größeren objekten ist es aber sinnvoller, nicht alle Felder jedes Mal neu zu belegen, sondern immer nur das erste Feld in die zu bewegende richtung.
+    lookInDirection('r');
+    return move(posX +1, posY);
 }
 
-bool MapObject::teleport(int setX, int setY){
-    bool success = setPos(setX, setY);
-    if(success){ 
-        unsetPos();
-        posX=setX;
-        posY=setY;
-    }
-
-    return success;
+bool Object::stepLeft(){
+    // vorerst über moveObj() -> Bei größeren objekten ist es aber sinnvoller, nicht alle Felder jedes Mal neu zu belegen, sondern immer nur das erste Feld in die zu bewegende richtung.
+    lookInDirection('l');
+    return move(posX-1, posY);
 }
 
-bool Object::moveRight(){
-    sprite.setScale(texture->scaleX * (-1), texture->scaleY); // look right
-    return teleport(posX+1, posY);
+bool Object::stepUp(){
+    // vorerst über moveObj() -> Bei größeren objekten ist es aber sinnvoller, nicht alle Felder jedes Mal neu zu belegen, sondern immer nur das erste Feld in die zu bewegende richtung.
+    lookInDirection('u');
+    return move(posX, posY -1);
 }
-bool Object::moveLeft(){
-    sprite.setScale(texture->scaleX, texture->scaleY); // look left
-    return teleport(posX-1, posY);
+
+bool Object::stepDown(){
+    // vorerst über moveObj() -> Bei größeren objekten ist es aber sinnvoller, nicht alle Felder jedes Mal neu zu belegen, sondern immer nur das erste Feld in die zu bewegende richtung.
+    lookInDirection('d');
+    return move(posX, posY +1);
 }
-bool Object::moveDown(){
-    return teleport(posX, posY+1);
-}
-bool Object::moveUp(){
-    return teleport(posX, posY-1);
-}
-*/

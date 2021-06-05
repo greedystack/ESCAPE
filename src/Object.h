@@ -11,20 +11,63 @@
 
 class Object {
 public:
-    Object(Tex* = nullptr);
+    Object(Object**, int, int, Tex* = nullptr);
+    Object** map;
 
     sf::Sprite sprite;
-    int posX, posY, sizeX, sizeY; // Position ist immer oben links am Objekt. Size ist dessen Größe in Map-Nodes.
+    int posX, posY, sizeX=1, sizeY=1; // Position ist immer oben links am Objekt. Size ist dessen Größe in Map-Nodes.
     bool visible=false;
     Tex *tex;
 
     void lookInDirection(char);
 
-private:
+
+    bool move(int, int);
+    bool stepRight();
+    bool stepLeft();
+    bool stepUp();
+    bool stepDown();
+    bool isFree(int, int, int, int);
+    Object** getNode(int, int);
+    Object* getObject(int, int);
+    int getMapsizeX();
+    int getMapsizeY();
 
 };
 
-class Wall : Object {
+// TODO Warum kann ich in der Vererbung keine Variablen überscheiben? Warum nimmt der immer die Vars der Mutterklasse?
+
+class Barrier : public Object {
+// Walls, Deko, ...
+public:
+    Barrier(Object ** map, int x, int y, Tex* tex) : 
+        Object(map, x, y, tex)
+    {};
+
+};
+
+class Portal : public Object {
+// Türen, Idee: statt aufschließen (permanent öffnen) kann man mit animation durchgehen, wenn man schlüssel hat. -> dann genau gleiche Funktion wie teleportationsportale.
+
+};
+
+class LivingObject : public Object {
+
+};
+
+class Player : public Object {
+public:
+    Player(Object ** map, int x, int y, Tex* tex) : 
+        Object(map, x, y, tex)
+    {};
+    const int sizeX=1, sizeY=2;
+};
+
+class Enemy : public LivingObject {
+
+};
+
+class Item : public Object {
 
 };
 

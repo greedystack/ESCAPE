@@ -32,20 +32,12 @@ public:
     int getMapX(){return mapsizex;};
     int getMapY(){return mapsizey;};
 
-    bool moveObj(Object*, int, int);
-    bool stepRight(Object*);
-    bool stepLeft(Object*);
-    bool stepUp(Object*);
-    bool stepDown(Object*);
 
 private:
     const int OBJECTUNIT = 20; // ACHTUNG AUCH NOCHMAL IM GAME FÜR DEN RENDERER DEFINIERT!
     Object** map;
     Object* player;
     int mapsizex, mapsizey;
-
-    Object* createObj(int, int, int=1, int=1);
-    bool isFree(int, int, int, int, Object* = nullptr);
 
     void buildBorders();
     void drawBackground(int);
