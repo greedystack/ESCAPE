@@ -55,6 +55,8 @@ void Game::start(){
                     //window->create());
                     // TODO: Window resizen!
                     break;
+                default:
+                    break;
             }
         }
         

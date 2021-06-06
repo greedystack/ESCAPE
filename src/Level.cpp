@@ -1,7 +1,7 @@
 #include "Level.h"
 #include "Tex.h"
 
-Level::Level(int x, int y)
+Level::Level(uint64_t x, uint64_t y)
     : mapsizex(x), mapsizey(y)
 {
     map = (Object**)(malloc((2 + x * y) * sizeof(Object *)));

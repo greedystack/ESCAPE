@@ -12,7 +12,7 @@
 
 class Level {
 public:
-    Level(int, int);
+    Level(uint64_t, uint64_t);
     ~Level();
     
     Object** getNode(int, int);
@@ -28,7 +28,7 @@ public:
     void loadFonts();
     //////////
 
-    Object* getPlayer(){return player;};
+    Player* getPlayer(){return player;};
     int getMapX(){return mapsizex;};
     int getMapY(){return mapsizey;};
 
@@ -36,7 +36,7 @@ public:
 private:
     const int OBJECTUNIT = 20; // ACHTUNG AUCH NOCHMAL IM GAME FÜR DEN RENDERER DEFINIERT!
     Object** map;
-    Object* player;
+    Player* player;
     int mapsizex, mapsizey;
 
     void buildBorders();

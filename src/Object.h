@@ -23,10 +23,6 @@ public:
 
 
     bool move(int, int);
-    bool stepRight();
-    bool stepLeft();
-    bool stepUp();
-    bool stepDown();
     bool isFree(int, int, int, int);
     Object** getNode(int, int);
     Object* getObject(int, int);
@@ -36,6 +32,8 @@ public:
 };
 
 // TODO Warum kann ich in der Vererbung keine Variablen überscheiben? Warum nimmt der immer die Vars der Mutterklasse?
+
+////////////////////////////////////////////////////////////////////////////////
 
 class Barrier : public Object {
 // Walls, Deko, ...
@@ -51,12 +49,41 @@ class Portal : public Object {
 
 };
 
+////////////////////////////////////////////////////////////////////////////////
+
 class LivingObject : public Object {
 public:
     LivingObject(Object ** map, int x, int y, int sx, int sy, Tex* tex) : 
         Object(map, x, y, sx, sy, tex)
     {};
+
+    bool stepRight(){
+        // vorerst über moveObj() -> Bei größeren objekten ist es aber sinnvoller, nicht alle Felder jedes Mal neu zu belegen, sondern immer nur das erste Feld in die zu bewegende richtung.
+        //lookInDirection('r');
+        return move(posX+1, posY);
+    };
+
+    bool stepLeft(){
+        // vorerst über moveObj() -> Bei größeren objekten ist es aber sinnvoller, nicht alle Felder jedes Mal neu zu belegen, sondern immer nur das erste Feld in die zu bewegende richtung.
+        //lookInDirection('l');
+        return move(posX-1, posY);
+    };
+
+    bool stepUp(){
+        // vorerst über moveObj() -> Bei größeren objekten ist es aber sinnvoller, nicht alle Felder jedes Mal neu zu belegen, sondern immer nur das erste Feld in die zu bewegende richtung.
+        lookInDirection('u');
+        return move(posX, posY-1);
+    };
+
+    bool stepDown(){
+        // vorerst über moveObj() -> Bei größeren objekten ist es aber sinnvoller, nicht alle Felder jedes Mal neu zu belegen, sondern immer nur das erste Feld in die zu bewegende richtung.
+        lookInDirection('d');
+        return move(posX, posY+1);
+    };
 };
+
+
+////////////////////////////////////////////////////////////////////////////////
 
 class Player : public LivingObject {
 public:
@@ -72,6 +99,8 @@ class Enemy : public LivingObject {
 
 
 
+////////////////////////////////////////////////////////////////////////////////
+
 class Item : public Object {
 public:
     Item (Object ** map, int x, int y, Tex* tex) : 
@@ -80,11 +109,13 @@ public:
     bool collect(){
         // von Map entfernen
         // zu Bag hinzufügen
+        return true;
     };
     bool use(){
         // aus Bag entfernen
         // Animation
         // Wirkung (auf alle Objekte im Wirkradius)
+        return true;
     };
 private:
     int distance; // Wie weit geht die Wirkung des Items, bis sie auf ein Objekt trifft?

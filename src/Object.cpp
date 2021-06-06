@@ -108,29 +108,3 @@ bool Object::move(int setX, int setY){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////////////////////////////////
-
-bool Object::stepRight(){
-    // vorerst über moveObj() -> Bei größeren objekten ist es aber sinnvoller, nicht alle Felder jedes Mal neu zu belegen, sondern immer nur das erste Feld in die zu bewegende richtung.
-    //lookInDirection('r');
-    return move(posX+1, posY);
-}
-
-bool Object::stepLeft(){
-    // vorerst über moveObj() -> Bei größeren objekten ist es aber sinnvoller, nicht alle Felder jedes Mal neu zu belegen, sondern immer nur das erste Feld in die zu bewegende richtung.
-    //lookInDirection('l');
-    return move(posX-1, posY);
-}
-
-bool Object::stepUp(){
-    // vorerst über moveObj() -> Bei größeren objekten ist es aber sinnvoller, nicht alle Felder jedes Mal neu zu belegen, sondern immer nur das erste Feld in die zu bewegende richtung.
-    lookInDirection('u');
-    return move(posX, posY-1);
-}
-
-bool Object::stepDown(){
-    // vorerst über moveObj() -> Bei größeren objekten ist es aber sinnvoller, nicht alle Felder jedes Mal neu zu belegen, sondern immer nur das erste Feld in die zu bewegende richtung.
-    lookInDirection('d');
-    return move(posX, posY+1);
-}
