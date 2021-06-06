@@ -6,6 +6,7 @@
 #include <SFML/Graphics/Sprite.hpp>
 #include "Tex.h"
 #include<iostream>
+#include <typeinfo>
 
 // Ein Objekt auf der Map. IDEE: Könnte von Sprite erben.
 // Problem: Da draw() von Sprite private... 
@@ -34,15 +35,15 @@ public:
             sprite.setOrigin(0.5, 0.5);
             //sprite.setRotation((float) rotation*90);
         }
-        place();
+        // place();
     };
 
     ////////////////////////////////////////////////////////////////////////////////
-
+/*
     virtual void getInteracted(){
         std::cout << "Mutterklasse" << std::endl;
     };
-
+*/
     ////////////////////////////////////////////////////////////////////////////////
     // Map-Functions
 
@@ -177,34 +178,25 @@ public:
 };
 
 
+
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
-class Player : public LivingObject {
+class InteractableObj : public Object {
 public:
-    Player(Object ** map, int x, int y, Tex* tex) : 
-        LivingObject(map, x, y, 3, 3, RIGHT, tex)
+    InteractableObj (Object ** map, int x, int y, int sx, int sy, Tex* tex) : 
+        Object(map, x, y, sx, sy, tex)
     {};
-
-    bool interact(){
-        if(isFree((pos+dir), size)) return false;
-        Object* obj = getObject(pos+dir);
-        std::cout << "ich stehe vor einem Objekt :)" << std::endl;
-        obj->getInteracted();
+    virtual void getInteracted() override{
+        std::cout << "INTERACTABLE MOTHER." << std::endl;
     };
 };
 
-class Enemy : public LivingObject {
-
-};
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-class Item : public Object {
+class Item : public InteractableObj {
 public:
     Item (Object ** map, int x, int y, int sx, int sy, Tex* tex) : 
-        Object(map, x, y, sx, sy, tex)
+        InteractableObj(map, x, y, sx, sy, tex)
     {};
     bool collect(){
         // von Map entfernen
@@ -224,6 +216,26 @@ private:
     int distance; // Wie weit geht die Wirkung des Items, bis sie auf ein Objekt trifft?
     bool radial; // Falls true: Wirkung in alle Richtungen statt nur in Blickrichtung des Anwenders.
     //virtual void effect(); // Die Wirkung. In Itemtypen zu implementieren!
+};
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+class Player : public LivingObject {
+public:
+    Player(Object ** map, int x, int y, Tex* tex) : 
+        LivingObject(map, x, y, 3, 3, RIGHT, tex)
+    {};
+
+    bool interact(){
+        if(isFree((pos+dir), size)) return false;
+        Object* obj = getObject(pos+dir);
+        (*obj).getInteracted();
+    };
+};
+
+class Enemy : public LivingObject {
+
 };
 
 #endif //OBJECT_H

@@ -132,7 +132,7 @@ void Game::render(){
 
     for (int x = 0; x < WINDOWSIZEX; x++){
         for (int y = 0; y < WINDOWSIZEY; y++){
-            Object* m = level->getObject(x+xfrom, y+yfrom);
+            Object* m = level->getObject(sf::Vector2i(x+xfrom, y+yfrom));
             if (m == nullptr) continue;
             //if (typeid(*n) != typeid(VisibleObject)) continue;
             //VisibleObject* m = (VisibleObject*)n;

@@ -1,62 +1,9 @@
 #include "Level.h"
 #include "Tex.h"
 
-Level::Level(uint64_t x, uint64_t y)
-    : mapsizex(x), mapsizey(y)
-{
-    map = (Object**)(malloc((2 + x * y) * sizeof(Object *)));
 
-    for(int i=0; i<(x*y); i++){
-        map[i] = nullptr;
-    }
 
-    map[0] = (Object*)x;
-    map[1] = (Object*)y;
 
-    printf("Map allocated \n");
-
-    // OLD:
-    textures = (Tex**)(malloc(5 * sizeof(uint8_t) * sizeof(Tex *)));
-    loadTextures();
-    loadFonts();
-    ////
-
-    player = new Player(map, 7, 4, getTexture('w', 0));
-    Object *foo = new LivingObject(map, 10, 10, 5, 5, LEFT, getTexture('w', 0));
-    Item* bar = new Item(map, 10, 3, 2, 2, getTexture('w', 0));
-    Object* baz = bar;
-    baz->getInteracted();
-    
-    new Barrier(map, 0, 0, getTexture('w', 0));
-    new Barrier(map, 0, 1, getTexture('w', 0));
-    new Barrier(map, 0, 2, getTexture('w', 0));
-    new Barrier(map, 1, 2, getTexture('w', 0));
-    new Barrier(map, 2, 2, getTexture('w', 0));
-    new Barrier(map, 3, 3, getTexture('w', 0));
-    new Barrier(map, 4, 3, getTexture('w', 0));
-    new Barrier(map, 5, 3, getTexture('w', 0));
-    new Barrier(map, 6, 3, getTexture('w', 0));
-    
-    //buildBorders();
-}
-
-Level::~Level(){
-    for(int i = 0; i < mapsizex*mapsizey; i++){
-        if(&map[i] != nullptr){
-            free(&map[i]);
-        }
-    }
-    free(map);
-    map = nullptr;
-    printf("Map freed \n");
-}
-
-Object** Level::getNode(int x, int y){
-    return &map[x * mapsizey + y +2];
-}
-Object* Level::getObject(int x, int y){
-    return *getNode(x, y);
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 // sf::Text text("Hello SFML", font, 30);
