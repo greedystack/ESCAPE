@@ -20,14 +20,14 @@ class Object {
 public:
     Object** map;
     sf::Sprite sprite;
-    sf::Vector2<int> pos, size; // Position ist immer oben links am Objekt. Size ist dessen Größe in Map-Nodes.
+    sf::Vector2i pos, size, dir; // Position ist immer oben links am Objekt. Size ist dessen Größe in Map-Nodes.
 
     bool visible=false;
     Tex *tex;
     ////////////////////////////////////////////////////////////////////////////////
 
-    Object(Object** m, int x, int y, int sx=1, int sy=1, Tex* t = nullptr) 
-        : map(m), pos(x, y), size(sx, sy), tex(t)
+    Object(Object** m, int x, int y, Tex* t = nullptr, sf::Vector2i d=DOWN, int sx=1, int sy=1) 
+        : map(m), pos(x, y), size(sx, sy), tex(t), dir(d)
     {
         if (tex != nullptr){
             visible=true;
@@ -39,11 +39,11 @@ public:
     };
 
     ////////////////////////////////////////////////////////////////////////////////
-/*
+
     virtual void getInteracted(){
         std::cout << "Mutterklasse" << std::endl;
     };
-*/
+
     ////////////////////////////////////////////////////////////////////////////////
     // Map-Functions
 
@@ -77,8 +77,13 @@ protected:
         }
     };
 
+    // !NEU: erste Fkt. mit Assumption, dass alle Objekte gleich groß sind.
+    Object* neighbor(sf::Vector2i _dir){
+        return getObject(pos+_dir);
+    };
+
     // Prüft, ob eine (Ziel-)position auf Map frei ist
-    bool isFree(sf::Vector2<int> check_pos, sf::Vector2<int> offset){
+    bool isFree(sf::Vector2i check_pos, sf::Vector2i offset){
         for (int x=0; x < offset.x; x++){
             for (int y=0; y < offset.y; y++){
                 Object* obj = getObject(check_pos + sf::Vector2i(x, y));
@@ -133,7 +138,7 @@ class Barrier : public Object {
 // Walls, Deko, ...
 public:
     Barrier(Object ** map, int x, int y, Tex* tex) : 
-        Object(map, x, y, 1, 1, tex)
+        Object(map, x, y, tex)
     {};
 
 };
@@ -145,11 +150,39 @@ class Portal : public Object {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class Item : public Object {
+public:
+    Item (Object ** map, int x, int y, Tex* tex) : 
+        Object(map, x, y, tex)
+    {};
+    bool collect(){
+        // von Map entfernen
+        // zu Bag hinzufügen
+        return true;
+    };
+    bool use(){
+        // aus Bag entfernen
+        // Animation
+        // Wirkung (auf alle Objekte im Wirkradius)
+        return true;
+    };
+    void getInteracted() override{
+        std::cout << "Huch, mit mir wurde interagiert." << std::endl;
+    };
+private:
+    int distance; // Wie weit geht die Wirkung des Items, bis sie auf ein Objekt trifft?
+    bool radial; // Falls true: Wirkung in alle Richtungen statt nur in Blickrichtung des Anwenders.
+    //virtual void effect(); // Die Wirkung. In Itemtypen zu implementieren!
+};
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+
 class LivingObject : public Object {
 public:
-    sf::Vector2<int> dir; //direction in which the object is looking
-    LivingObject(Object ** map, int x, int y, int sx=2, int sy=2, sf::Vector2<int> d = DOWN, Tex* tex=nullptr) : 
-        Object(map, x, y, sx, sy, tex), dir(d)
+    LivingObject(Object ** map, int x, int y, Tex* tex=nullptr, sf::Vector2i d = DOWN) : 
+        Object(map, x, y, tex, d)
     {};
 
     bool stepRight(){
@@ -177,65 +210,27 @@ public:
     };
 };
 
-
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
-
-class InteractableObj : public Object {
-public:
-    InteractableObj (Object ** map, int x, int y, int sx, int sy, Tex* tex) : 
-        Object(map, x, y, sx, sy, tex)
-    {};
-    virtual void getInteracted() override{
-        std::cout << "INTERACTABLE MOTHER." << std::endl;
-    };
-};
-
-class Item : public InteractableObj {
-public:
-    Item (Object ** map, int x, int y, int sx, int sy, Tex* tex) : 
-        InteractableObj(map, x, y, sx, sy, tex)
-    {};
-    bool collect(){
-        // von Map entfernen
-        // zu Bag hinzufügen
-        return true;
-    };
-    bool use(){
-        // aus Bag entfernen
-        // Animation
-        // Wirkung (auf alle Objekte im Wirkradius)
-        return true;
-    };
-    void getInteracted() override{
-        std::cout << "Huch, mit mir wurde interagiert." << std::endl;
-    };
-private:
-    int distance; // Wie weit geht die Wirkung des Items, bis sie auf ein Objekt trifft?
-    bool radial; // Falls true: Wirkung in alle Richtungen statt nur in Blickrichtung des Anwenders.
-    //virtual void effect(); // Die Wirkung. In Itemtypen zu implementieren!
-};
-
-
-////////////////////////////////////////////////////////////////////////////////
-
 class Player : public LivingObject {
 public:
     Player(Object ** map, int x, int y, Tex* tex) : 
-        LivingObject(map, x, y, 3, 3, RIGHT, tex)
+        LivingObject(map, x, y, tex, RIGHT)
     {};
 
     bool interact(){
-        if(isFree((pos+dir), size)) return false;
-        Object* obj = getObject(pos+dir);
-        (*obj).getInteracted();
+        Object* nb = neighbor(dir);
+        if(nb == nullptr) return false;
+        nb->getInteracted();
+    };
+    void getInteracted() override{
+        std::cout << "Player gets interacted" << std::endl;
     };
 };
 
 class Enemy : public LivingObject {
 
 };
+
+
 
 #endif //OBJECT_H

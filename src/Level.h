@@ -44,17 +44,18 @@ public:
         ////
 
         
-        place(new LivingObject(map, 10, 10, 5, 5, LEFT, getTexture('w', 0)));
+        place(new LivingObject(map, 10, 10, getTexture('w', 0), LEFT));
 
-        place(new Item(map, 10, 3, 2, 2, getTexture('w', 0)));
+        place(new Item(map, 10, 3, getTexture('w', 0)));
         
 
         Object* obj = getObject(sf::Vector2i(10,3));
-        //obj->getInteracted();
+        obj->getInteracted();
 
         player = new Player(map, 7, 4, getTexture('w', 0));
         place(player);
         
+        /*
         new Barrier(map, 0, 0, getTexture('w', 0));
         new Barrier(map, 0, 1, getTexture('w', 0));
         new Barrier(map, 0, 2, getTexture('w', 0));
@@ -64,7 +65,7 @@ public:
         new Barrier(map, 4, 3, getTexture('w', 0));
         new Barrier(map, 5, 3, getTexture('w', 0));
         new Barrier(map, 6, 3, getTexture('w', 0));
-        
+        */
         //buildBorders();
     }
 
@@ -122,6 +123,13 @@ public:
         }
         return true;
     };
+
+    bool interact(Object* obj){
+        if(isFree((obj->pos + obj->dir), obj->size)) return false;
+        Object* iteractee = getObject(obj->pos + obj->dir);
+        std::cout << "Interactee: (" << iteractee->pos.x << ", " << iteractee->pos.y << ")" << std::endl;
+        iteractee->getInteracted();
+    }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////
