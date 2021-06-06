@@ -6,7 +6,7 @@
 #include <SFML/Graphics/Sprite.hpp>
 #include "Tex.h"
 #include<iostream>
-#include <typeinfo>
+#include <list>
 
 // Ein Objekt auf der Map. IDEE: Könnte von Sprite erben.
 // Problem: Da draw() von Sprite private... 
@@ -35,13 +35,13 @@ public:
             sprite.setOrigin(0.5, 0.5);
             //sprite.setRotation((float) rotation*90);
         }
-        // place();
+        place();
     };
 
     ////////////////////////////////////////////////////////////////////////////////
 
-    virtual void getInteracted(){
-        std::cout << "Mutterklasse" << std::endl;
+    virtual bool getInteracted(Object* interacter){
+        return false;
     };
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -77,10 +77,16 @@ protected:
         }
     };
 
-    // !NEU: erste Fkt. mit Assumption, dass alle Objekte gleich groß sind.
+    // ACHTUNG!! Nur für 1x1-große Objekte gebaut! 
     Object* neighbor(sf::Vector2i _dir){
         return getObject(pos+_dir);
     };
+
+    // ACHTUNG!! Nur für 1x1-große Objekte gebaut! 
+    // ACHTUNG!! Entfernt Objekt nur von Map, nicht aus dem Speicher!
+    void removeFromMap(){
+        *getNode(pos) = nullptr;
+    }
 
     // Prüft, ob eine (Ziel-)position auf Map frei ist
     bool isFree(sf::Vector2i check_pos, sf::Vector2i offset){
@@ -150,24 +156,72 @@ class Portal : public Object {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class LivingObject : public Object {
+public:
+    LivingObject(Object ** map, int x, int y, Tex* tex=nullptr, sf::Vector2i d = DOWN) : 
+        Object(map, x, y, tex, d)
+    {};
+
+    // nur genau einen Schritt moven
+    bool step(sf::Vector2i _dir){
+         // vorerst über moveObj() -> Bei größeren objekten ist es aber sinnvoller, nicht alle Felder jedes Mal neu zu belegen, sondern immer nur das erste Feld in die zu bewegende richtung.
+        dir = _dir;
+        return move(pos + _dir);
+    };
+};
+
+////////////////////////////////////////////////////////////////////////////////
+class Player : public LivingObject {
+public:
+
+    Player(Object ** map, int x, int y, Tex* tex) : 
+        LivingObject(map, x, y, tex, RIGHT)
+    {};
+    ~Player(){
+        for (Object* i : bag) {
+            delete i;
+        }
+    }
+
+    // TODO Hier und an der neighbor() scheitert aktuell die variable Objektgröße. Fix this!
+    // z.B. fixbar durch loop, in der dann mit alllen adjazenten, interactable Objects interagiert wird.
+    bool interact(){
+        Object* nb = neighbor(dir);
+        if(nb == nullptr) return false;
+        return nb->getInteracted(this);
+    };
+    void putInBag(Object* item){
+        bag.push_back(item);
+    };
+
+private:
+    std::list<Object*> bag;
+};
+
+class Enemy : public LivingObject {
+
+};
+////////////////////////////////////////////////////////////////////////////////
+
 class Item : public Object {
 public:
     Item (Object ** map, int x, int y, Tex* tex) : 
         Object(map, x, y, tex)
     {};
-    bool collect(){
-        // von Map entfernen
-        // zu Bag hinzufügen
+    bool collect(Player* collector){
+        removeFromMap();
+        collector->putInBag(this);
         return true;
     };
     bool use(){
-        // aus Bag entfernen
+        // aus Bag entfernen??
         // Animation
         // Wirkung (auf alle Objekte im Wirkradius)
         return true;
     };
-    void getInteracted() override{
+    bool getInteracted(Object* interacter) override{
         std::cout << "Huch, mit mir wurde interagiert." << std::endl;
+        return collect((Player*)interacter);
     };
 private:
     int distance; // Wie weit geht die Wirkung des Items, bis sie auf ein Objekt trifft?
@@ -179,57 +233,7 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 
-class LivingObject : public Object {
-public:
-    LivingObject(Object ** map, int x, int y, Tex* tex=nullptr, sf::Vector2i d = DOWN) : 
-        Object(map, x, y, tex, d)
-    {};
 
-    bool stepRight(){
-        // vorerst über moveObj() -> Bei größeren objekten ist es aber sinnvoller, nicht alle Felder jedes Mal neu zu belegen, sondern immer nur das erste Feld in die zu bewegende richtung.
-        //lookInDirection('r');
-        return move(pos + RIGHT);
-    };
-
-    bool stepLeft(){
-        // vorerst über moveObj() -> Bei größeren objekten ist es aber sinnvoller, nicht alle Felder jedes Mal neu zu belegen, sondern immer nur das erste Feld in die zu bewegende richtung.
-        //lookInDirection('l');
-        return move(pos + LEFT);
-    };
-
-    bool stepUp(){
-        // vorerst über moveObj() -> Bei größeren objekten ist es aber sinnvoller, nicht alle Felder jedes Mal neu zu belegen, sondern immer nur das erste Feld in die zu bewegende richtung.
-        //lookInDirection('u');
-        return move(pos + UP);
-    };
-
-    bool stepDown(){
-        // vorerst über moveObj() -> Bei größeren objekten ist es aber sinnvoller, nicht alle Felder jedes Mal neu zu belegen, sondern immer nur das erste Feld in die zu bewegende richtung.
-        //lookInDirection('d');
-        return move(pos + DOWN);
-    };
-};
-
-////////////////////////////////////////////////////////////////////////////////
-class Player : public LivingObject {
-public:
-    Player(Object ** map, int x, int y, Tex* tex) : 
-        LivingObject(map, x, y, tex, RIGHT)
-    {};
-
-    bool interact(){
-        Object* nb = neighbor(dir);
-        if(nb == nullptr) return false;
-        nb->getInteracted();
-    };
-    void getInteracted() override{
-        std::cout << "Player gets interacted" << std::endl;
-    };
-};
-
-class Enemy : public LivingObject {
-
-};
 
 
 

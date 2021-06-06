@@ -5,6 +5,8 @@
 #include <SFML/Graphics/Texture.hpp>
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics.hpp>
+
+
 #include "Tex.h"
 #include "Object.hpp"
 
@@ -18,8 +20,6 @@ public:
     sf::Font font;
     Tex*  getTexture(char c, int i){return textures[(uint16_t)c+i];};
     void loadTexture(char c, int i, Tex* t){textures[(uint16_t)c+i] = t;};
-    void loadTextures();
-    void loadFonts();
 
     //////////////////////////////////////////////////////////////////////////////////////////////
     
@@ -44,18 +44,12 @@ public:
         ////
 
         
-        place(new LivingObject(map, 10, 10, getTexture('w', 0), LEFT));
 
-        place(new Item(map, 10, 3, getTexture('w', 0)));
-        
-
-        Object* obj = getObject(sf::Vector2i(10,3));
-        obj->getInteracted();
-
+        new LivingObject(map, 10, 10, getTexture('w', 0), LEFT);
+        new Item(map, 10, 3, getTexture('w', 0));
         player = new Player(map, 7, 4, getTexture('w', 0));
-        place(player);
         
-        /*
+        
         new Barrier(map, 0, 0, getTexture('w', 0));
         new Barrier(map, 0, 1, getTexture('w', 0));
         new Barrier(map, 0, 2, getTexture('w', 0));
@@ -65,14 +59,14 @@ public:
         new Barrier(map, 4, 3, getTexture('w', 0));
         new Barrier(map, 5, 3, getTexture('w', 0));
         new Barrier(map, 6, 3, getTexture('w', 0));
-        */
+        
         //buildBorders();
     }
 
     ~Level(){
         for(int i = 0; i < mapsizex*mapsizey; i++){
             if(&map[i] != nullptr){
-                free(&map[i]);
+                delete &map[i];
             }
         }
         free(map);
@@ -95,44 +89,56 @@ public:
         return *getNode(position);
     }
 
+//////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+// sf::Text text("Hello SFML", font, 30);
+/*/ Load a music to play
+        sf::Music music;
+        if (!music.openFromFile("nice_music.ogg"))
+            return EXIT_FAILURE;
+        // Play the music
+        music.play();
+         */
 
-    bool place(Object* obj){
-        printf("Placing Object to (%d, %d) \n", obj->pos.x, obj->pos.y);
-    
-        if(! isFree(obj->pos, obj->size)){
-            // TODO: Dann woanders platzieren?
-            std::cout << "ERROR: Position bereits belegt." << std::endl;
-        }
+void loadTextures(){
+    // backgrounds
+    loadTexture('w', 0, new Tex("../include/img/wall0.png", OBJECTUNIT, OBJECTUNIT));
 
-        for (int x=0; x < obj->size.x; x++){
-            for (int y=0; y < obj->size.y; y++){
-                *getNode(obj->pos + sf::Vector2i(x, y)) = obj;
-            }
-        }
-    };
+    // Player
+    loadTexture('P', 0, new Tex("../include/img/mario.png", 20, 40));
+}
 
-    // Prüft, ob eine (Ziel-)position auf Map frei ist
-    bool isFree(sf::Vector2<int> check_pos, sf::Vector2<int> offset, Object* allowed = nullptr){
-        for (int x=0; x < offset.x; x++){
-            for (int y=0; y < offset.y; y++){
-                Object* obj = getObject(check_pos + sf::Vector2i(x, y));
-                if(obj != nullptr && obj != allowed){
-                    return false;
-                }
-            }
-        }
-        return true;
-    };
+void loadFonts() {
+    if (!font.loadFromFile("../include/KulimPark-Regular.ttf"))
+        printf("ERROR: FONT NOT LOADED!");
+        //return EXIT_FAILURE;
+}
 
-    bool interact(Object* obj){
-        if(isFree((obj->pos + obj->dir), obj->size)) return false;
-        Object* iteractee = getObject(obj->pos + obj->dir);
-        std::cout << "Interactee: (" << iteractee->pos.x << ", " << iteractee->pos.y << ")" << std::endl;
-        iteractee->getInteracted();
+////////////////////////////////////////////////////////////////////////////////
+
+
+void buildBorders(){
+    for (int x=0; x<mapsizex; x++){
+        new Barrier(map, x, 0, getTexture('w', 0));
+        new Barrier(map, x, mapsizey-1, getTexture('w', 0));
     }
+    for (int y=1; y<mapsizey-1; y++){
+        new Barrier(map, 0, y, getTexture('w', 0));
+        new Barrier(map, mapsizex-1, y, getTexture('w', 0));
+    }
+}
 
-//////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////
+/*
+
+void Level::drawBackground(int bgRepeteAfter){
+    for (int x=0; x<bgRepeteAfter; x++){
+        for (int y=0; y<bgRepeteAfter; y++){
+            new Object(getTexture('b', 0), ' ', x, y);
+        }
+    }
+}
+*/
 
 private:
     const int OBJECTUNIT = 20; // ACHTUNG AUCH NOCHMAL IM GAME FÜR DEN RENDERER DEFINIERT!
@@ -140,9 +146,9 @@ private:
     Player* player;
     int mapsizex, mapsizey;
 
-    void buildBorders();
     void drawBackground(int);
 };
+
 
 
 
