@@ -47,6 +47,7 @@ public:
 
         new LivingObject(map, 10, 10, getTexture('w', 0), LEFT);
         new Item(map, 10, 3, getTexture('w', 0));
+        new Item(map, 10, 6, getTexture('w', 0));
         player = new Player(map, 7, 4, getTexture('w', 0));
         
         
@@ -66,7 +67,7 @@ public:
     ~Level(){
         for(int i = 0; i < mapsizex*mapsizey; i++){
             if(&map[i] != nullptr){
-                delete &map[i];
+                free(&map[i]);
             }
         }
         free(map);

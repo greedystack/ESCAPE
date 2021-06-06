@@ -19,11 +19,16 @@ const sf::Vector2<int> DOWN(0,1);
 class Object {
 public:
     Object** map;
+    
     sf::Sprite sprite;
     sf::Vector2i pos, size, dir; // Position ist immer oben links am Objekt. Size ist dessen Größe in Map-Nodes.
 
     bool visible=false;
     Tex *tex;
+
+    ////////////////////////////////////////////////////////////////////////////////
+    //Object* r, l, u, d, on; // Ich bau den Müll jetzt in eine 2d-Liste um, wenn ich eh schon bei identisch großen Objekten bleibe.
+    //Object** connected=nullptr; // das wäre dann ein Array für größere Objekte - die bestehen dann aus einelnen subobjekten.
     ////////////////////////////////////////////////////////////////////////////////
 
     Object(Object** m, int x, int y, Tex* t = nullptr, sf::Vector2i d=DOWN, int sx=1, int sy=1) 
@@ -40,7 +45,10 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////////
 
-    virtual bool getInteracted(Object* interacter){
+    virtual bool getInteracted(Object* interacter){ // passive interaktion
+        return false;
+    };
+    virtual bool interact(Object* interacter){ //aktive interaktion
         return false;
     };
 
@@ -61,6 +69,11 @@ public:
         return *getNode(position);
     }
 
+    // ACHTUNG!! Nur für 1x1-große Objekte gebaut! 
+    Object* neighbor(sf::Vector2i _dir){
+        return getObject(pos+_dir);
+    };
+
 protected:
     bool place(){
         printf("Placing Object to (%d, %d) \n", pos.x, pos.y);
@@ -77,15 +90,18 @@ protected:
         }
     };
 
-    // ACHTUNG!! Nur für 1x1-große Objekte gebaut! 
-    Object* neighbor(sf::Vector2i _dir){
-        return getObject(pos+_dir);
-    };
+    
 
     // ACHTUNG!! Nur für 1x1-große Objekte gebaut! 
     // ACHTUNG!! Entfernt Objekt nur von Map, nicht aus dem Speicher!
     void removeFromMap(){
         *getNode(pos) = nullptr;
+        pos = sf::Vector2i(-1, -1);
+    }
+    // ACHTUNG!! Nur für 1x1-große Objekte gebaut! 
+    void putOnMap(sf::Vector2i _pos){
+        *getNode(_pos) = this;
+        pos = _pos;
     }
 
     // Prüft, ob eine (Ziel-)position auf Map frei ist
@@ -179,20 +195,35 @@ public:
     {};
     ~Player(){
         for (Object* i : bag) {
-            delete i;
+            free(i);
         }
     }
 
     // TODO Hier und an der neighbor() scheitert aktuell die variable Objektgröße. Fix this!
     // z.B. fixbar durch loop, in der dann mit alllen adjazenten, interactable Objects interagiert wird.
-    bool interact(){
+    virtual bool interact(Object* interacter=nullptr) override{
         Object* nb = neighbor(dir);
         if(nb == nullptr) return false;
         return nb->getInteracted(this);
     };
     void putInBag(Object* item){
         bag.push_back(item);
+        std::cout << "added " << item << "\n\n";
+        for (Object* i : bag) {
+            std::cout << i << std::endl;
+        }
     };
+    void removeFromBag(Object* item){
+        bag.remove(item);
+        std::cout << "removed " << item << "\n\n";
+        for (Object* i : bag) {
+            std::cout << i << std::endl;
+        }
+    }
+    void useItem(){
+        if(bag.empty()) return;
+        if(bag.front()->interact(this)) removeFromBag(bag.front());
+    }
 
 private:
     std::list<Object*> bag;
@@ -213,16 +244,20 @@ public:
         collector->putInBag(this);
         return true;
     };
-    bool use(){
-        // aus Bag entfernen??
-        // Animation
-        // Wirkung (auf alle Objekte im Wirkradius)
+    virtual bool interact(Object* player) override{
+        std::cout << "placing item" << this << std::endl;
+        sf::Vector2i newpos = player->pos + player->dir;
+        if(getObject(newpos) != nullptr) return false;
+        pos = newpos;
+        place();
         return true;
     };
     bool getInteracted(Object* interacter) override{
         std::cout << "Huch, mit mir wurde interagiert." << std::endl;
         return collect((Player*)interacter);
     };
+
+
 private:
     int distance; // Wie weit geht die Wirkung des Items, bis sie auf ein Objekt trifft?
     bool radial; // Falls true: Wirkung in alle Richtungen statt nur in Blickrichtung des Anwenders.

@@ -95,9 +95,10 @@ int main()
                 level.getPlayer()->interact();
                 update = true;
             }
-            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Enter))
+            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Return))
             {
                 // Item Bag
+                level.getPlayer()->useItem(); // temporarily
                 update = true;
             }
 
