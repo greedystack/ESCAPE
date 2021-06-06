@@ -1,10 +1,8 @@
 #include "Object.h"
 
-Object::Object(Object** m, int setX, int setY, Tex* t) 
-    : map(m), posX(setX), posY(setY), tex(t)
+Object::Object(Object** m, int setX, int setY, int sx, int sy, Tex* t) 
+    : map(m), posX(setX), posY(setY), sizeX(sx), sizeY(sy), tex(t)
 {
-    sizeX =1;
-    sizeY =1;
     
     if (tex != nullptr){
         visible=true;
@@ -27,6 +25,8 @@ Object::Object(Object** m, int setX, int setY, Tex* t)
     }
 }
 
+
+// Achtung! textur invertieren funktioniert nicht wirklich. Zeigt komisches Verhalten: Objekt bleibt bei blickrichtungswechsel auf der Stelle stehen, obwohl sich Position in Map ändert
 void Object::lookInDirection(char dir){
     switch (dir){
         case 'r':
@@ -75,25 +75,32 @@ bool Object::isFree(int pos_x, int pos_y, int offset_x, int offset_y){
     return true;
 }
 
-// Objekte teleportieren
+// Objekte "teleportieren"
 bool Object::move(int setX, int setY){
-    // ränder teleportieren
+    // map-ränder verkleben
     if(setX < 0) setX = getMapsizeX() +setX;
     if(setY < 0) setY = getMapsizeY() +setY;
     if(setX >= getMapsizeX()) setX = setX - getMapsizeX();
     if(setY >= getMapsizeY()) setY = setY - getMapsizeY();
 
-    printf("Moving Object to (%d, %d) \n", setX, setY);
+    //printf("Moving Object to (%d, %d) \n", setX, setY);
     
     if(! isFree(setX, setY, sizeX, sizeY)) return false;
 
-    // Bewege
+    // Befreie alte Pos.
     for (int x=0; x < sizeX; x++){
         for (int y=0; y < sizeY; y++){
             *getNode(posX +x, posY +y) = nullptr;
+        }
+    }
+
+    // Setze neue Pos.
+    for (int x=0; x < sizeX; x++){
+        for (int y=0; y < sizeY; y++){
             *getNode(setX+x, setY+y) = this;
         }
     }
+    
     posX = setX;
     posY = setY;
 
@@ -106,24 +113,24 @@ bool Object::move(int setX, int setY){
 
 bool Object::stepRight(){
     // vorerst über moveObj() -> Bei größeren objekten ist es aber sinnvoller, nicht alle Felder jedes Mal neu zu belegen, sondern immer nur das erste Feld in die zu bewegende richtung.
-    lookInDirection('r');
-    return move(posX +1, posY);
+    //lookInDirection('r');
+    return move(posX+1, posY);
 }
 
 bool Object::stepLeft(){
     // vorerst über moveObj() -> Bei größeren objekten ist es aber sinnvoller, nicht alle Felder jedes Mal neu zu belegen, sondern immer nur das erste Feld in die zu bewegende richtung.
-    lookInDirection('l');
+    //lookInDirection('l');
     return move(posX-1, posY);
 }
 
 bool Object::stepUp(){
     // vorerst über moveObj() -> Bei größeren objekten ist es aber sinnvoller, nicht alle Felder jedes Mal neu zu belegen, sondern immer nur das erste Feld in die zu bewegende richtung.
     lookInDirection('u');
-    return move(posX, posY -1);
+    return move(posX, posY-1);
 }
 
 bool Object::stepDown(){
     // vorerst über moveObj() -> Bei größeren objekten ist es aber sinnvoller, nicht alle Felder jedes Mal neu zu belegen, sondern immer nur das erste Feld in die zu bewegende richtung.
     lookInDirection('d');
-    return move(posX, posY +1);
+    return move(posX, posY+1);
 }

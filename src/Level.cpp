@@ -21,13 +21,16 @@ Level::Level(int x, int y)
     loadFonts();
     ////
 
-    player = new Player(map, 5, 3, getTexture('P', 0));
+    player = new Player(map, 7, 4, getTexture('w', 0));
     new Barrier(map, 0, 0, getTexture('w', 0));
     new Barrier(map, 0, 1, getTexture('w', 0));
     new Barrier(map, 0, 2, getTexture('w', 0));
     new Barrier(map, 1, 2, getTexture('w', 0));
     new Barrier(map, 2, 2, getTexture('w', 0));
     new Barrier(map, 3, 3, getTexture('w', 0));
+    new Barrier(map, 4, 3, getTexture('w', 0));
+    new Barrier(map, 5, 3, getTexture('w', 0));
+    new Barrier(map, 6, 3, getTexture('w', 0));
     
     // buildBorders();
 }

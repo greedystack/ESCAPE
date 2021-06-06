@@ -2,14 +2,14 @@
 #include "Game.h"
 #include <iostream>
 
-// in Pixel:
-const int OBJECTUNIT = 20;
+const int OBJECTUNIT = 15; // Pixel pro Map-Block
+
 // in ObjectUnit:
-const int WINDOWSIZEX=100;
-const int WINDOWSIZEY=100;
+const int WINDOWSIZEX=200;
+const int WINDOWSIZEY=200;
 const int BGSIZE=200; // minimum half of screensize!! // must be divideable by 2
 
-const sf::Time UPDATE_TIME = sf::milliseconds(40); // Latency
+const sf::Time UPDATE_TIME = sf::milliseconds(20); // Move Speed
 
 
 Game::Game(){
@@ -32,7 +32,7 @@ void Game::start(){
         // add the time passed since the last cycle
         elapsed = elapsed + clock.restart();
 
-        //catchEvents();
+        
         sf::Event event;
         while (window->pollEvent(event))
         {
@@ -53,9 +53,11 @@ void Game::start(){
                     std::cout << "new width: " << event.size.width << std::endl;
                     std::cout << "new height: " << event.size.height << std::endl;
                     //window->create());
+                    // TODO: Window resizen!
                     break;
             }
         }
+        
 
         if(paused) continue;
         
@@ -89,19 +91,18 @@ void Game::start(){
             elapsed -= UPDATE_TIME;
         }
 
+        
         if(update){
             render();
             update = false;
-        } 
+        }
     }
 
     free(window);
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////// RENDERING -> später eigener Fred, execution mit 60 FPS -> wichtig, um wenig Latenz zwischen Aktion und Rendering zu haben und auch Aktion durch System möglich zu machen (nicht nur durch Usereingabe)
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
 void Game::render(){
+    // TODO: Views statt jeden Frame neu zu drawen?
     // Ist das wirklich effizient so? Gehen Views nicht auch?
     // https://www.sfml-dev.org/tutorials/2.2/graphics-view.php#showing-more-when-the-window-is-resized
 
@@ -115,7 +116,7 @@ void Game::render(){
     if(xfrom+WINDOWSIZEX >= level->getMapX()) xfrom = level->getMapX() - WINDOWSIZEX;
     if(yfrom+WINDOWSIZEY >= level->getMapY()) yfrom = level->getMapY() - WINDOWSIZEY;
 
-    printf("refreshing window from (%d, %d) to (%d, %d)\n", xfrom, yfrom, xfrom+WINDOWSIZEX, yfrom+WINDOWSIZEY);
+    //printf("refreshing window from (%d, %d) to (%d, %d)\n", xfrom, yfrom, xfrom+WINDOWSIZEX, yfrom+WINDOWSIZEY);
 
     for (int x = 0; x < WINDOWSIZEX; x++){
         for (int y = 0; y < WINDOWSIZEY; y++){
@@ -125,11 +126,12 @@ void Game::render(){
             //VisibleObject* m = (VisibleObject*)n;
             //printf("RENDERING (%d, %d, %d) [%d]\n", x, y, z, m);
 
-            // TODO: Hier noch check, ob die Position auch die im Object bekannte Position. Sonst werden alle Sprites n mal angezeigt wenn Objekt größer als 1x1
-            if(m->visible){
-                m->sprite.setPosition((float)x*OBJECTUNIT, (float)y*OBJECTUNIT);
-                window->draw(m->sprite);
-            }
+
+            //if(x != m->posX || y != m->posY ) continue;
+            if (!m->visible) continue;
+
+            m->sprite.setPosition((float)x*OBJECTUNIT, (float)y*OBJECTUNIT);
+            window->draw(m->sprite);
         }
     } //*/
 
