@@ -22,6 +22,11 @@ Level::Level(uint64_t x, uint64_t y)
     ////
 
     player = new Player(map, 7, 4, getTexture('w', 0));
+    Object *foo = new LivingObject(map, 10, 10, 5, 5, LEFT, getTexture('w', 0));
+    Item* bar = new Item(map, 10, 3, 2, 2, getTexture('w', 0));
+    Object* baz = bar;
+    baz->getInteracted();
+    
     new Barrier(map, 0, 0, getTexture('w', 0));
     new Barrier(map, 0, 1, getTexture('w', 0));
     new Barrier(map, 0, 2, getTexture('w', 0));
@@ -32,7 +37,7 @@ Level::Level(uint64_t x, uint64_t y)
     new Barrier(map, 5, 3, getTexture('w', 0));
     new Barrier(map, 6, 3, getTexture('w', 0));
     
-    // buildBorders();
+    //buildBorders();
 }
 
 Level::~Level(){
@@ -78,18 +83,20 @@ void Level::loadFonts() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/*
+
 
 void Level::buildBorders(){
     for (int x=0; x<mapsizex; x++){
-        placeObj(new Object, x, 0);
-        placeObj(new Object, x, mapsizey-1);
+        new Barrier(map, x, 0, getTexture('w', 0));
+        new Barrier(map, x, mapsizey-1, getTexture('w', 0));
     }
     for (int y=1; y<mapsizey-1; y++){
-        placeObj(new Object, 0, y);
-        placeObj(new Object, mapsizex-1, y);
+        new Barrier(map, 0, y, getTexture('w', 0));
+        new Barrier(map, mapsizex-1, y, getTexture('w', 0));
     }
 }
+
+/*
 
 void Level::drawBackground(int bgRepeteAfter){
     for (int x=0; x<bgRepeteAfter; x++){

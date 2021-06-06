@@ -25,7 +25,7 @@ void Game::start(){
     bool update = true;
     bool paused = false;
 
-    level = new Level(200, 200);
+    level = new Level(250, 250);
 
     while (window->isOpen())
     {
@@ -88,6 +88,16 @@ void Game::start(){
                 level->getPlayer()->stepDown();
                 update = true;
             }
+            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
+            {
+                level->getPlayer()->interact();
+                update = true;
+            }
+            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Enter))
+            {
+                // Item Bag
+                update = true;
+            }
 
             // don't forget to subtract the updateTime each cycle ;-)
             elapsed -= UPDATE_TIME;
@@ -111,8 +121,8 @@ void Game::render(){
     // Clear screen
     window->clear(sf::Color::White);
 
-    int xfrom=level->getPlayer()->posX-(WINDOWSIZEX/2);
-    int yfrom=level->getPlayer()->posY-(WINDOWSIZEY/2);
+    int xfrom=level->getPlayer()->pos.x-(WINDOWSIZEX/2);
+    int yfrom=level->getPlayer()->pos.y-(WINDOWSIZEY/2);
     if(xfrom < 0) xfrom = 0;
     if(yfrom < 0) yfrom = 0;
     if(xfrom+WINDOWSIZEX >= level->getMapX()) xfrom = level->getMapX() - WINDOWSIZEX;

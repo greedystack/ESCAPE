@@ -6,7 +6,7 @@
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics.hpp>
 #include "Tex.h"
-#include "Object.h"
+#include "Object.hpp"
 
 // Stellt ein Level dar und verwaltet die Map etc.
 
