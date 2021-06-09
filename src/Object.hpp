@@ -26,6 +26,7 @@ protected:
 public:
     static void loadTexsheets(std::string theme = "standard"){
         texsheets["wall"] = new Texsheet("../include/img/wall0.png");
+        texsheets["arrow_left"] = new Texsheet("../include/img/arrow.png", 1, 4);
     }
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -51,7 +52,8 @@ public:
         if (tex != nullptr){
             visible=true;
             sprite.setTexture(tex->texture);
-
+            
+            setTexType(dir);
             sf::Vector2f scale(
                 (float) (OBJECTUNIT * size.x) / tex->getSize().x, 
                 (float) (OBJECTUNIT * size.y) / tex->getSize().y);
@@ -100,7 +102,7 @@ public:
 
 protected:
     bool place(){
-        printf("Placing Object to (%d, %d) \n", pos.x, pos.y);
+        //printf("Placing Object to (%d, %d) \n", pos.x, pos.y);
     
         if(! isFree(pos, size)){
             // TODO: Dann woanders platzieren?
@@ -177,6 +179,21 @@ protected:
         return true;
     };
 
+    void setTexType(sf::Vector2i _dir){
+        //if(dir == _dir) return;
+        sf::Vector2i multiplier;
+        if(_dir == LEFT) multiplier = sf::Vector2i(0, 0);
+        if(_dir == UP) multiplier = sf::Vector2i(1, 0);
+        if(_dir == RIGHT) sf::Vector2i(2, 0);
+        if(_dir == DOWN) sf::Vector2i(3, 0);
+
+        sf::Vector2i texsize = (sf::Vector2i) tex->getSize();
+        sf::Vector2i position(texsize.x * multiplier.x, texsize.y * multiplier.x);
+        sprite.setTextureRect(sf::IntRect(position,texsize));
+        std::cout << "Texsize: " + texsize.x << ", " << texsize.y << "\n";
+        dir = _dir;
+    };
+
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -207,8 +224,12 @@ public:
 
     // nur genau einen Schritt moven
     virtual bool step(sf::Vector2i _dir){
-         // vorerst über moveObj() -> Bei größeren objekten ist es aber sinnvoller, nicht alle Felder jedes Mal neu zu belegen, sondern immer nur das erste Feld in die zu bewegende richtung.
-        dir = _dir;
+         // vorerst über move() -> Bei größeren objekten (also größer als 1x1) ist es aber sinnvoller, nicht alle Felder jedes Mal neu zu belegen, sondern immer nur das erste Feld in die zu bewegende richtung.
+        if(dir != _dir){
+            // erstmal nur in die gewünschte Richtung schauen. Noch kein Schritt.
+            setTexType(_dir);
+            return true;
+        }
         return move(pos + _dir);
     };
 };
@@ -221,7 +242,7 @@ private:
 public:
 
     Player(Object ** map, int x, int y) : 
-        LivingObject(map, x, y, texsheets["wall"], RIGHT)
+        LivingObject(map, x, y, texsheets["arrow_left"], LEFT)
     {};
     ~Player(){
         for (Object* i : bag) {
