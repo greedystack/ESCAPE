@@ -37,6 +37,7 @@ public:
 protected:
     Texsheet *tex;
     Object** map;
+    int OBJECTUNIT = 40;
 
 public:
     ////////////////////////////////////////////////////////////////////////////////
@@ -50,8 +51,7 @@ public:
         if (tex != nullptr){
             visible=true;
             sprite.setTexture(tex->texture);
-
-            int OBJECTUNIT = 20;
+            
             sf::Vector2f scale(
                 (float) (OBJECTUNIT * size.x) / tex->getSize().x, 
                 (float) (OBJECTUNIT * size.y) / tex->getSize().y);
@@ -60,6 +60,7 @@ public:
             //sprite.setRotation((float) rotation*90);
         }
         place();
+        sprite.setPosition((float)pos.x*OBJECTUNIT, (float)pos.y*OBJECTUNIT);
     };
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -171,6 +172,7 @@ protected:
         
         pos.x = set_pos.x;
         pos.y = set_pos.y;
+        sprite.setPosition((float)pos.x*OBJECTUNIT, (float)pos.y*OBJECTUNIT);
 
         return true;
     };
@@ -276,6 +278,7 @@ public:
         sf::Vector2i newpos = player->pos + player->dir;
         if(getObject(newpos) != nullptr) return false;
         pos = newpos;
+        sprite.setPosition((float)pos.x*OBJECTUNIT, (float)pos.y*OBJECTUNIT);
         place();
         return true;
     };

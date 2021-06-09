@@ -19,7 +19,6 @@ public:
     sf::Font font;
     //////////////////////////////////////////////////////////////////////////////////////////////
 private:
-    const int OBJECTUNIT = 20; // ACHTUNG AUCH NOCHMAL IM GAME FÜR DEN RENDERER DEFINIERT!
     Object** map;
     Player* player;
     int mapsizex, mapsizey;
@@ -91,6 +90,12 @@ public:
 
 
     Object** getNode(sf::Vector2u position){
+        if(position.x*position.y >= mapsizex*mapsizey +2
+            || position.x*position.y < 0
+        ){
+            std::cout<< "ERROR: Position (" << position.x <<", "<< position.y <<") out of Array!\n";
+            return nullptr;
+        }
         return &map[position.x * mapsizey + position.y +2];
     }
     Object* getObject(sf::Vector2u position){

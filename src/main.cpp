@@ -8,18 +8,23 @@
 #include <unistd.h>
 #include <iostream>
 
-const int OBJECTUNIT = 20; // Pixel pro Map-Block
+
 
 // in ObjectUnit:
-const int WINDOWSIZEX=100;
-const int WINDOWSIZEY=100;
 const int BGSIZE=100; // minimum half of screensize!! // must be divideable by 2
 
+
+const std::string TITLE = "Best game ever!";
+
+const uint OBJECTUNIT = 40; // Pixel pro Map-Block
 const sf::Time UPDATE_TIME = sf::milliseconds(30); // Move Speed
+sf::Vector2u WIN_SIZE(1024, 1024); // in Pixel
 
 int main()
 {
-    sf::RenderWindow window(sf::VideoMode(WINDOWSIZEX*OBJECTUNIT, WINDOWSIZEY*OBJECTUNIT), "SFML window");
+    sf::RenderWindow window(sf::VideoMode(WIN_SIZE.x, WIN_SIZE.y), TITLE);
+    sf::View view;
+
     sf::Clock clock;
     sf::Time elapsed = clock.restart();
     
@@ -27,7 +32,7 @@ int main()
     bool update = true;
     bool paused = false;
 
-    Level level(1000, 1000);
+    Level level(2000, 2000);
     
 
     while (window.isOpen())
@@ -55,8 +60,8 @@ int main()
                 case sf::Event::Resized:
                     std::cout << "new width: " << event.size.width << std::endl;
                     std::cout << "new height: " << event.size.height << std::endl;
-                    //window.create());
-                    // TODO: Window resizen!
+                    WIN_SIZE = sf::Vector2u(event.size.width, event.size.height);
+                    update = true;
                     break;
                 default:
                     break;
@@ -113,35 +118,59 @@ int main()
             // Ist das wirklich effizient so? Gehen Views nicht auch?
             // https://www.sfml-dev.org/tutorials/2.2/graphics-view.php#showing-more-when-the-window-is-resized
 
+            //Set View
+
+            sf::Vector2f playerpos = level.getPlayer()->sprite.getPosition();
+            //std::cout << "Player: ("<< playerpos.x << ", "<< playerpos.y << ")";
+            //std::cout << " ("<< playerpos.x/OBJECTUNIT << ", "<< playerpos.y/OBJECTUNIT << ")\t";
+            float xfrom = playerpos.x - WIN_SIZE.x *0.5;
+            if(xfrom < 0){ 
+                // Player ist so weit links, dass er nicht mehr zentriert angezeigt werden kann.
+                xfrom=0;
+            }else if(xfrom >= level.getMapX()*OBJECTUNIT - WIN_SIZE.x){
+                // Player ist so weit unten, dass er nicht mehr zentriert angezeigt werden kann.
+                xfrom = level.getMapX()*OBJECTUNIT - WIN_SIZE.x;
+            }
+
+            float yfrom = playerpos.y - WIN_SIZE.y *0.5;
+            if(yfrom < 0){ 
+                // Player ist so weit oben, dass er nicht mehr zentriert angezeigt werden kann.
+                yfrom=0;
+            }else if(yfrom >= level.getMapY()*OBJECTUNIT - WIN_SIZE.y){
+                // Player ist so weit unten, dass er nicht mehr zentriert angezeigt werden kann.
+                yfrom = level.getMapY()*OBJECTUNIT - WIN_SIZE.y;
+            }
+            
+            view.reset(sf::FloatRect(xfrom, yfrom, WIN_SIZE.x, WIN_SIZE.y ));
+
             // Clear screen
             window.clear(sf::Color::White);
+            window.setView(view);
 
-            int xfrom=level.getPlayer()->pos.x-(WINDOWSIZEX/2);
-            int yfrom=level.getPlayer()->pos.y-(WINDOWSIZEY/2);
-            if(xfrom < 0) xfrom = 0;
-            if(yfrom < 0) yfrom = 0;
-            if(xfrom+WINDOWSIZEX >= level.getMapX()) xfrom = level.getMapX() - WINDOWSIZEX;
-            if(yfrom+WINDOWSIZEY >= level.getMapY()) yfrom = level.getMapY() - WINDOWSIZEY;
 
-            //printf("refreshing window from (%d, %d) to (%d, %d)\n", xfrom, yfrom, xfrom+WINDOWSIZEX, yfrom+WINDOWSIZEY);
+            // Render Objects in View
+            float xfrom_oj = xfrom / OBJECTUNIT;
+            float yfrom_oj = yfrom / OBJECTUNIT;
+            uint xfrom_oju = (uint) xfrom_oj;
+            uint yfrom_oju = (uint) yfrom_oj;
 
-            for (int x = 0; x < WINDOWSIZEX; x++){
-                for (int y = 0; y < WINDOWSIZEY; y++){
-                    Object* m = level.getObject(sf::Vector2u(x+xfrom, y+yfrom));
+            //std::cout<< "FROM: ("<< xfrom << ", " <<yfrom << ")";
+            //std::cout<< "FLOAT: ("<< xfrom_oj << ", " <<yfrom_oj << ")";
+            //std::cout<< "UINT: ("<< xfrom_oju<< ", "<< yfrom_oju<< ")\n";
+
+            //printf("WINSIZE FLOAT: (%f, %f) \t UINT: (%d, %d) \n", wsu.x, wsu.y, xfrom_oju, yfrom_oju);
+            for (int x = 0; x < WIN_SIZE.x / OBJECTUNIT + 1; x++){
+                for (int y = 0; y < WIN_SIZE.y / OBJECTUNIT + 1; y++){
+                    Object* m = level.getObject(sf::Vector2u(x+ xfrom_oju, y+ yfrom_oju));
+                    //printf("RENDERING (%d, %d)\n", x, y);
                     if (m == nullptr) continue;
-                    //if (typeid(*n) != typeid(VisibleObject)) continue;
-                    //VisibleObject* m = (VisibleObject*)n;
-                    //printf("RENDERING (%d, %d, %d) [%d]\n", x, y, z, m);
-
-
-                    //if(x != m->posX || y != m->posY ) continue;
-                    if (!m->visible) continue;
-
-                    m->sprite.setPosition((float)x*OBJECTUNIT, (float)y*OBJECTUNIT);
+                    //if(x != m->posX || y != m->posY ) continue; // For Objects bigger than 1x1 map-field
+                    //if (!m->visible) continue;
                     window.draw(m->sprite);
                 }
-            } //*/
+            } 
 
+            
 
             // Draw the string
             //window.draw(text);
