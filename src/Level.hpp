@@ -63,7 +63,8 @@ public:
         new Barrier(map, 5, 3);
         new Barrier(map, 6, 3);
         
-        //buildBorders();
+        buildBorders();
+        zinken();
     }
 
     ~Level(){
@@ -140,6 +141,17 @@ void buildBorders(){
     for (int y=1; y<mapsizey-1; y++){
         new Barrier(map, 0, y);
         new Barrier(map, mapsizex-1, y);
+    }
+}
+
+void zinken(){
+    for (int x=1; x<mapsizex-1; x+=2){
+        new Barrier(map, x, 1);
+        new Barrier(map, x, mapsizey-2);
+    }
+    for (int y=2; y<mapsizey-2; y+=2){
+        new Barrier(map, 1, y);
+        new Barrier(map, mapsizex-2, y);
     }
 }
 

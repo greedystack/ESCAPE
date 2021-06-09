@@ -17,9 +17,13 @@ const int BGSIZE=100; // minimum half of screensize!! // must be divideable by 2
 const std::string TITLE = "Best game ever!";
 
 const uint OBJECTUNIT = 20; // Pixel pro Map-Block
-const sf::Time UPDATE_TIME = sf::milliseconds(15); // Move Speed
+const sf::Time MAX_updateTime = sf::milliseconds(10); // fastest possible move speed
+const sf::Time STD_updateTime = sf::milliseconds(50); // regular move speed
+const sf::Time DELTA_updateTime = sf::milliseconds(2); // änderungsvektor für beschleunigung
+
+sf::Time updateTime = STD_updateTime;
 sf::Vector2u WIN_SIZE(1024, 1024); // in Pixel
-float zoom = 0.5f;
+float zoom = 0.5f; // inverted
 
 int main()
 {
@@ -32,6 +36,7 @@ int main()
     // keep track if we have to redraw things. No need if nothing has been updated!
     bool update = true;
     bool paused = false;
+    int speedup = 0;
 
     Level level(2000, 2000);
     
@@ -74,39 +79,37 @@ int main()
         if(paused) continue;
         
         // make as many updates as needed for the elapsed time
-        while (elapsed > UPDATE_TIME)
-        {
-
-            // classical key pressed checks
+        while (elapsed > updateTime)
+        {   
+            speedup-=1;
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
             {
                 level.getPlayer()->step(LEFT);
                 update = true;
+                speedup+=2;
             }
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
             {
                 level.getPlayer()->step(UP);
                 update = true;
+                speedup+=2;
             }
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
             {
                 level.getPlayer()->step(RIGHT);
                 update = true;
+                speedup+=2;
             }
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
             {
                 level.getPlayer()->step(DOWN);
                 update = true;
+                speedup+=2;
             }
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
             {
+                // Interact with Object before Player
                 level.getPlayer()->interact();
-                update = true;
-            }
-            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Return))
-            {
-                // Item Bag
-                level.getPlayer()->useItem(); // temporarily
                 update = true;
             }
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Return) 
@@ -116,13 +119,38 @@ int main()
                 level.getPlayer()->useItem(); // temporarily
                 update = true;
             }
+            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Add) ||
+                sf::Keyboard::isKeyPressed(sf::Keyboard::M))
+            {
+                zoom-=0.05;
+                update = true;
+            }
+            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Subtract) ||
+                sf::Keyboard::isKeyPressed(sf::Keyboard::N))
+            {
+                zoom+=0.05;
+                update=true;
+            }
+
 
             // don't forget to subtract the updateTime each cycle ;-)
-            elapsed -= UPDATE_TIME;
+            elapsed -= updateTime;
         }
 
+        if(speedup<0){
+            // keine Bewegung stattgefunden
+            speedup=0;
+            updateTime = STD_updateTime; // Stoppe schnelles Laufen.
+        }else if(speedup>3){
+            // Bewegung in `speedup-1` aufeinanderfolgenden Loops stattgefunden.
+            speedup=0;
+            if(updateTime >= MAX_updateTime){
+                updateTime -= DELTA_updateTime; // Beschleunige
+            }
+        }
         
         if(update){
+            //std::cout<< "Beschleunigung: " << updateTime.asSeconds() << "\n";
             //Set View
             
             sf::Vector2f playerpos = level.getPlayer()->sprite.getPosition();
