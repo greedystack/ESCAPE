@@ -4,9 +4,10 @@
 #include <SFML/Graphics/Color.hpp>
 #include <SFML/Graphics/Texture.hpp>
 #include <SFML/Graphics/Sprite.hpp>
-#include "Tex.h"
-#include<iostream>
+#include "Animation.hpp"
+#include <iostream>
 #include <list>
+#include <map>
 
 // Ein Objekt auf der Map. IDEE: Könnte von Sprite erben.
 // Problem: Da draw() von Sprite private... 
@@ -17,27 +18,45 @@ const sf::Vector2<int> UP(0,-1);
 const sf::Vector2<int> DOWN(0,1);
 
 class Object {
+////////////////////////////////////////////////////////////////////////////////
+///// STATIC
+////////////////////////////////////////////////////////////////////////////////
+protected:
+    static std::map<std::string, Texsheet*> texsheets;
 public:
-    Object** map;
-    
+    static void loadTexsheets(std::string theme = "standard"){
+        texsheets["wall"] = new Texsheet("../include/img/wall0.png");
+    }
+////////////////////////////////////////////////////////////////////////////////
+
+public:
     sf::Sprite sprite;
     sf::Vector2i pos, size, dir; // Position ist immer oben links am Objekt. Size ist dessen Größe in Map-Nodes.
-
     bool visible=false;
-    Tex *tex;
+    
+protected:
+    Texsheet *tex;
+    Object** map;
 
+public:
     ////////////////////////////////////////////////////////////////////////////////
     //Object* r, l, u, d, on; // Ich bau den Müll jetzt in eine 2d-Liste um, wenn ich eh schon bei identisch großen Objekten bleibe.
     //Object** connected=nullptr; // das wäre dann ein Array für größere Objekte - die bestehen dann aus einelnen subobjekten.
     ////////////////////////////////////////////////////////////////////////////////
 
-    Object(Object** m, int x, int y, Tex* t = nullptr, sf::Vector2i d=DOWN, int sx=1, int sy=1) 
+    Object(Object** m, int x, int y, Texsheet* t = nullptr, sf::Vector2i d=DOWN, int sx=1, int sy=1) 
         : map(m), pos(x, y), size(sx, sy), tex(t), dir(d)
     {
         if (tex != nullptr){
             visible=true;
-            sprite.setTexture(tex->regular);
-            sprite.setOrigin(0.5, 0.5);
+            sprite.setTexture(tex->texture);
+
+            int OBJECTUNIT = 20;
+            sf::Vector2f scale(
+                (float) (OBJECTUNIT * size.x) / tex->getSize().x, 
+                (float) (OBJECTUNIT * size.y) / tex->getSize().y);
+            sprite.scale(scale);
+            
             //sprite.setRotation((float) rotation*90);
         }
         place();
@@ -51,6 +70,10 @@ public:
     virtual bool interact(Object* interacter){ //aktive interaktion
         return false;
     };
+
+    virtual void update(){ // macht virtual hier sinn?
+
+    }
 
     ////////////////////////////////////////////////////////////////////////////////
     // Map-Functions
@@ -159,11 +182,13 @@ protected:
 class Barrier : public Object {
 // Walls, Deko, ...
 public:
-    Barrier(Object ** map, int x, int y, Tex* tex) : 
-        Object(map, x, y, tex)
+    Barrier(Object ** map, int x, int y) : 
+        Object(map, x, y, texsheets["wall"])
     {};
 
 };
+
+////////////////////////////////////////////////////////////////////////////////
 
 class Portal : public Object {
 // Türen, Idee: statt aufschließen (permanent öffnen) kann man mit animation durchgehen, wenn man schlüssel hat. -> dann genau gleiche Funktion wie teleportationsportale.
@@ -174,7 +199,7 @@ class Portal : public Object {
 
 class LivingObject : public Object {
 public:
-    LivingObject(Object ** map, int x, int y, Tex* tex=nullptr, sf::Vector2i d = DOWN) : 
+    LivingObject(Object ** map, int x, int y, Texsheet* tex=nullptr, sf::Vector2i d = DOWN) : 
         Object(map, x, y, tex, d)
     {};
 
@@ -188,14 +213,17 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 class Player : public LivingObject {
+private:
+    std::list<Object*> bag;
 public:
 
-    Player(Object ** map, int x, int y, Tex* tex) : 
-        LivingObject(map, x, y, tex, RIGHT)
+    Player(Object ** map, int x, int y) : 
+        LivingObject(map, x, y, texsheets["wall"], RIGHT)
     {};
     ~Player(){
         for (Object* i : bag) {
             free(i);
+            std::cout << i << " from BAG deleted.\n";
         }
     }
 
@@ -224,10 +252,9 @@ public:
         if(bag.empty()) return;
         if(bag.front()->interact(this)) removeFromBag(bag.front());
     }
-
-private:
-    std::list<Object*> bag;
 };
+
+////////////////////////////////////////////////////////////////////////////////
 
 class Enemy : public LivingObject {
 
@@ -236,8 +263,8 @@ class Enemy : public LivingObject {
 
 class Item : public Object {
 public:
-    Item (Object ** map, int x, int y, Tex* tex) : 
-        Object(map, x, y, tex)
+    Item (Object ** map, int x, int y) : 
+        Object(map, x, y, texsheets["wall"])
     {};
     bool collect(Player* collector){
         removeFromMap();
@@ -266,10 +293,8 @@ private:
 
 
 ////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
+///// Static vars ankündigen:
+////////////////////////////////////////////////////////////////////////////////
+std::map<std::string, Texsheet*> Object::texsheets;
 
 #endif //OBJECT_H

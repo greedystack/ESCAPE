@@ -27,7 +27,8 @@ int main()
     bool update = true;
     bool paused = false;
 
-    Level level(250, 250);
+    Level level(1000, 1000);
+    
 
     while (window.isOpen())
     {
@@ -126,7 +127,7 @@ int main()
 
             for (int x = 0; x < WINDOWSIZEX; x++){
                 for (int y = 0; y < WINDOWSIZEY; y++){
-                    Object* m = level.getObject(sf::Vector2i(x+xfrom, y+yfrom));
+                    Object* m = level.getObject(sf::Vector2u(x+xfrom, y+yfrom));
                     if (m == nullptr) continue;
                     //if (typeid(*n) != typeid(VisibleObject)) continue;
                     //VisibleObject* m = (VisibleObject*)n;
