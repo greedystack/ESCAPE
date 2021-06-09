@@ -12,10 +12,10 @@
 // Ein Objekt auf der Map. IDEE: Könnte von Sprite erben.
 // Problem: Da draw() von Sprite private... 
 
-const sf::Vector2<int> RIGHT(1,0);
-const sf::Vector2<int> LEFT(-1,0);
-const sf::Vector2<int> UP(0,-1);
-const sf::Vector2<int> DOWN(0,1);
+const sf::Vector2i RIGHT(1,0);
+const sf::Vector2i LEFT(-1,0);
+const sf::Vector2i UP(0,-1);
+const sf::Vector2i DOWN(0,1);
 
 class Object {
 ////////////////////////////////////////////////////////////////////////////////
@@ -37,7 +37,7 @@ public:
 protected:
     Texsheet *tex;
     Object** map;
-    int OBJECTUNIT = 40;
+    int OBJECTUNIT = 20;
 
 public:
     ////////////////////////////////////////////////////////////////////////////////
@@ -51,7 +51,7 @@ public:
         if (tex != nullptr){
             visible=true;
             sprite.setTexture(tex->texture);
-            
+
             sf::Vector2f scale(
                 (float) (OBJECTUNIT * size.x) / tex->getSize().x, 
                 (float) (OBJECTUNIT * size.y) / tex->getSize().y);
@@ -206,7 +206,7 @@ public:
     {};
 
     // nur genau einen Schritt moven
-    bool step(sf::Vector2i _dir){
+    virtual bool step(sf::Vector2i _dir){
          // vorerst über moveObj() -> Bei größeren objekten ist es aber sinnvoller, nicht alle Felder jedes Mal neu zu belegen, sondern immer nur das erste Feld in die zu bewegende richtung.
         dir = _dir;
         return move(pos + _dir);
@@ -217,6 +217,7 @@ public:
 class Player : public LivingObject {
 private:
     std::list<Object*> bag;
+
 public:
 
     Player(Object ** map, int x, int y) : 
@@ -227,7 +228,7 @@ public:
             free(i);
             std::cout << i << " from BAG deleted.\n";
         }
-    }
+    };
 
     // TODO Hier und an der neighbor() scheitert aktuell die variable Objektgröße. Fix this!
     // z.B. fixbar durch loop, in der dann mit alllen adjazenten, interactable Objects interagiert wird.

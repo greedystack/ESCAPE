@@ -16,9 +16,10 @@ const int BGSIZE=100; // minimum half of screensize!! // must be divideable by 2
 
 const std::string TITLE = "Best game ever!";
 
-const uint OBJECTUNIT = 40; // Pixel pro Map-Block
-const sf::Time UPDATE_TIME = sf::milliseconds(30); // Move Speed
+const uint OBJECTUNIT = 20; // Pixel pro Map-Block
+const sf::Time UPDATE_TIME = sf::milliseconds(15); // Move Speed
 sf::Vector2u WIN_SIZE(1024, 1024); // in Pixel
+float zoom = 0.5f;
 
 int main()
 {
@@ -64,6 +65,7 @@ int main()
                     update = true;
                     break;
                 default:
+                    //std::cout << "-UNKNOWN EVENT: " << event.type << std::endl;
                     break;
             }
         }
@@ -107,6 +109,13 @@ int main()
                 level.getPlayer()->useItem(); // temporarily
                 update = true;
             }
+            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Return) 
+                || sf::Keyboard::isKeyPressed(sf::Keyboard::Enter))
+            {
+                // Item Bag
+                level.getPlayer()->useItem(); // temporarily
+                update = true;
+            }
 
             // don't forget to subtract the updateTime each cycle ;-)
             elapsed -= UPDATE_TIME;
@@ -114,56 +123,62 @@ int main()
 
         
         if(update){
-            // TODO: Views statt jeden Frame neu zu drawen?
-            // Ist das wirklich effizient so? Gehen Views nicht auch?
-            // https://www.sfml-dev.org/tutorials/2.2/graphics-view.php#showing-more-when-the-window-is-resized
-
             //Set View
-
+            
             sf::Vector2f playerpos = level.getPlayer()->sprite.getPosition();
-            //std::cout << "Player: ("<< playerpos.x << ", "<< playerpos.y << ")";
-            //std::cout << " ("<< playerpos.x/OBJECTUNIT << ", "<< playerpos.y/OBJECTUNIT << ")\t";
-            float xfrom = playerpos.x - WIN_SIZE.x *0.5;
-            if(xfrom < 0){ 
+            float xfrom, yfrom;
+
+            // x
+            if(playerpos.x < WIN_SIZE.x *zoom *0.5){
                 // Player ist so weit links, dass er nicht mehr zentriert angezeigt werden kann.
                 xfrom=0;
-            }else if(xfrom >= level.getMapX()*OBJECTUNIT - WIN_SIZE.x){
-                // Player ist so weit unten, dass er nicht mehr zentriert angezeigt werden kann.
-                xfrom = level.getMapX()*OBJECTUNIT - WIN_SIZE.x;
+            }else if(playerpos.x > level.getMapX()*OBJECTUNIT - WIN_SIZE.x *zoom *0.5){
+                // Player ist so weit rechts, dass er nicht mehr zentriert angezeigt werden kann.
+                xfrom = level.getMapX()*OBJECTUNIT - WIN_SIZE.x *zoom;
+            }else{
+                // Player ist x-mittig im view
+                xfrom = playerpos.x - WIN_SIZE.x *zoom *0.5;
             }
 
-            float yfrom = playerpos.y - WIN_SIZE.y *0.5;
-            if(yfrom < 0){ 
+            // y
+            if(playerpos.y < WIN_SIZE.y *zoom *0.5){
                 // Player ist so weit oben, dass er nicht mehr zentriert angezeigt werden kann.
                 yfrom=0;
-            }else if(yfrom >= level.getMapY()*OBJECTUNIT - WIN_SIZE.y){
+            }else if(playerpos.y > level.getMapY()*OBJECTUNIT - WIN_SIZE.y *zoom *0.5){
                 // Player ist so weit unten, dass er nicht mehr zentriert angezeigt werden kann.
-                yfrom = level.getMapY()*OBJECTUNIT - WIN_SIZE.y;
+                yfrom = level.getMapY()*OBJECTUNIT - WIN_SIZE.y *zoom;
             }
-            
-            view.reset(sf::FloatRect(xfrom, yfrom, WIN_SIZE.x, WIN_SIZE.y ));
+            else{
+                // Player ist x-mittig im view
+                yfrom = playerpos.y - WIN_SIZE.y *zoom *0.5;
+            }
+
+
+            view.reset(sf::FloatRect(xfrom, yfrom, WIN_SIZE.x*zoom, WIN_SIZE.y*zoom ));
 
             // Clear screen
             window.clear(sf::Color::White);
             window.setView(view);
 
 
-            // Render Objects in View
-            float xfrom_oj = xfrom / OBJECTUNIT;
-            float yfrom_oj = yfrom / OBJECTUNIT;
-            uint xfrom_oju = (uint) xfrom_oj;
-            uint yfrom_oju = (uint) yfrom_oj;
+            // Render Objects inside View
+            sf::Vector2u start = sf::Vector2u(
+                xfrom/OBJECTUNIT,
+                yfrom/OBJECTUNIT
+            );
+            sf::Vector2u end = sf::Vector2u(
+                (xfrom + WIN_SIZE.x*zoom)/OBJECTUNIT,
+                (yfrom + WIN_SIZE.x*zoom)/OBJECTUNIT
+            );
 
-            //std::cout<< "FROM: ("<< xfrom << ", " <<yfrom << ")";
-            //std::cout<< "FLOAT: ("<< xfrom_oj << ", " <<yfrom_oj << ")";
-            //std::cout<< "UINT: ("<< xfrom_oju<< ", "<< yfrom_oju<< ")\n";
+            std::cout << "Drawing: ("<< start.x <<", "<< start.y<<") ";
+            std::cout << "to ("<< end.x <<", "<< end.y<<")\n";
 
-            //printf("WINSIZE FLOAT: (%f, %f) \t UINT: (%d, %d) \n", wsu.x, wsu.y, xfrom_oju, yfrom_oju);
-            for (int x = 0; x < WIN_SIZE.x / OBJECTUNIT + 1; x++){
-                for (int y = 0; y < WIN_SIZE.y / OBJECTUNIT + 1; y++){
-                    Object* m = level.getObject(sf::Vector2u(x+ xfrom_oju, y+ yfrom_oju));
-                    //printf("RENDERING (%d, %d)\n", x, y);
+            for (uint x = start.x; x < end.x; x++){
+                for (uint y = start.y; y < end.y; y++){
+                    Object* m = level.getObject(sf::Vector2u(x, y));
                     if (m == nullptr) continue;
+                    //printf("RENDERING (%d, %d)\n", x, y);
                     //if(x != m->posX || y != m->posY ) continue; // For Objects bigger than 1x1 map-field
                     //if (!m->visible) continue;
                     window.draw(m->sprite);

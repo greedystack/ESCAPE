@@ -99,6 +99,12 @@ public:
         return &map[position.x * mapsizey + position.y +2];
     }
     Object* getObject(sf::Vector2u position){
+        if(position.x*position.y >= mapsizex*mapsizey +2
+            || position.x*position.y < 0
+        ){
+            std::cout<< "ERROR: Position (" << position.x <<", "<< position.y <<") out of Array!\n";
+            return nullptr;
+        }
         return *getNode(position);
     }
 
