@@ -18,7 +18,7 @@ const std::string TITLE = "Best game ever!";
 
 const uint OBJECTUNIT = 20; // Pixel pro Map-Block
 const sf::Time MAX_updateTime = sf::milliseconds(10); // fastest possible move speed
-const sf::Time STD_updateTime = sf::milliseconds(50); // regular move speed
+const sf::Time STD_updateTime = sf::milliseconds(55); // regular move speed
 const sf::Time DELTA_updateTime = sf::milliseconds(2); // änderungsvektor für beschleunigung
 
 sf::Time updateTime = STD_updateTime;
@@ -129,6 +129,19 @@ int main()
                 sf::Keyboard::isKeyPressed(sf::Keyboard::N))
             {
                 zoom+=0.05;
+                update=true;
+            }
+            if(sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+            { // TEST
+                sf::Vector2f scale = level.getPlayer()->sprite.getScale();
+                if(scale.x >= 0.f){
+                    level.getPlayer()->sprite.setScale(scale.x *(-1.f), scale.y);
+                    level.getPlayer()->sprite.move(OBJECTUNIT, 0);
+                }else{
+                    level.getPlayer()->sprite.setScale(scale.x *(-1.f), scale.y);
+                    level.getPlayer()->sprite.move((-1.f)*OBJECTUNIT, 0);
+                }
+                std::cout << level.getPlayer()->sprite.getRotation() << std::endl;
                 update=true;
             }
 

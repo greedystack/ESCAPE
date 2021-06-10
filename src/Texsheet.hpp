@@ -23,7 +23,7 @@ public:
     };
 
     sf::Vector2u getImageCount(){return imageCount;};
-    sf::Vector2u getSize(){return sf::Vector2u(texture.getSize().x / imageCount.y, texture.getSize().y / imageCount.y);};
+    sf::Vector2u getSize(){return sf::Vector2u(texture.getSize().x / imageCount.x, texture.getSize().y / imageCount.y);};
 
     //TODO Funktion zum Returnen eines bestimmten Bildes aus Spritesheet.
 };

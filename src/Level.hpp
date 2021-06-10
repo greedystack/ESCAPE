@@ -49,7 +49,7 @@ public:
 
         new Item(map, 10, 3);
         new Item(map, 10, 6);
-        player = new Player(map, 7, 4);
+        player = new Player(map, 4, 1);
         new Barrier(map, 3, 0);
         
         

@@ -46,14 +46,15 @@ public:
     //Object** connected=nullptr; // das wäre dann ein Array für größere Objekte - die bestehen dann aus einelnen subobjekten.
     ////////////////////////////////////////////////////////////////////////////////
 
-    Object(Object** m, int x, int y, Texsheet* t = nullptr, sf::Vector2i d=DOWN, int sx=1, int sy=1) 
-        : map(m), pos(x, y), size(sx, sy), tex(t), dir(d)
+    Object(Object** m, int x, int y, Texsheet* t = nullptr, sf::Vector2i d=LEFT, int sx=1, int sy=1) 
+        : map(m), pos(x, y), size(sx, sy), tex(t)
     {
         if (tex != nullptr){
             visible=true;
             sprite.setTexture(tex->texture);
+            //sprite.setOrigin(10.f,10.f); // weird!
             
-            setTexType(dir);
+            setDirection(d);
             sf::Vector2f scale(
                 (float) (OBJECTUNIT * size.x) / tex->getSize().x, 
                 (float) (OBJECTUNIT * size.y) / tex->getSize().y);
@@ -144,7 +145,7 @@ protected:
     };
 
     // Objekte "teleportieren"
-    bool move(sf::Vector2<int> set_pos){
+    bool teleport(sf::Vector2<int> set_pos){
         // map-ränder verkleben
         if(set_pos.x < 0) set_pos.x = getMapsizeX() +set_pos.x;
         if(set_pos.y < 0) set_pos.y = getMapsizeY() +set_pos.y;
@@ -179,18 +180,26 @@ protected:
         return true;
     };
 
-    void setTexType(sf::Vector2i _dir){
-        //if(dir == _dir) return;
-        sf::Vector2i multiplier;
-        if(_dir == LEFT) multiplier = sf::Vector2i(0, 0);
-        if(_dir == UP) multiplier = sf::Vector2i(1, 0);
-        if(_dir == RIGHT) sf::Vector2i(2, 0);
-        if(_dir == DOWN) sf::Vector2i(3, 0);
-
+    void setTexType(int row){
+        if(tex->getImageCount().y <= row){
+            std::cout << "ERROR: Texsheet hat nicht so viele Modi. Setze Modus 0.";
+            row = 0;
+        }
         sf::Vector2i texsize = (sf::Vector2i) tex->getSize();
-        sf::Vector2i position(texsize.x * multiplier.x, texsize.y * multiplier.x);
+        sf::Vector2i position(0, texsize.y * row);
         sprite.setTextureRect(sf::IntRect(position,texsize));
-        std::cout << "Texsize: " + texsize.x << ", " << texsize.y << "\n";
+        // std::cout << "Texsize: " << texsize.x << ", " << texsize.y * row << std::endl;
+    };
+
+    void setDirection(sf::Vector2i _dir){
+        if(dir == _dir) return;
+        int row;
+        if(_dir == LEFT) row = 0;
+        if(_dir == UP) row =1;
+        if(_dir == RIGHT) row = 2;
+        if(_dir == DOWN) row = 3;
+
+        setTexType(row);
         dir = _dir;
     };
 
@@ -227,10 +236,10 @@ public:
          // vorerst über move() -> Bei größeren objekten (also größer als 1x1) ist es aber sinnvoller, nicht alle Felder jedes Mal neu zu belegen, sondern immer nur das erste Feld in die zu bewegende richtung.
         if(dir != _dir){
             // erstmal nur in die gewünschte Richtung schauen. Noch kein Schritt.
-            setTexType(_dir);
+            setDirection(_dir);
             return true;
         }
-        return move(pos + _dir);
+        return teleport(pos + _dir);
     };
 };
 
