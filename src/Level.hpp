@@ -7,9 +7,10 @@
 #include <SFML/Graphics.hpp>
 
 #include <map>
-
-#include "Texsheet.hpp"
 #include "Object.hpp"
+#include "O_Living.hpp" // Living muss über Facility und Item, weil die den Player-Typ kennen müssen.
+#include "O_Facility.hpp"
+#include "O_Item.hpp"
 
 // Stellt ein Level dar und verwaltet die Map etc.
 
@@ -50,7 +51,9 @@ public:
         new Item(map, 10, 3);
         new Item(map, 10, 6);
         player = new Player(map, 4, 1);
-        new Barrier(map, 3, 0);
+        new Destroyer(map, 10, 10);
+
+        new Goal(map, 15, 10);
         
         
         new Barrier(map, 0, 0);
@@ -62,7 +65,7 @@ public:
         new Barrier(map, 4, 3);
         new Barrier(map, 5, 3);
         new Barrier(map, 6, 3);
-        
+
         buildBorders();
         zinken();
     }

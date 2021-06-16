@@ -7,6 +7,7 @@
 #include "Animation.hpp"
 #include <iostream>
 #include <list>
+#include <set>
 #include <map>
 
 // Ein Objekt auf der Map. IDEE: Könnte von Sprite erben.
@@ -17,6 +18,19 @@ const sf::Vector2i LEFT(-1,0);
 const sf::Vector2i UP(0,-1);
 const sf::Vector2i DOWN(0,1);
 
+// Identifier for whoami()
+const uint OBJECT = 0;
+const uint ITEM = 1;
+const uint BARRIER = 2;
+const uint PORTAL = 3;
+const uint GOAL = 31;
+const uint DESTROYER = 11;
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+// LAYER 0
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 class Object {
 ////////////////////////////////////////////////////////////////////////////////
 ///// STATIC
@@ -39,6 +53,7 @@ protected:
     Texsheet *tex;
     Object** map;
     int OBJECTUNIT = 20;
+    std::set<uint> identity;
 
 public:
     ////////////////////////////////////////////////////////////////////////////////
@@ -49,6 +64,7 @@ public:
     Object(Object** m, int x, int y, Texsheet* t = nullptr, sf::Vector2i d=LEFT, int sx=1, int sy=1) 
         : map(m), pos(x, y), size(sx, sy), tex(t)
     {
+        identity.insert(OBJECT);
         if (tex != nullptr){
             visible=true;
             sprite.setTexture(tex->texture);
@@ -56,26 +72,27 @@ public:
             
             setDirection(d);
             sf::Vector2f scale(
-                (float) (OBJECTUNIT * size.x) / tex->getSize().x, 
+                (float) (OBJECTUNIT * size.x) / tex->getSize().x,
                 (float) (OBJECTUNIT * size.y) / tex->getSize().y);
             sprite.scale(scale);
             
-            //sprite.setRotation((float) rotation*90);
         }
         place();
         sprite.setPosition((float)pos.x*OBJECTUNIT, (float)pos.y*OBJECTUNIT);
     };
+
+    std::set<uint> whoami(){return identity;}
 
     ////////////////////////////////////////////////////////////////////////////////
 
     virtual bool getInteracted(Object* interacter){ // passive interaktion
         return false;
     };
-    virtual bool interact(Object* interacter){ //aktive interaktion
+    virtual bool interact(Object* interactee){ //aktive interaktion
         return false;
     };
 
-    virtual void update(){ // macht virtual hier sinn?
+    virtual void update(){ // Fkt. für Animationen und draw und so. Macht virtual hier sinn?
 
     }
 
@@ -101,6 +118,14 @@ public:
         return getObject(pos+_dir);
     };
 
+    // ACHTUNG!! Nur für 1x1-große Objekte gebaut! 
+    // Entfernt Objekt restlos.
+    void del(){
+        // TODO WARUM GEHT DAS NICHT PROTECTED?????
+        removeFromMap();
+        delete this;
+    };
+
 protected:
     bool place(){
         //printf("Placing Object to (%d, %d) \n", pos.x, pos.y);
@@ -115,6 +140,7 @@ protected:
                 *getNode(pos + sf::Vector2i(x, y)) = this;
             }
         }
+        return true;
     };
 
     
@@ -124,12 +150,13 @@ protected:
     void removeFromMap(){
         *getNode(pos) = nullptr;
         pos = sf::Vector2i(-1, -1);
-    }
+    };
+    
     // ACHTUNG!! Nur für 1x1-große Objekte gebaut! 
     void putOnMap(sf::Vector2i _pos){
         *getNode(_pos) = this;
         pos = _pos;
-    }
+    };
 
     // Prüft, ob eine (Ziel-)position auf Map frei ist
     bool isFree(sf::Vector2i check_pos, sf::Vector2i offset){
@@ -204,128 +231,6 @@ protected:
     };
 
 };
-
-////////////////////////////////////////////////////////////////////////////////
-
-class Barrier : public Object {
-// Walls, Deko, ...
-public:
-    Barrier(Object ** map, int x, int y) : 
-        Object(map, x, y, texsheets["wall"])
-    {};
-
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
-class Portal : public Object {
-// Türen, Idee: statt aufschließen (permanent öffnen) kann man mit animation durchgehen, wenn man schlüssel hat. -> dann genau gleiche Funktion wie teleportationsportale.
-
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
-class LivingObject : public Object {
-public:
-    LivingObject(Object ** map, int x, int y, Texsheet* tex=nullptr, sf::Vector2i d = DOWN) : 
-        Object(map, x, y, tex, d)
-    {};
-
-    // nur genau einen Schritt moven
-    virtual bool step(sf::Vector2i _dir){
-         // vorerst über move() -> Bei größeren objekten (also größer als 1x1) ist es aber sinnvoller, nicht alle Felder jedes Mal neu zu belegen, sondern immer nur das erste Feld in die zu bewegende richtung.
-        if(dir != _dir){
-            // erstmal nur in die gewünschte Richtung schauen. Noch kein Schritt.
-            setDirection(_dir);
-            return true;
-        }
-        return teleport(pos + _dir);
-    };
-};
-
-////////////////////////////////////////////////////////////////////////////////
-class Player : public LivingObject {
-private:
-    std::list<Object*> bag;
-
-public:
-
-    Player(Object ** map, int x, int y) : 
-        LivingObject(map, x, y, texsheets["arrow_left"], LEFT)
-    {};
-    ~Player(){
-        for (Object* i : bag) {
-            free(i);
-            std::cout << i << " from BAG deleted.\n";
-        }
-    };
-
-    // TODO Hier und an der neighbor() scheitert aktuell die variable Objektgröße. Fix this!
-    // z.B. fixbar durch loop, in der dann mit alllen adjazenten, interactable Objects interagiert wird.
-    virtual bool interact(Object* interacter=nullptr) override{
-        Object* nb = neighbor(dir);
-        if(nb == nullptr) return false;
-        return nb->getInteracted(this);
-    };
-    void putInBag(Object* item){
-        bag.push_back(item);
-        std::cout << "added " << item << "\n\n";
-        for (Object* i : bag) {
-            std::cout << i << std::endl;
-        }
-    };
-    void removeFromBag(Object* item){
-        bag.remove(item);
-        std::cout << "removed " << item << "\n\n";
-        for (Object* i : bag) {
-            std::cout << i << std::endl;
-        }
-    }
-    void useItem(){
-        if(bag.empty()) return;
-        if(bag.front()->interact(this)) removeFromBag(bag.front());
-    }
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
-class Enemy : public LivingObject {
-
-};
-////////////////////////////////////////////////////////////////////////////////
-
-class Item : public Object {
-public:
-    Item (Object ** map, int x, int y) : 
-        Object(map, x, y, texsheets["wall"])
-    {};
-    bool collect(Player* collector){
-        removeFromMap();
-        collector->putInBag(this);
-        return true;
-    };
-    virtual bool interact(Object* player) override{
-        std::cout << "placing item" << this << std::endl;
-        sf::Vector2i newpos = player->pos + player->dir;
-        if(getObject(newpos) != nullptr) return false;
-        pos = newpos;
-        sprite.setPosition((float)pos.x*OBJECTUNIT, (float)pos.y*OBJECTUNIT);
-        place();
-        return true;
-    };
-    bool getInteracted(Object* interacter) override{
-        std::cout << "Huch, mit mir wurde interagiert." << std::endl;
-        return collect((Player*)interacter);
-    };
-
-
-private:
-    int distance; // Wie weit geht die Wirkung des Items, bis sie auf ein Objekt trifft?
-    bool radial; // Falls true: Wirkung in alle Richtungen statt nur in Blickrichtung des Anwenders.
-    //virtual void effect(); // Die Wirkung. In Itemtypen zu implementieren!
-};
-
-
 ////////////////////////////////////////////////////////////////////////////////
 ///// Static vars ankündigen:
 ////////////////////////////////////////////////////////////////////////////////
