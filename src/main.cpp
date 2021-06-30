@@ -14,7 +14,7 @@
 const int BGSIZE=100; // minimum half of screensize!! // must be divideable by 2
 
 
-const std::string TITLE = "Best game ever!";
+const std::string TITLE = "Escape!";
 
 const uint OBJECTUNIT = 20; // Pixel pro Map-Block
 const sf::Time MAX_updateTime = sf::milliseconds(10); // fastest possible move speed
@@ -24,6 +24,8 @@ const sf::Time DELTA_updateTime = sf::milliseconds(2); // änderungsvektor für 
 sf::Time updateTime = STD_updateTime;
 sf::Vector2u WIN_SIZE(1024, 1024); // in Pixel
 float zoom = 0.5f; // inverted
+
+int lvl_count = 2;
 
 int main()
 {
@@ -38,7 +40,7 @@ int main()
     bool paused = false;
     int speedup = 0;
 
-    Level level(2000, 2000);
+    Level* level = new Level(2000, 2000);
     
 
     while (window.isOpen())
@@ -84,39 +86,39 @@ int main()
             speedup-=1;
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
             {
-                level.getPlayer()->step(LEFT);
+                level->getPlayer()->step(LEFT);
                 update = true;
                 speedup+=2;
             }
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
             {
-                level.getPlayer()->step(UP);
+                level->getPlayer()->step(UP);
                 update = true;
                 speedup+=2;
             }
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
             {
-                level.getPlayer()->step(RIGHT);
+                level->getPlayer()->step(RIGHT);
                 update = true;
                 speedup+=2;
             }
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
             {
-                level.getPlayer()->step(DOWN);
+                level->getPlayer()->step(DOWN);
                 update = true;
                 speedup+=2;
             }
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
             {
                 // Interact with Object before Player
-                level.getPlayer()->interact();
+                level->getPlayer()->interact();
                 update = true;
             }
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Return) 
                 || sf::Keyboard::isKeyPressed(sf::Keyboard::Enter))
             {
                 // Item Bag
-                level.getPlayer()->useItem(); // temporarily
+                level->getPlayer()->useItem(); // temporarily
                 update = true;
             }
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Add) ||
@@ -134,15 +136,15 @@ int main()
             /*
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::A))
             { // TEST
-                sf::Vector2f scale = level.getPlayer()->sprite.getScale();
+                sf::Vector2f scale = level->getPlayer()->sprite.getScale();
                 if(scale.x >= 0.f){
-                    level.getPlayer()->sprite.setScale(scale.x *(-1.f), scale.y);
-                    level.getPlayer()->sprite.move(OBJECTUNIT, 0);
+                    level->getPlayer()->sprite.setScale(scale.x *(-1.f), scale.y);
+                    level->getPlayer()->sprite.move(OBJECTUNIT, 0);
                 }else{
-                    level.getPlayer()->sprite.setScale(scale.x *(-1.f), scale.y);
-                    level.getPlayer()->sprite.move((-1.f)*OBJECTUNIT, 0);
+                    level->getPlayer()->sprite.setScale(scale.x *(-1.f), scale.y);
+                    level->getPlayer()->sprite.move((-1.f)*OBJECTUNIT, 0);
                 }
-                std::cout << level.getPlayer()->sprite.getRotation() << std::endl;
+                std::cout << level->getPlayer()->sprite.getRotation() << std::endl;
                 update=true;
             }
             */
@@ -166,22 +168,30 @@ int main()
         
         if(update){
             //std::cout<< "Beschleunigung: " << updateTime.asSeconds() << "\n";
-            //Set View
-            if(level.getPlayer()->hasWon()){
+            if(level->getPlayer()->hasWon()){
                 // TODO Level löschen, neues Level erstellen
-                std::cout << "HURRA! HURRA!" << std::endl;
+                lvl_count--;
+                if(lvl_count <= 0){
+                    // WON GAME
+                    std::cout << "HURRA! HURRA!" << std::endl;
+                }else{
+                    std::cout << "init new level" << std::endl;
+                    delete level;
+                    level = new Level(2000, 2000);
+                }
             }
             
-            sf::Vector2f playerpos = level.getPlayer()->sprite.getPosition();
+             //Set View
+            sf::Vector2f playerpos = level->getPlayer()->sprite.getPosition();
             float xfrom, yfrom;
 
             // x
             if(playerpos.x < WIN_SIZE.x *zoom *0.5){
                 // Player ist so weit links, dass er nicht mehr zentriert angezeigt werden kann.
                 xfrom=0;
-            }else if(playerpos.x > level.getMapX()*OBJECTUNIT - WIN_SIZE.x *zoom *0.5){
+            }else if(playerpos.x > level->getMapX()*OBJECTUNIT - WIN_SIZE.x *zoom *0.5){
                 // Player ist so weit rechts, dass er nicht mehr zentriert angezeigt werden kann.
-                xfrom = level.getMapX()*OBJECTUNIT - WIN_SIZE.x *zoom;
+                xfrom = level->getMapX()*OBJECTUNIT - WIN_SIZE.x *zoom;
             }else{
                 // Player ist x-mittig im view
                 xfrom = playerpos.x - WIN_SIZE.x *zoom *0.5;
@@ -191,9 +201,9 @@ int main()
             if(playerpos.y < WIN_SIZE.y *zoom *0.5){
                 // Player ist so weit oben, dass er nicht mehr zentriert angezeigt werden kann.
                 yfrom=0;
-            }else if(playerpos.y > level.getMapY()*OBJECTUNIT - WIN_SIZE.y *zoom *0.5){
+            }else if(playerpos.y > level->getMapY()*OBJECTUNIT - WIN_SIZE.y *zoom *0.5){
                 // Player ist so weit unten, dass er nicht mehr zentriert angezeigt werden kann.
-                yfrom = level.getMapY()*OBJECTUNIT - WIN_SIZE.y *zoom;
+                yfrom = level->getMapY()*OBJECTUNIT - WIN_SIZE.y *zoom;
             }
             else{
                 // Player ist x-mittig im view
@@ -218,16 +228,17 @@ int main()
                 (yfrom + WIN_SIZE.x*zoom)/OBJECTUNIT
             );
 
-            std::cout << "Drawing: ("<< start.x <<", "<< start.y<<") ";
-            std::cout << "to ("<< end.x <<", "<< end.y<<")\n";
+            //std::cout << "Drawing: ("<< start.x <<", "<< start.y<<") ";
+            //std::cout << "to ("<< end.x <<", "<< end.y<<")\n";
 
             for (uint x = start.x; x < end.x; x++){
                 for (uint y = start.y; y < end.y; y++){
-                    Object* m = level.getObject(sf::Vector2u(x, y));
+                    Object* m = level->getObject(sf::Vector2u(x, y));
                     if (m == nullptr) continue;
                     //printf("RENDERING (%d, %d)\n", x, y);
                     //if(x != m->posX || y != m->posY ) continue; // For Objects bigger than 1x1 map-field
                     //if (!m->visible) continue;
+
                     window.draw(m->sprite);
                 }
             } 
@@ -243,6 +254,8 @@ int main()
             update = false;
         }
     }
+
+    delete level;
 
     return EXIT_SUCCESS;
 }

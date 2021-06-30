@@ -74,6 +74,7 @@ public:
             target->del();
             return true;
         }
+        std::cout << "Das Item lässt sich hier nicht anwenden." << std::endl;
         return false;
     };
 
