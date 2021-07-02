@@ -51,31 +51,9 @@ public:
         // textures = (Tex**)(malloc(5 * sizeof(uint8_t) * sizeof(Tex *)));
         //loadTextures();
         loadFonts();
-        ////
-
-        //player = new Player(map, 4, 1);
-        /*
-        new Item(map, 10, 3);
-        new Item(map, 10, 6);
-        
-        new Destroyer(map, 10, 10);
-
-        new Goal(map, 15, 10);
-        
-        
-        new Barrier(map, 0, 0);
-        new Barrier(map, 0, 1);
-        new Barrier(map, 0, 2);
-        new Barrier(map, 1, 2);
-        new Barrier(map, 2, 2);
-        new Barrier(map, 3, 3);
-        new Barrier(map, 4, 3);
-        new Barrier(map, 5, 3);
-        new Barrier(map, 6, 3);
-        */
 
         buildOuterBorders();
-        dfs(sf::Vector2u(20, 20));
+        dfs(sf::Vector2u(75, 25));
     }
 
     ~Level(){
@@ -162,6 +140,7 @@ void dfs(sf::Vector2u size){
     std::array<uint, 2> start, end;
     std::set<std::array<uint, 2>> noWall; // durchgang, hier keine wall platzieren
     std::stack<std::array<uint, 2>> maxPath;
+    srand (time(NULL));
 
 
     auto getRandomStartposition = [size]() -> std::array<uint, 2>
@@ -194,35 +173,37 @@ void dfs(sf::Vector2u size){
     };
     auto getBorderFields = [scalar](std::array<uint, 2> node1, std::array<uint, 2> node2) -> std::set<std::array<uint, 2>>
     {
-        std::cout << "Got Wall-Fields between Positions:  ("<< node1[0] <<", "<< node1[1] <<") - ("<< node2[0] <<", "<< node2[1] <<"):\n";
+        //std::cout << "Got Wall-Fields between Positions:  ("<< node1[0] <<", "<< node1[1] <<") - ("<< node2[0] <<", "<< node2[1] <<"):\n";
 
         std::set<std::array<uint, 2>> mapfields;
         if(node1[0] == node2[0] + 1 && node1[1] == node2[1]){ // node2 ist links von node1
-            std::cout << "\tLEFT\n";
+            //std::cout << "\tLEFT\n";
             for (uint y=1; y<=scalar; y++){
                 mapfields.insert({ (node1[0] * (scalar+1) ) ,  (node1[1] * (scalar+1) + y ) });
             }
         }else if(node1[0] == node2[0] - 1 && node1[1] == node2[1]){ // node2 ist rechts von node1
-            std::cout << "\tRIGHT\n";
+            //std::cout << "\tRIGHT\n";
             for (uint y=1; y<=scalar; y++){
                 mapfields.insert({ ((node1[0] * (scalar+1)) + scalar +1 ) ,  (node1[1] * (scalar+1) + y ) });
             }
         }else if(node1[1] == node2[1] + 1 && node1[0] == node2[0]){ // node2 ist unter node1
-            std::cout << "\tUNDER\n";
+            //std::cout << "\tUNDER\n";
             for (uint x=1; x<=scalar; x++){
                 mapfields.insert({ ((node1[0] * (scalar+1)) + x) ,  (node1[1] * (scalar+1)  ) });
             }
         }else if(node1[1] == node2[1] - 1 && node1[0] == node2[0]){ // node2 ist über node1
-            std::cout << "\tOVER\n";
+            //std::cout << "\tOVER\n";
             for (uint x=1; x<=scalar; x++){
                 mapfields.insert({ ((node1[0] * (scalar+1)) + x) ,  (node1[1] * (scalar+1) + scalar + 1) });
             }
         }
         
+        /*
         for( auto i : mapfields){
             std::cout << "\t("<< i[0] <<", "<< i[1] <<")\n";
         }
         std::cout << std::endl;
+        */
         return mapfields;
     };
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -269,11 +250,24 @@ void dfs(sf::Vector2u size){
     stack.push(start);
     visited.insert(start);
 
+    std::cout << "starting DFS.\n";
     uint maxdepth = 1;
     uint depth = 1;
+    uint progress = 0;
     while(!stack.empty()){
+        /*
+        uint r = rand() % 10;
+        if(r == 0){
+            // breche aktuellen Pfad ab und gehe n felder zurück
+            r = rand() % depth;
+            for (uint i = 0; i < r; i++){
+                stack.pop();
+                depth--;
+            }
+        }
+        */
         std::set<std::array<uint, 2>> neighbors = getUnvisitedNeighbors(stack.top(), visited);
-        std::cout << "Stack top: " << stack.top()[0] << ", " << stack.top()[1] << "   visited: " << visited.size() << "\tdepth: " << depth << std::endl;
+
         if(neighbors.empty()){
             stack.pop();
             depth--;
@@ -284,7 +278,13 @@ void dfs(sf::Vector2u size){
             noWall.merge(getBorderFields(stack.top(), *it));
             stack.push(*it); 
             visited.insert(*it);
+
             depth++;
+            uint progressRaw = (((float)visited.size() / (float)(size.x * size.y))*100.);
+            if(progressRaw > progress){
+                progress = progressRaw;
+                std::cout << progress << "%\n";
+            }
         }
         if(depth > maxdepth){
             maxdepth = depth;
@@ -292,16 +292,18 @@ void dfs(sf::Vector2u size){
         }
     }
 
+    std::cout << "DFS done. Starting Map creation.\n";
+
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /////// Player, Goal
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    start = getMapField(start);
 
     end = maxPath.top();
     end = getMapField(end);
-    new Goal(map, end[0], end[1]);
 
-    start = getMapField(start);
-    player = new Player(map, start[0], start[1]);
+    new Goal(map, start[0], start[1]);
+    player = new Player(map, end[0], end[1]);
 
     /*
     while(maxPath.size() > 1) {
@@ -321,9 +323,6 @@ void dfs(sf::Vector2u size){
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-    
-    std::cout << "noWalls: " << noWall.size() << "\n";
-
     std::set<std::array<uint, 2>> possibleWalls;
     for (uint x=0; x<size.x; x++){
         for (uint y=0; y<size.y; y++){
@@ -331,35 +330,25 @@ void dfs(sf::Vector2u size){
             possibleWalls.merge(getBorderFields({x,y}, {x,y+1})); // unterm Feld
             possibleWalls.insert({ (x* (scalar+1)) + (scalar+1),  (y* (scalar+1)) + (scalar+1)}); // die Ecke zwischen den Feldern
         }
-        std::cout <<  "possible walls: " << possibleWalls.size() << "\n";
+        //std::cout <<  "possible walls: " << possibleWalls.size() << "\n";
     }
 
     std::set<std::array<uint, 2>> walls;
     std::set_difference(possibleWalls.begin(), possibleWalls.end(), noWall.begin(), noWall.end(), std::inserter(walls, walls.end()));
 
-    /*
-    std::set<std::array<uint, 2>> noWallTest;
-    noWallTest.merge(getBorderFields({5,5}, {5,6}));
-    noWallTest.merge(getBorderFields({5,5}, {5,4}));
-    noWallTest.merge(getBorderFields({5,5}, {6,5}));
-    noWallTest.merge(getBorderFields({6,5}, {7,5}));
-    noWallTest.merge(getBorderFields({7,5}, {7,6}));
-    noWallTest.merge(getBorderFields({7,6}, {7,7}));
-    noWallTest.merge(getBorderFields({7,7}, {7,8}));
-    std::set_difference(possibleWalls.begin(), possibleWalls.end(), noWallTest.begin(), noWallTest.end(), std::inserter(walls, walls.end()));
-    */
-
-    
-
-    std::cout <<  "set walls: " << walls.size() <<"\n";
-
     for(auto wall : walls) {
         new Barrier(map, wall[0], wall[1]);
     }
 
-    
 
-    
+    // TODO: Irgendwie klappt random net
+
+    // TODO Navi-Items verteilen.
+
+    // TODO noch Tore auf den Path setzen
+    // Schlüssel auf einen Teilgraph vor Tor
+
+    // TODO Gegner und Waffen verteilen
 };
 
 
@@ -376,16 +365,15 @@ void buildOuterBorders(){
     }
 }
 
-/*
 
-void Level::drawBackground(int bgRepeteAfter){
+void drawBackground(int bgRepeteAfter){
     for (int x=0; x<bgRepeteAfter; x++){
         for (int y=0; y<bgRepeteAfter; y++){
-            new Object(getTexture('b', 0), ' ', x, y);
+            //new Object();
         }
     }
 }
-*/
+
 };
 
 

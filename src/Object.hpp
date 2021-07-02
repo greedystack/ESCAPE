@@ -39,6 +39,8 @@ protected:
     static std::map<std::string, Texsheet*> texsheets;
 public:
     static void loadTexsheets(std::string theme = "standard"){
+        texsheets["bg0"] = new Texsheet("../include/img/boden.png");
+        texsheets["hecke"] = new Texsheet("../include/img/hecke.png", 1, 14);
         texsheets["wall"] = new Texsheet("../include/img/wall0.png");
         texsheets["arrow_left"] = new Texsheet("../include/img/arrow.png", 1, 4);
     }
@@ -131,8 +133,8 @@ protected:
         //printf("Placing Object to (%d, %d) \n", pos.x, pos.y);
     
         if(! isFree(pos, size)){
-            // TODO: Dann woanders platzieren?
-            std::cout << "ERROR: Position bereits belegt." << std::endl;
+            // TODO: Dann vielleicht woanders platzieren?
+            //std::cout << "ERROR: Position bereits belegt." << std::endl;
         }
 
         for (int x=0; x < size.x; x++){
@@ -182,7 +184,7 @@ protected:
         //printf("Moving Object to (%d, %d) \n", set_pos.x, set_pos.y);
         
         if(! isFree(set_pos, size)){
-            std::cout << "ERROR: Position bereits belegt." << std::endl;
+            //std::cout << "ERROR: Position bereits belegt." << std::endl;
             return false;
         } 
 

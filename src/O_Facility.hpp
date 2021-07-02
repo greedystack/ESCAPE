@@ -12,7 +12,7 @@ class Barrier : public Object {
 // Walls, Deko, ...
 public:
     Barrier(Object ** map, int x, int y) : 
-        Object(map, x, y, texsheets["wall"])
+        Object(map, x, y, texsheets["hecke"])
     {
         identity.insert(BARRIER);
     };
