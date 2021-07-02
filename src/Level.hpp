@@ -75,7 +75,7 @@ public:
         */
 
         buildOuterBorders();
-        dfs(sf::Vector2u(5, 5));
+        dfs(sf::Vector2u(20, 20));
     }
 
     ~Level(){
@@ -156,7 +156,7 @@ void dfs(sf::Vector2u size){
     // Achtung: std::set geht mit sf::Vector2 nicht, weil angeblich nicht vergleichbar. Dummer Compiler. -.-
     // Daher wird hier mit std::arrays statt sf::Vector2 gearbeitet
 
-    uint scalar = 1; // wie viele Mapfields hat ein DFS-Node (zu deutsch: wie breit sind die Gänge)
+    uint scalar = 2; // wie viele Mapfields hat ein DFS-Node (zu deutsch: wie breit sind die Gänge)
 
 
     std::array<uint, 2> start, end;
@@ -238,9 +238,9 @@ void dfs(sf::Vector2u size){
     {
         std::set<std::array<uint, 2>> neighbors; // possible neighbors
 
-        if(node[0] < size.x -2) neighbors.insert({ node[0] +1, node[1] }); // right
+        if(node[0] < size.x -1) neighbors.insert({ node[0] +1, node[1] }); // right
         if(node[0] > 0) neighbors.insert({ node[0] -1, node[1] }); // left
-        if(node[1] < size.y -2) neighbors.insert({ node[0], node[1] +1 }); // down
+        if(node[1] < size.y -1) neighbors.insert({ node[0], node[1] +1 }); // down
         if(node[1] > 0) neighbors.insert({ node[0], node[1] -1 }); // up
 
         /*
