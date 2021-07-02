@@ -41,7 +41,7 @@ public:
 class Goal : public Portal {
 public:
     Goal(Object ** map, int x, int y) : 
-        Portal(map, x, y, texsheets["wall"])
+        Portal(map, x, y, texsheets["arrow_left"])
     {
         identity.insert(GOAL);
     };
