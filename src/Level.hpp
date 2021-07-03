@@ -84,6 +84,10 @@ public:
                 }
             }
         }
+        free(map);
+        map = nullptr;
+
+        /*
         for(int x = 0; x < bgsizex; x++){
             for(int y = 0; y < bgsizey; y++){
                 sf::Sprite* obj = getBackground(sf::Vector2u(x, y));
@@ -93,10 +97,11 @@ public:
                 }
             }
         }
-        free(map);
         free(bg);
-        map = nullptr;
         bg = nullptr;
+        */
+        
+        
         printf("Map freed \n");
     }
     

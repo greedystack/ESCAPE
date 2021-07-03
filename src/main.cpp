@@ -79,7 +79,7 @@ int main()
         
 
         if(paused){
-            usleep(350000); // Heizung aus! ;)
+            usleep(250000); // Heizung aus! ;)
             continue;
         } 
         
