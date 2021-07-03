@@ -341,14 +341,13 @@ void dfs(sf::Vector2u size){
     }
 
 
-    // TODO: Irgendwie klappt random net
+    // TODO Navi-Items, Brot, Bambus, Minotauren zufällig verteilen.
+    // TODO Navi-Item braucht DS, die für jedes Feld die Richtung des adjazenten Felds kennt, das zum Ziel führt. -> std::map<std::array<uint, 2>, sf::Vector2i>
 
-    // TODO Navi-Items verteilen.
-
-    // TODO noch Tore auf den Path setzen
-    // Schlüssel auf einen Teilgraph vor Tor
-
-    // TODO Gegner und Waffen verteilen
+    // Wichtig bei Bambus: genug verteilen, um an minotaurus vorbeizukommen
+    // Idee: Items schon bei DFS verteilen!!
+    //  Das ist effizient und pro 1 Minotaurus können danach (bei umgekehrter DFS, sonst halt andersrum) n Bambusse verteilt werden
+    // Navi und Brot: An den Anfang mehr, sonst aber gleichverteilt, an Ende weniger.
 };
 
 

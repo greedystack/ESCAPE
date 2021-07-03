@@ -81,6 +81,7 @@ public:
         }
         place();
         sprite.setPosition((float)pos.x*OBJECTUNIT, (float)pos.y*OBJECTUNIT);
+
     };
 
     std::set<uint> whoami(){return identity;}
@@ -109,10 +110,24 @@ public:
     }
 
     Object** getNode(sf::Vector2<int> position){
+        if(!isInBounds(position)) return nullptr;
         return &map[position.x * getMapsizeY() + position.y +2];
     }
     Object* getObject(sf::Vector2<int> position){
+        if(!isInBounds(position)) return nullptr;
         return *getNode(position);
+    }
+
+    bool isInBounds(sf::Vector2i position){
+        if(position.x >= getMapsizeX() 
+            || position.y >= getMapsizeY()
+            || position.x <0 
+            || position.y < 0
+        ){
+            //std::cout<< "ERROR: Position (" << position.x <<", "<< position.y <<") out of Array!\n";
+            return false;
+        }
+        return true;
     }
 
     // ACHTUNG!! Nur für 1x1-große Objekte gebaut! 
