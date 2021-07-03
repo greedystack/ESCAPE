@@ -30,11 +30,13 @@ private:
     Player* player;
     int OBJECTUNIT = 20;
 
-
+    /*
     sf::Sprite** bg;
     int bgsize = 1;
     uint bgsizex, bgsizey;
-
+    */
+    int bgsize = 10;
+    sf::Sprite bg;
 
     int mapsizex, mapsizey;
 
@@ -66,6 +68,8 @@ public:
         }
         drawBackground();
         */
+        
+        createBackground();
 
         
         loadFonts();
@@ -133,8 +137,9 @@ public:
     }
 
     // Input: MapFild-Position;  Output: corresponding Background 
-    sf::Sprite* getBackground(sf::Vector2u pos){
-        return bg[pos.x*bgsizey + pos.y];
+    sf::Sprite getBackground(sf::Vector2u pos){
+        bg.setPosition((float)pos.x * OBJECTUNIT, (float)pos.y * OBJECTUNIT);
+        return bg;
     }
 
 
@@ -404,7 +409,17 @@ void buildOuterBorders(){
     }
 }
 
+void createBackground(){
+    Texsheet* tex = Object::texsheets["wall"];
+    bg = sf::Sprite(tex->texture);
+    sf::Vector2f scale(
+                (float) (OBJECTUNIT * bgsize) / tex->getSize().x,
+                (float) (OBJECTUNIT * bgsize) / tex->getSize().y);
+    bg.scale(scale);
+    bg.setPosition(0.,0.);
+}
 
+/*
 // bgSize ist in Mapfilds
 void drawBackground(){
     for (int x=0; x<bgsizex; x++){
@@ -422,7 +437,7 @@ void drawBackground(){
     }
 
 }
-
+*/
 
 
 };

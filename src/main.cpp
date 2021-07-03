@@ -239,6 +239,8 @@ int main()
                     //sf::Sprite* s = level->getBackground(sf::Vector2u(x, y));
                     //if (s != nullptr) window.draw(*s);
                     
+                    window.draw(level->getBackground(sf::Vector2u(x, y)));
+                    
                     Object* m = level->getObject(sf::Vector2u(x, y));
                     if (m == nullptr) continue;
                     //printf("RENDERING (%d, %d)\n", x, y);
