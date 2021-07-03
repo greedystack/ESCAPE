@@ -78,7 +78,10 @@ int main()
         }
         
 
-        if(paused) continue;
+        if(paused){
+            usleep(350000); // Heizung aus! ;)
+            continue;
+        } 
         
         // make as many updates as needed for the elapsed time
         while (elapsed > updateTime)
@@ -233,6 +236,9 @@ int main()
 
             for (uint x = start.x; x < end.x; x++){
                 for (uint y = start.y; y < end.y; y++){
+                    //sf::Sprite* s = level->getBackground(sf::Vector2u(x, y));
+                    //if (s != nullptr) window.draw(*s);
+                    
                     Object* m = level->getObject(sf::Vector2u(x, y));
                     if (m == nullptr) continue;
                     //printf("RENDERING (%d, %d)\n", x, y);

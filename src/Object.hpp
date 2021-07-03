@@ -35,9 +35,9 @@ class Object {
 ////////////////////////////////////////////////////////////////////////////////
 ///// STATIC
 ////////////////////////////////////////////////////////////////////////////////
-protected:
-    static std::map<std::string, Texsheet*> texsheets;
 public:
+    static std::map<std::string, Texsheet*> texsheets;
+
     static void loadTexsheets(std::string theme = "standard"){
         texsheets["bg0"] = new Texsheet("../include/img/boden.png");
         texsheets["hecke"] = new Texsheet("../include/img/hecke.png", 1, 14);
@@ -150,6 +150,7 @@ protected:
         if(! isFree(pos, size)){
             // TODO: Dann vielleicht woanders platzieren?
             //std::cout << "ERROR: Position bereits belegt." << std::endl;
+            return false;
         }
 
         for (int x=0; x < size.x; x++){

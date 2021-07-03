@@ -12,6 +12,7 @@
 #include <set>
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include "Object.hpp"
 #include "O_Living.hpp" // Living muss über Facility und Item, weil die den Player-Typ kennen müssen.
 #include "O_Facility.hpp"
@@ -27,6 +28,14 @@ public:
 private:
     Object** map;
     Player* player;
+    int OBJECTUNIT = 20;
+
+
+    sf::Sprite** bg;
+    int bgsize = 1;
+    uint bgsizex, bgsizey;
+
+
     int mapsizex, mapsizey;
 
     
@@ -37,7 +46,7 @@ public:
     {
 
         map = (Object**)(malloc((2 + x * y) * sizeof(Object *)));
-        for(int i=0; i<(x*y); i++){
+        for(int i=0; i<(x*y +2); i++){
             map[i] = nullptr;
         }
         map[0] = (Object*)x;
@@ -47,9 +56,18 @@ public:
 
         Object::loadTexsheets();
 
-        // OLD:
-        // textures = (Tex**)(malloc(5 * sizeof(uint8_t) * sizeof(Tex *)));
-        //loadTextures();
+        /*
+        // Das frisst zu viel RAM
+        bgsizex = (uint) std::ceil((float)mapsizex / (float)bgsize);
+        bgsizey = (uint) std::ceil((float)mapsizey / (float)bgsize);
+        bg = (sf::Sprite**)(malloc((bgsizex * bgsizey) * sizeof(sf::Sprite *)));
+        for(int i=0; i<(bgsizex*bgsizey); i++){
+            bg[i] = nullptr;
+        }
+        drawBackground();
+        */
+
+        
         loadFonts();
 
         buildOuterBorders();
@@ -66,8 +84,19 @@ public:
                 }
             }
         }
+        for(int x = 0; x < bgsizex; x++){
+            for(int y = 0; y < bgsizey; y++){
+                sf::Sprite* obj = getBackground(sf::Vector2u(x, y));
+                if(obj != nullptr){
+                    delete obj;
+                    //std::cout << "deleted object on ("<<x<<" , "<<y<<").\n";
+                }
+            }
+        }
         free(map);
+        free(bg);
         map = nullptr;
+        bg = nullptr;
         printf("Map freed \n");
     }
     
@@ -98,6 +127,11 @@ public:
         return *getNode(position);
     }
 
+    // Input: MapFild-Position;  Output: corresponding Background 
+    sf::Sprite* getBackground(sf::Vector2u pos){
+        return bg[pos.x*bgsizey + pos.y];
+    }
+
 
 private:
 
@@ -118,6 +152,7 @@ void loadFonts() {
         printf("ERROR: FONT NOT LOADED!");
         //return EXIT_FAILURE;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -365,13 +400,25 @@ void buildOuterBorders(){
 }
 
 
-void drawBackground(int bgRepeteAfter){
-    for (int x=0; x<bgRepeteAfter; x++){
-        for (int y=0; y<bgRepeteAfter; y++){
-            //new Object();
+// bgSize ist in Mapfilds
+void drawBackground(){
+    for (int x=0; x<bgsizex; x++){
+        for (int y=0; y<bgsizey; y++){
+            Texsheet* tex = Object::texsheets["bg0"];
+
+            bg[x*bgsizey + y] = new sf::Sprite(tex->texture);
+            //sf::Sprite* sprite = bg[x*bgsizey + y];
+            sf::Vector2f scale(
+                (float) (OBJECTUNIT * bgsize) / tex->getSize().x,
+                (float) (OBJECTUNIT * bgsize) / tex->getSize().y);
+            bg[x*bgsizey + y]->scale(scale);
+            bg[x*bgsizey + y]->setPosition((float)x*OBJECTUNIT, (float)y*OBJECTUNIT);
         }
     }
+
 }
+
+
 
 };
 
