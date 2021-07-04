@@ -40,7 +40,7 @@ public:
 
     static void loadTexsheets(std::string theme = "standard"){
         texsheets["bg0"] = new Texsheet("../include/img/boden.png");
-        texsheets["hecke"] = new Texsheet("../include/img/hecke.png", 1, 14);
+        texsheets["hecke"] = new Texsheet("../include/img/hecke.png", 1, 16);
         texsheets["wall"] = new Texsheet("../include/img/wall0.png");
         texsheets["arrow_left"] = new Texsheet("../include/img/arrow.png", 1, 4);
     }

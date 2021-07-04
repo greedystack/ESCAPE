@@ -56,8 +56,8 @@ public:
         mapping[{R}] = 11;
         mapping[{D}] = 12;
         mapping[{U}] = 13;
-        mapping[{}] = 0; // TODO Hier fehlt noch eine Kachel 
-        mapping[{R, L, U, D}] = 0; // TODO Hier fehlt noch eine Kachel 
+        mapping[{}] = 15;
+        mapping[{R, L, U, D}] = 14;
 
         int spriterow = mapping[bnd];
         dir = sf::Vector2i(spriterow, 0);

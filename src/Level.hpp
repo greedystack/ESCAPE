@@ -136,9 +136,7 @@ public:
         return *getNode(position);
     }
 
-    // Input: MapFild-Position;  Output: corresponding Background 
     sf::Sprite getBackground(){
-        //bg.setPosition((float)pos.x * OBJECTUNIT, (float)pos.y * OBJECTUNIT);
         return bg;
     }
 
@@ -161,6 +159,24 @@ void loadFonts() {
     if (!font.loadFromFile("../include/KulimPark-Regular.ttf"))
         printf("ERROR: FONT NOT LOADED!");
         //return EXIT_FAILURE;
+}
+
+void buildOuterBorders(){
+    for (int x=0; x<mapsizex; x++){
+        new Barrier(map, x, 0);
+        new Barrier(map, x, mapsizey-1);
+    }
+    for (int y=1; y<mapsizey-1; y++){
+        new Barrier(map, 0, y);
+        new Barrier(map, mapsizex-1, y);
+    }
+}
+
+void createBackground(){
+    Texsheet* tex = Object::texsheets["bg0"];
+    tex->texture.setRepeated(true);
+    bg.setTexture(tex->texture);
+    bg.setTextureRect({0, 0, mapsizex*OBJECTUNIT, mapsizey*OBJECTUNIT});
 }
 
 
@@ -393,60 +409,12 @@ void dfs(sf::Vector2u size){
     // Idee: Items schon bei DFS verteilen!!
     //  Das ist effizient und pro 1 Minotaurus können danach (bei umgekehrter DFS, sonst halt andersrum) n Bambusse verteilt werden
     // Navi und Brot: An den Anfang mehr, sonst aber gleichverteilt, an Ende weniger.
-};
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void buildOuterBorders(){
-    for (int x=0; x<mapsizex; x++){
-        new Barrier(map, x, 0);
-        new Barrier(map, x, mapsizey-1);
-    }
-    for (int y=1; y<mapsizey-1; y++){
-        new Barrier(map, 0, y);
-        new Barrier(map, mapsizex-1, y);
-    }
-}
-
-void createBackground(){
-    Texsheet* tex = Object::texsheets["bg0"];
-    tex->texture.setRepeated(true);
-    bg.setTexture(tex->texture);
-    bg.setTextureRect({0, 0, mapsizex*OBJECTUNIT, mapsizey*OBJECTUNIT});
-    /*
-    sf::Vector2f scale(
-                (float) (OBJECTUNIT * bgsize) / tex->getSize().x,
-                (float) (OBJECTUNIT * bgsize) / tex->getSize().y);
-    bg.scale(scale);
-    bg.setPosition(0.,0.);
-    */
-}
-
-/*
-// bgSize ist in Mapfilds
-void drawBackground(){
-    for (int x=0; x<bgsizex; x++){
-        for (int y=0; y<bgsizey; y++){
-            Texsheet* tex = Object::texsheets["bg0"];
-
-            bg[x*bgsizey + y] = new sf::Sprite(tex->texture);
-            //sf::Sprite* sprite = bg[x*bgsizey + y];
-            sf::Vector2f scale(
-                (float) (OBJECTUNIT * bgsize) / tex->getSize().x,
-                (float) (OBJECTUNIT * bgsize) / tex->getSize().y);
-            bg[x*bgsizey + y]->scale(scale);
-            bg[x*bgsizey + y]->setPosition((float)x*OBJECTUNIT, (float)y*OBJECTUNIT);
-        }
-    }
-
-}
-*/
-
-
 };
-
-
 
 
 #endif //LEVEL_H
