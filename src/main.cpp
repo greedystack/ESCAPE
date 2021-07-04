@@ -233,21 +233,25 @@ int main()
 
             //std::cout << "Drawing: ("<< start.x <<", "<< start.y<<") ";
             //std::cout << "to ("<< end.x <<", "<< end.y<<")\n";
+            window.draw(level->getBackground());
 
             for (uint x = start.x; x < end.x; x++){
                 for (uint y = start.y; y < end.y; y++){
                     //sf::Sprite* s = level->getBackground(sf::Vector2u(x, y));
                     //if (s != nullptr) window.draw(*s);
-                    
-                    window.draw(level->getBackground(sf::Vector2u(x, y)));
+
+                    //window.draw(level->getBackground(sf::Vector2u(x, y)));
                     
                     Object* m = level->getObject(sf::Vector2u(x, y));
                     if (m == nullptr) continue;
-                    //printf("RENDERING (%d, %d)\n", x, y);
-                    //if(x != m->posX || y != m->posY ) continue; // For Objects bigger than 1x1 map-field
-                    //if (!m->visible) continue;
+                    while(m != nullptr){
+                        //if (!m->visible) continue;
+                        //if(x != m->posX || y != m->posY ) continue; // For Objects bigger than 1x1 map-field
 
-                    window.draw(m->sprite);
+                        window.draw(m->sprite);
+                        //m=m->onTop; // falls ich Stacking implementiere.
+                        m=nullptr; // falls nicht
+                    }
                 }
             } 
 

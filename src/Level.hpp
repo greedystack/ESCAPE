@@ -137,8 +137,8 @@ public:
     }
 
     // Input: MapFild-Position;  Output: corresponding Background 
-    sf::Sprite getBackground(sf::Vector2u pos){
-        bg.setPosition((float)pos.x * OBJECTUNIT, (float)pos.y * OBJECTUNIT);
+    sf::Sprite getBackground(){
+        //bg.setPosition((float)pos.x * OBJECTUNIT, (float)pos.y * OBJECTUNIT);
         return bg;
     }
 
@@ -410,13 +410,17 @@ void buildOuterBorders(){
 }
 
 void createBackground(){
-    Texsheet* tex = Object::texsheets["wall"];
-    bg = sf::Sprite(tex->texture);
+    Texsheet* tex = Object::texsheets["bg0"];
+    tex->texture.setRepeated(true);
+    bg.setTexture(tex->texture);
+    bg.setTextureRect({0, 0, mapsizex*OBJECTUNIT, mapsizey*OBJECTUNIT});
+    /*
     sf::Vector2f scale(
                 (float) (OBJECTUNIT * bgsize) / tex->getSize().x,
                 (float) (OBJECTUNIT * bgsize) / tex->getSize().y);
     bg.scale(scale);
     bg.setPosition(0.,0.);
+    */
 }
 
 /*
