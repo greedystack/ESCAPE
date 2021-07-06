@@ -15,19 +15,37 @@ public:
     {};
 
     // nur genau einen Schritt moven
-    virtual bool step(sf::Vector2i _dir){
-         // vorerst über move() -> Bei größeren objekten (also größer als 1x1) ist es aber sinnvoller, nicht alle Felder jedes Mal neu zu belegen, sondern immer nur das erste Feld in die zu bewegende richtung.
+    virtual void step(sf::Vector2i _dir, uint factor=1){
+         // vorerst über teleport() -> Bei größeren objekten (also größer als 1x1) ist es aber sinnvoller, nicht alle Felder jedes Mal neu zu belegen, sondern immer nur das erste Feld in die zu bewegende richtung.
         if(dir != _dir){
             // erstmal nur in die gewünschte Richtung schauen. Noch kein Schritt.
             setDirection(_dir);
-            return true;
+            return;
         }
-        return teleport(pos + _dir);
+
+        for(uint i=1; i <= factor; i++){
+            if(!setMapPosition(pos + _dir)){
+                return;
+            }
+            sprite.setPosition((float)pos.x*OBJECTUNIT, (float)pos.y*OBJECTUNIT);
+            
+            // Statt pending steps direction etc. besser: AnimationQueue-Datenstruktur die 
+        }
     };
 
-    virtual void update() override {
+    virtual void update() override { 
+        // returned false, wenn animation noch nicht fertig - also weiterer input gesperrt werden muss.
         iterateAnimation();
+        if(pendingSteps > 0){
+
+        }else{
+            switchTime = switchTimeRegular
+        }
     }
+
+protected:
+    uint pendingSteps;
+    sf::Vector2i pendingStepsDirection;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

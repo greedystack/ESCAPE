@@ -7,7 +7,7 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 
 #######################
 
-add_executable(first ${CMAKE_SOURCE_DIR}/src/main.cpp src/Object.hpp src/Texsheet.hpp src/Animation.hpp src/Level.hpp src/Bag.hpp src/O_Facility.hpp src/O_Living.hpp src/O_Item.hpp)
+add_executable(first ${CMAKE_SOURCE_DIR}/src/main.cpp src/Object.hpp src/Texsheet.hpp src/Level.hpp src/Bag.hpp src/O_Facility.hpp src/O_Living.hpp src/O_Item.hpp)
 
 include_directories(${CMAKE_SOURCE_DIR}/lib ${CMAKE_SOURCE_DIR}/include) #HEADER
 

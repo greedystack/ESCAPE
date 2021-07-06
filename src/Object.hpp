@@ -4,7 +4,7 @@
 #include <SFML/Graphics/Color.hpp>
 #include <SFML/Graphics/Texture.hpp>
 #include <SFML/Graphics/Sprite.hpp>
-#include "Animation.hpp"
+#include "Texsheet.hpp"
 #include <iostream>
 #include <list>
 #include <set>
@@ -17,6 +17,9 @@ const sf::Vector2i RIGHT(1,0);
 const sf::Vector2i LEFT(-1,0);
 const sf::Vector2i UP(0,-1);
 const sf::Vector2i DOWN(0,1);
+
+const uint ANIMATION_STEPS_PER_FIELD = 10;
+
 
 // Identifier for whoami()
 const uint OBJECT = 0;
@@ -53,7 +56,7 @@ public:
     bool animated=false, visible=false;
 
     // Animation:
-    sf::Time passedTime, switchTime = sf::milliseconds(500);
+    sf::Time passedTime, switchTimeRegular = sf::milliseconds(500), switchTime = switchTimeRegular;
     
 protected:
     Texsheet *tex;
@@ -167,7 +170,7 @@ protected:
     
 
     // ACHTUNG!! Nur für 1x1-große Objekte gebaut! 
-    // ACHTUNG!! Entfernt Objekt nur von Map, nicht aus dem Speicher!
+    // ACHTUNG!! Entfernt Objekt nur von Map, nicht aus dem Speicher! Also nu sinnvoll, wenn Pointer dann woanders gespeichert wird (Item Bag zB)
     void removeFromMap(){
         *getNode(pos) = nullptr;
         pos = sf::Vector2i(-1, -1);
@@ -194,11 +197,20 @@ protected:
 
     // Objekte "teleportieren"
     bool teleport(sf::Vector2<int> set_pos){
+        if(!setMapPosition(set_pos)){
+            return false;
+        }
+
+        sprite.setPosition((float)pos.x*OBJECTUNIT, (float)pos.y*OBJECTUNIT);
+        return true;
+    };
+
+    bool setMapPosition(sf::Vector2<int> set_pos){
         // map-ränder verkleben
         if(set_pos.x < 0) set_pos.x = getMapsizeX() +set_pos.x;
+        else if(set_pos.x >= getMapsizeX()) set_pos.x = set_pos.x - getMapsizeX();
         if(set_pos.y < 0) set_pos.y = getMapsizeY() +set_pos.y;
-        if(set_pos.x >= getMapsizeX()) set_pos.x = set_pos.x - getMapsizeX();
-        if(set_pos.y >= getMapsizeY()) set_pos.y = set_pos.y - getMapsizeY();
+        else if(set_pos.y >= getMapsizeY()) set_pos.y = set_pos.y - getMapsizeY();
 
         //printf("Moving Object to (%d, %d) \n", set_pos.x, set_pos.y);
         
@@ -223,7 +235,6 @@ protected:
         
         pos.x = set_pos.x;
         pos.y = set_pos.y;
-        sprite.setPosition((float)pos.x*OBJECTUNIT, (float)pos.y*OBJECTUNIT);
 
         return true;
     };

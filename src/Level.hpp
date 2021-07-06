@@ -75,7 +75,7 @@ public:
         loadFonts();
 
         buildOuterBorders();
-        dfs(sf::Vector2u(75, 25));
+        dfs(sf::Vector2u(25, 25));
     }
 
     ~Level(){

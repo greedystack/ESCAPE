@@ -21,7 +21,7 @@ const sf::Time MAX_updateTime = sf::milliseconds(10); // fastest possible move s
 const sf::Time STD_updateTime = sf::milliseconds(45); // regular move speed
 const sf::Time DELTA_updateTime = sf::milliseconds(2); // änderungsvektor für beschleunigung
 
-sf::Time updateTime = STD_updateTime;
+sf::Time UPDATE_TIME = STD_updateTime;
 sf::Vector2u WIN_SIZE(1024, 1024); // in Pixel
 float zoom = 0.5f; // inverted (also im Sinne von Kehrwert)
 
@@ -41,6 +41,7 @@ int main()
     bool updateView = true;
     bool paused = false;
     bool drawAnimation = false;
+    bool interactionBlocked = false;
     int speedup = 0;
 
     Level* level = new Level(2000, 2000);
@@ -91,60 +92,62 @@ int main()
         ///// Eingabe
         ////////////////////////////////////////////////
         // make as many updates as needed for the elapsed time
-        while (elapsed > updateTime)
-        {   
-            speedup-=1;
-            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
-            {
-                level->getPlayer()->step(LEFT);
-                updateView = true;
-                speedup+=2;
-            }
-            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
-            {
-                level->getPlayer()->step(UP);
-                updateView = true;
-                speedup+=2;
-            }
-            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
-            {
-                level->getPlayer()->step(RIGHT);
-                updateView = true;
-                speedup+=2;
-            }
-            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
-            {
-                level->getPlayer()->step(DOWN);
-                updateView = true;
-                speedup+=2;
-            }
-            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
-            {
-                // Interact with Object before Player
-                level->getPlayer()->interact();
-                updateView = true;
-            }
-            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Return) 
-                || sf::Keyboard::isKeyPressed(sf::Keyboard::Enter))
-            {
-                // Item Bag
-                level->getPlayer()->useItem(); // temporarily
-                updateView = true;
-            }
-            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Add) ||
-                sf::Keyboard::isKeyPressed(sf::Keyboard::M))
-            {
-                zoom-=0.05;
-                updateView = true;
-            }
-            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Subtract) ||
-                sf::Keyboard::isKeyPressed(sf::Keyboard::N))
-            {
-                zoom+=0.05;
-                updateView=true;
-            }
+        if(!interactionBlocked){
+            while (elapsed > UPDATE_TIME)
+            {   
+                speedup-=1;
+                if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
+                {
+                    level->getPlayer()->step(LEFT);
+                    updateView = true;
+                    speedup+=2;
+                }
+                if(sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+                {
+                    level->getPlayer()->step(UP);
+                    updateView = true;
+                    speedup+=2;
+                }
+                if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+                {
+                    level->getPlayer()->step(RIGHT);
+                    updateView = true;
+                    speedup+=2;
+                }
+                if(sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+                {
+                    level->getPlayer()->step(DOWN);
+                    updateView = true;
+                    speedup+=2;
+                }
+                if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
+                {
+                    // Interact with Object before Player
+                    level->getPlayer()->interact();
+                    updateView = true;
+                }
+                if(sf::Keyboard::isKeyPressed(sf::Keyboard::Return) 
+                    || sf::Keyboard::isKeyPressed(sf::Keyboard::Enter))
+                {
+                    // Item Bag
+                    level->getPlayer()->useItem(); // temporarily
+                    updateView = true;
+                }
+                if(sf::Keyboard::isKeyPressed(sf::Keyboard::Add) ||
+                    sf::Keyboard::isKeyPressed(sf::Keyboard::M))
+                {
+                    zoom-=0.05;
+                    updateView = true;
+                }
+                if(sf::Keyboard::isKeyPressed(sf::Keyboard::Subtract) ||
+                    sf::Keyboard::isKeyPressed(sf::Keyboard::N))
+                {
+                    zoom+=0.05;
+                    updateView=true;
+                }
 
-            elapsed -= updateTime;
+                elapsed -= UPDATE_TIME;
+            }
         }
 
         ////////////////////////////////////////////////
@@ -154,12 +157,12 @@ int main()
         if(speedup<0){
             // keine Bewegung stattgefunden
             speedup=0;
-            updateTime = STD_updateTime; // Stoppe schnelles Laufen.
+            UPDATE_TIME = STD_updateTime; // Stoppe schnelles Laufen.
         }else if(speedup>3){
             // Bewegung in `speedup-1` aufeinanderfolgenden Loops stattgefunden.
             speedup=0;
-            if(updateTime >= MAX_updateTime){
-                updateTime -= DELTA_updateTime; // Beschleunige
+            if(UPDATE_TIME >= MAX_updateTime){
+                UPDATE_TIME -= DELTA_updateTime; // Beschleunige
             }
         }
 
@@ -182,17 +185,21 @@ int main()
         animationclock.restart();
 
         ////////////////////////////////////////////////
-        //////////////// Update View
+        //////////////// Update Window
         ////////////////////////////////////////////////
         if(updateView || drawAnimation){
             if(updateView){
                 //std::cout<< "Beschleunigung: " << updateTime.asSeconds() << "\n";
+
+                ////////////////////////////////////////////////
+                //////////////// Level Won
+                ////////////////////////////////////////////////
                 if(level->getPlayer()->hasWon()){
-                    // TODO Level löschen, neues Level erstellen
                     lvl_count--;
                     if(lvl_count <= 0){
                         // WON GAME
                         std::cout << "HURRA! HURRA!" << std::endl;
+                        // TODO Win Animation
                     }else{
                         std::cout << "init new level" << std::endl;
                         delete level;
@@ -200,7 +207,9 @@ int main()
                     }
                 }
                 
-                //Set View
+                ////////////////////////////////////////////////
+                //////////////// Calculate View Size and View
+                ////////////////////////////////////////////////
                 sf::Vector2f playerpos = level->getPlayer()->sprite.getPosition();
                 float xfrom, yfrom;
 
@@ -245,6 +254,10 @@ int main()
                 //std::cout << "to ("<< end.x <<", "<< end.y<<")\n";
             }
 
+
+            ////////////////////////////////////////////////
+            //////////////// Draw Window
+            ////////////////////////////////////////////////
             // Clear screen
             window.clear(sf::Color::White);
             window.setView(view);
@@ -258,7 +271,7 @@ int main()
                 for (uint y = start.y; y < end.y; y++){
                     Object* m = level->getObject(sf::Vector2u(x, y));
                     if (m == nullptr) continue;
-                    while(m != nullptr){
+                    while(m != nullptr){// falls ich Stacking implementiere.
                         //if (!m->visible) continue;
                         //if(x != m->posX || y != m->posY ) continue; // For Objects bigger than 1x1 map-field
 
