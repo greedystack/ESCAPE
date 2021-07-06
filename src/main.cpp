@@ -23,7 +23,7 @@ const sf::Time DELTA_updateTime = sf::milliseconds(2); // änderungsvektor für 
 
 sf::Time updateTime = STD_updateTime;
 sf::Vector2u WIN_SIZE(1024, 1024); // in Pixel
-float zoom = 0.5f; // inverted
+float zoom = 0.5f; // inverted (also im Sinne von Kehrwert)
 
 int lvl_count = 2;
 
@@ -32,12 +32,15 @@ int main()
     sf::RenderWindow window(sf::VideoMode(WIN_SIZE.x, WIN_SIZE.y), TITLE);
     sf::View view;
 
-    sf::Clock clock;
+    sf::Clock clock, animationclock;
     sf::Time elapsed = clock.restart();
+
+    sf::Vector2u start(0,0), end(0,0); // Mapblocks zum Rendern
     
     // keep track if we have to redraw things. No need if nothing has been updated!
-    bool update = true;
+    bool updateView = true;
     bool paused = false;
+    bool drawAnimation = false;
     int speedup = 0;
 
     Level* level = new Level(2000, 2000);
@@ -46,9 +49,11 @@ int main()
     while (window.isOpen())
     {
         // add the time passed since the last cycle
-        elapsed = elapsed + clock.restart();
+        elapsed = elapsed + clock.restart(); // This function puts the time counter back to zero. It also returns the time elapsed since the clock was started.
 
-        
+        ////////////////////////////////////////////////
+        ///// Events
+        ////////////////////////////////////////////////
         sf::Event event;
         while (window.pollEvent(event))
         {
@@ -69,7 +74,7 @@ int main()
                     std::cout << "new width: " << event.size.width << std::endl;
                     std::cout << "new height: " << event.size.height << std::endl;
                     WIN_SIZE = sf::Vector2u(event.size.width, event.size.height);
-                    update = true;
+                    updateView = true;
                     break;
                 default:
                     //std::cout << "-UNKNOWN EVENT: " << event.type << std::endl;
@@ -82,7 +87,9 @@ int main()
             usleep(250000); // Heizung aus! ;)
             continue;
         } 
-        
+        ////////////////////////////////////////////////
+        ///// Eingabe
+        ////////////////////////////////////////////////
         // make as many updates as needed for the elapsed time
         while (elapsed > updateTime)
         {   
@@ -90,72 +97,59 @@ int main()
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
             {
                 level->getPlayer()->step(LEFT);
-                update = true;
+                updateView = true;
                 speedup+=2;
             }
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
             {
                 level->getPlayer()->step(UP);
-                update = true;
+                updateView = true;
                 speedup+=2;
             }
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
             {
                 level->getPlayer()->step(RIGHT);
-                update = true;
+                updateView = true;
                 speedup+=2;
             }
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
             {
                 level->getPlayer()->step(DOWN);
-                update = true;
+                updateView = true;
                 speedup+=2;
             }
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
             {
                 // Interact with Object before Player
                 level->getPlayer()->interact();
-                update = true;
+                updateView = true;
             }
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Return) 
                 || sf::Keyboard::isKeyPressed(sf::Keyboard::Enter))
             {
                 // Item Bag
                 level->getPlayer()->useItem(); // temporarily
-                update = true;
+                updateView = true;
             }
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Add) ||
                 sf::Keyboard::isKeyPressed(sf::Keyboard::M))
             {
                 zoom-=0.05;
-                update = true;
+                updateView = true;
             }
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Subtract) ||
                 sf::Keyboard::isKeyPressed(sf::Keyboard::N))
             {
                 zoom+=0.05;
-                update=true;
+                updateView=true;
             }
-            /*
-            if(sf::Keyboard::isKeyPressed(sf::Keyboard::A))
-            { // TEST
-                sf::Vector2f scale = level->getPlayer()->sprite.getScale();
-                if(scale.x >= 0.f){
-                    level->getPlayer()->sprite.setScale(scale.x *(-1.f), scale.y);
-                    level->getPlayer()->sprite.move(OBJECTUNIT, 0);
-                }else{
-                    level->getPlayer()->sprite.setScale(scale.x *(-1.f), scale.y);
-                    level->getPlayer()->sprite.move((-1.f)*OBJECTUNIT, 0);
-                }
-                std::cout << level->getPlayer()->sprite.getRotation() << std::endl;
-                update=true;
-            }
-            */
 
-
-            // don't forget to subtract the updateTime each cycle ;-)
             elapsed -= updateTime;
         }
+
+        ////////////////////////////////////////////////
+        ///// Speedup
+        ////////////////////////////////////////////////
 
         if(speedup<0){
             // keine Bewegung stattgefunden
@@ -168,80 +162,100 @@ int main()
                 updateTime -= DELTA_updateTime; // Beschleunige
             }
         }
-        
-        if(update){
-            //std::cout<< "Beschleunigung: " << updateTime.asSeconds() << "\n";
-            if(level->getPlayer()->hasWon()){
-                // TODO Level löschen, neues Level erstellen
-                lvl_count--;
-                if(lvl_count <= 0){
-                    // WON GAME
-                    std::cout << "HURRA! HURRA!" << std::endl;
-                }else{
-                    std::cout << "init new level" << std::endl;
-                    delete level;
-                    level = new Level(2000, 2000);
+
+        ////////////////////////////////////////////////
+        ///// Animate
+        ////////////////////////////////////////////////
+        for (uint x = start.x; x < end.x; x++){
+            for (uint y = start.y; y < end.y; y++){
+                Object* m = level->getObject(sf::Vector2u(x, y));
+                if (m == nullptr) continue;
+                if(!m->animated) continue;
+                m->passedTime += animationclock.getElapsedTime();
+                if(m->passedTime < m->switchTime) continue;
+                m->passedTime = sf::milliseconds(0);
+                m->update();
+                updateView=true;
+
+            }
+        }
+        animationclock.restart();
+
+        ////////////////////////////////////////////////
+        //////////////// Update View
+        ////////////////////////////////////////////////
+        if(updateView || drawAnimation){
+            if(updateView){
+                //std::cout<< "Beschleunigung: " << updateTime.asSeconds() << "\n";
+                if(level->getPlayer()->hasWon()){
+                    // TODO Level löschen, neues Level erstellen
+                    lvl_count--;
+                    if(lvl_count <= 0){
+                        // WON GAME
+                        std::cout << "HURRA! HURRA!" << std::endl;
+                    }else{
+                        std::cout << "init new level" << std::endl;
+                        delete level;
+                        level = new Level(2000, 2000);
+                    }
                 }
-            }
-            
-             //Set View
-            sf::Vector2f playerpos = level->getPlayer()->sprite.getPosition();
-            float xfrom, yfrom;
+                
+                //Set View
+                sf::Vector2f playerpos = level->getPlayer()->sprite.getPosition();
+                float xfrom, yfrom;
 
-            // x
-            if(playerpos.x < WIN_SIZE.x *zoom *0.5){
-                // Player ist so weit links, dass er nicht mehr zentriert angezeigt werden kann.
-                xfrom=0;
-            }else if(playerpos.x > level->getMapX()*OBJECTUNIT - WIN_SIZE.x *zoom *0.5){
-                // Player ist so weit rechts, dass er nicht mehr zentriert angezeigt werden kann.
-                xfrom = level->getMapX()*OBJECTUNIT - WIN_SIZE.x *zoom;
-            }else{
-                // Player ist x-mittig im view
-                xfrom = playerpos.x - WIN_SIZE.x *zoom *0.5;
-            }
+                // x
+                if(playerpos.x < WIN_SIZE.x *zoom *0.5){
+                    // Player ist so weit links, dass er nicht mehr zentriert angezeigt werden kann.
+                    xfrom=0;
+                }else if(playerpos.x > level->getMapX()*OBJECTUNIT - WIN_SIZE.x *zoom *0.5){
+                    // Player ist so weit rechts, dass er nicht mehr zentriert angezeigt werden kann.
+                    xfrom = level->getMapX()*OBJECTUNIT - WIN_SIZE.x *zoom;
+                }else{
+                    // Player ist x-mittig im view
+                    xfrom = playerpos.x - WIN_SIZE.x *zoom *0.5;
+                }
 
-            // y
-            if(playerpos.y < WIN_SIZE.y *zoom *0.5){
-                // Player ist so weit oben, dass er nicht mehr zentriert angezeigt werden kann.
-                yfrom=0;
-            }else if(playerpos.y > level->getMapY()*OBJECTUNIT - WIN_SIZE.y *zoom *0.5){
-                // Player ist so weit unten, dass er nicht mehr zentriert angezeigt werden kann.
-                yfrom = level->getMapY()*OBJECTUNIT - WIN_SIZE.y *zoom;
-            }
-            else{
-                // Player ist x-mittig im view
-                yfrom = playerpos.y - WIN_SIZE.y *zoom *0.5;
-            }
+                // y
+                if(playerpos.y < WIN_SIZE.y *zoom *0.5){
+                    // Player ist so weit oben, dass er nicht mehr zentriert angezeigt werden kann.
+                    yfrom=0;
+                }else if(playerpos.y > level->getMapY()*OBJECTUNIT - WIN_SIZE.y *zoom *0.5){
+                    // Player ist so weit unten, dass er nicht mehr zentriert angezeigt werden kann.
+                    yfrom = level->getMapY()*OBJECTUNIT - WIN_SIZE.y *zoom;
+                }
+                else{
+                    // Player ist x-mittig im view
+                    yfrom = playerpos.y - WIN_SIZE.y *zoom *0.5;
+                }
 
 
-            view.reset(sf::FloatRect(xfrom, yfrom, WIN_SIZE.x*zoom, WIN_SIZE.y*zoom ));
+                view.reset(sf::FloatRect(xfrom, yfrom, WIN_SIZE.x*zoom, WIN_SIZE.y*zoom ));
+
+                // Adjust Render from-to
+                start = sf::Vector2u(
+                    xfrom/OBJECTUNIT,
+                    yfrom/OBJECTUNIT
+                );
+                end= sf::Vector2u(
+                    (xfrom + WIN_SIZE.x*zoom)/OBJECTUNIT,
+                    (yfrom + WIN_SIZE.x*zoom)/OBJECTUNIT
+                );
+                //std::cout << "Drawing: ("<< start.x <<", "<< start.y<<") ";
+                //std::cout << "to ("<< end.x <<", "<< end.y<<")\n";
+            }
 
             // Clear screen
             window.clear(sf::Color::White);
             window.setView(view);
 
 
-            // Render Objects inside View
-            sf::Vector2u start = sf::Vector2u(
-                xfrom/OBJECTUNIT,
-                yfrom/OBJECTUNIT
-            );
-            sf::Vector2u end = sf::Vector2u(
-                (xfrom + WIN_SIZE.x*zoom)/OBJECTUNIT,
-                (yfrom + WIN_SIZE.x*zoom)/OBJECTUNIT
-            );
-
-            //std::cout << "Drawing: ("<< start.x <<", "<< start.y<<") ";
-            //std::cout << "to ("<< end.x <<", "<< end.y<<")\n";
+            
             window.draw(level->getBackground());
 
+            // Render only Objects inside View
             for (uint x = start.x; x < end.x; x++){
                 for (uint y = start.y; y < end.y; y++){
-                    //sf::Sprite* s = level->getBackground(sf::Vector2u(x, y));
-                    //if (s != nullptr) window.draw(*s);
-
-                    //window.draw(level->getBackground(sf::Vector2u(x, y)));
-                    
                     Object* m = level->getObject(sf::Vector2u(x, y));
                     if (m == nullptr) continue;
                     while(m != nullptr){
@@ -263,8 +277,9 @@ int main()
 
             // Update the window
             window.display();
-            update = false;
+            updateView = false;
         }
+        ////////////////////////////////////////////////
     }
 
     delete level;

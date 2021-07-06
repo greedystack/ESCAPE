@@ -39,23 +39,30 @@ public:
     static std::map<std::string, Texsheet*> texsheets;
 
     static void loadTexsheets(std::string theme = "standard"){
-        texsheets["bg0"] = new Texsheet("../include/img/boden.png");
+        texsheets["bg0"] = new Texsheet("../include/img/boden2.png");
         texsheets["hecke"] = new Texsheet("../include/img/hecke.png", 1, 16);
         texsheets["wall"] = new Texsheet("../include/img/wall0.png");
         texsheets["arrow_left"] = new Texsheet("../include/img/arrow.png", 1, 4);
+        texsheets["panda"] = new Texsheet("../include/img/panda.png", 3, 8);
     }
 ////////////////////////////////////////////////////////////////////////////////
 
 public:
     sf::Sprite sprite;
     sf::Vector2i pos, size, dir; // Position ist immer oben links am Objekt. Size ist dessen Größe in Map-Nodes.
-    bool visible=false;
+    bool animated=false, visible=false;
+
+    // Animation:
+    sf::Time passedTime, switchTime = sf::milliseconds(500);
     
 protected:
     Texsheet *tex;
     Object** map;
     int OBJECTUNIT = 20;
     std::set<uint> identity;
+
+    // Animation:
+    uint state, frame, cyclesLeft;
 
 public:
     ////////////////////////////////////////////////////////////////////////////////
@@ -70,18 +77,14 @@ public:
         if (tex != nullptr){
             visible=true;
             sprite.setTexture(tex->texture);
-            //sprite.setOrigin(10.f,10.f); // weird!
-            
+            setScale();
             setDirection(d);
-            sf::Vector2f scale(
-                (float) (OBJECTUNIT * size.x) / tex->getSize().x,
-                (float) (OBJECTUNIT * size.y) / tex->getSize().y);
-            sprite.scale(scale);
             
         }
         place();
         sprite.setPosition((float)pos.x*OBJECTUNIT, (float)pos.y*OBJECTUNIT);
 
+        if(tex->getImageCount().x > 1) animated=true;
     };
 
     std::set<uint> whoami(){return identity;}
@@ -95,10 +98,10 @@ public:
         return false;
     };
 
-    virtual void update(){ // Fkt. für Animationen und draw und so. Macht virtual hier sinn?
+    virtual void update(){ // Fkt. für Animationen und so
 
     }
-
+    
     ////////////////////////////////////////////////////////////////////////////////
     // Map-Functions
 
@@ -225,28 +228,66 @@ protected:
         return true;
     };
 
+////////////////////////////////////////////////////////////////////////////////
+/// Optik
+////////////////////////////////////////////////////////////////////////////////
+
     void setTexType(int row){
         if(tex->getImageCount().y <= row){
             std::cout << "ERROR: Texsheet hat nicht so viele Modi. Setze Modus 0.";
             row = 0;
         }
+        state=row;
         sf::Vector2i texsize = (sf::Vector2i) tex->getSize();
         sf::Vector2i position(0, texsize.y * row);
         sprite.setTextureRect(sf::IntRect(position,texsize));
         // std::cout << "Texsize: " << texsize.x << ", " << texsize.y * row << std::endl;
     };
 
+    void iterateAnimation(){
+        if(!animated){
+            return;
+        }
+        frame++;
+        if(frame >= tex->getImageCount().x){
+            frame = 0;
+            if(cyclesLeft <= 0){
+                // State beendet, Objekt ist wieder in Standard-Row
+                //return updateDirection();
+            }
+        }
+        std::cout << "Shifting to\tR: " << state << "\tC: "<< frame << std::endl;
+        sf::Vector2i texsize = (sf::Vector2i) tex->getSize();
+        sf::Vector2i position(texsize.x * frame, texsize.y * state);
+        sprite.setTextureRect(sf::IntRect(position,texsize));
+        // std::cout << "Texsize: " << texsize.x << ", " << texsize.y * row << std::endl;
+    };
+
+    // update texture direction gemäß vorliegendem wert -> wird überschrieben zB bei Objekten mit mehr als 4 richtungen (die blöden Hecken)
+    public:
+    virtual void updateDirection(){
+        int row;
+        if(dir == LEFT) row = 0;
+        else if(dir == UP) row =1;
+        else if(dir == RIGHT) row = 2;
+        else if(dir == DOWN) row = 3;
+        setTexType(row);
+    }
+
+    protected:
+    // Change direction to provided direction and change texture
     void setDirection(sf::Vector2i _dir){
         if(dir == _dir) return;
-        int row;
-        if(_dir == LEFT) row = 0;
-        if(_dir == UP) row =1;
-        if(_dir == RIGHT) row = 2;
-        if(_dir == DOWN) row = 3;
-
-        setTexType(row);
         dir = _dir;
+        updateDirection();
     };
+
+    void setScale(){
+        sf::Vector2f scale(
+            (float) (OBJECTUNIT * size.x) / tex->getSize().x,
+            (float) (OBJECTUNIT * size.y) / tex->getSize().y);
+        sprite.scale(scale);
+    }
 
 };
 ////////////////////////////////////////////////////////////////////////////////

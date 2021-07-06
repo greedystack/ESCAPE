@@ -24,6 +24,10 @@ public:
         }
         return teleport(pos + _dir);
     };
+
+    virtual void update() override {
+        iterateAnimation();
+    }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -38,8 +42,10 @@ private:
 public:
 
     Player(Object ** map, int x, int y) : 
-        LivingObject(map, x, y, texsheets["arrow_left"], LEFT)
-    {};
+        LivingObject(map, x, y, texsheets["panda"], DOWN)
+    {
+        switchTime = sf::milliseconds(600);
+    };
     ~Player(){
         for (Object* i : bag) {
             free(i);

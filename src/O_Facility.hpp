@@ -20,15 +20,15 @@ public:
         for(auto d : {RIGHT, UP, LEFT, DOWN}){
             if(neighbor(d) == nullptr) continue;            
             if(neighbor(d)->whoami().contains(BARRIER)){
-                neighbor(d)->update();
+                neighbor(d)->updateDirection();
             }
             
         }
-        update();
+        updateDirection();
         
     };
 
-    virtual void update() override {
+    virtual void updateDirection() override {
         // hier wird die Row des Texsheets direkt in den x-Value der Direction kodiert, da die von den Nachbarn und deren Position abhängt.
         std::set<std::array<int, 2>> bnd; //barrierNeighborDirections ... oder Bundesnachrichtendienst?? ... Zufall oder Chiffre?!!
         for(auto d : {RIGHT, UP, LEFT, DOWN}){
