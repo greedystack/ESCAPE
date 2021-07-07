@@ -169,6 +169,7 @@ int main()
         ////////////////////////////////////////////////
         ///// Animate
         ////////////////////////////////////////////////
+        interactionBlocked = false;
         for (uint x = start.x; x < end.x; x++){
             for (uint y = start.y; y < end.y; y++){
                 Object* m = level->getObject(sf::Vector2u(x, y));
@@ -177,7 +178,9 @@ int main()
                 m->passedTime += animationclock.getElapsedTime();
                 if(m->passedTime < m->switchTime) continue;
                 m->passedTime = sf::milliseconds(0);
-                m->update();
+                if(!m->update()){
+                    interactionBlocked = true;
+                }
                 updateView=true;
 
             }

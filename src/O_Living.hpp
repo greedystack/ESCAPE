@@ -24,28 +24,33 @@ public:
         }
 
         for(uint i=1; i <= factor; i++){
+            sf::Vector2i startpos = pos;
             if(!setMapPosition(pos + _dir)){
                 return;
             }
-            sprite.setPosition((float)pos.x*OBJECTUNIT, (float)pos.y*OBJECTUNIT);
+            //sprite.setPosition((float)pos.x*OBJECTUNIT, (float)pos.y*OBJECTUNIT);
             
-            // Statt pending steps direction etc. besser: AnimationQueue-Datenstruktur die 
+            // Statt pending steps direction etc. besser: AnimationQueue-Datenstruktur, die row und duration und 
+            addAnimation(dtm[{dir.x, dir.y}] +4, 9, sf::milliseconds(5), startpos, pos);
         }
+        addAnimation(dtm[{dir.x, dir.y}] , 0, switchTimeRegular);
     };
 
-    virtual void update() override { 
-        // returned false, wenn animation noch nicht fertig - also weiterer input gesperrt werden muss.
+    virtual bool update() override { 
+        
         iterateAnimation();
-        if(pendingSteps > 0){
 
-        }else{
-            switchTime = switchTimeRegular
-        }
+        if(animationQueue.size() > 1) return false;
+        return true;
     }
 
 protected:
-    uint pendingSteps;
-    sf::Vector2i pendingStepsDirection;
+    //std::queue<std::function> aniQueue;
+
+    void animateStepRight(){
+
+    }
+
 };
 
 ////////////////////////////////////////////////////////////////////////////////

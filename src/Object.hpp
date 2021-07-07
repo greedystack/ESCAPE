@@ -9,6 +9,7 @@
 #include <list>
 #include <set>
 #include <map>
+#include <queue>
 
 // Ein Objekt auf der Map. IDEE: Könnte von Sprite erben.
 // Problem: Da draw() von Sprite private... 
@@ -17,6 +18,7 @@ const sf::Vector2i RIGHT(1,0);
 const sf::Vector2i LEFT(-1,0);
 const sf::Vector2i UP(0,-1);
 const sf::Vector2i DOWN(0,1);
+    
 
 const uint ANIMATION_STEPS_PER_FIELD = 10;
 
@@ -65,7 +67,19 @@ protected:
     std::set<uint> identity;
 
     // Animation:
-    uint state, frame, cyclesLeft;
+    uint frame;
+    struct ani {
+        uint state; // reihe in Texsheet
+        int frames; // also animationsiterationen
+        sf::Time time;
+        sf::Vector2f endPos;
+        sf::Vector2f move;
+    } ;
+    std::queue<ani> animationQueue;
+    ani standardAnimation;
+        // TODO: StandardAnimation ststt letztes Queue-Objekt!
+
+    std::map<std::array<int, 2>, uint> dtm; //direction texsheet map
 
 public:
     ////////////////////////////////////////////////////////////////////////////////
@@ -88,6 +102,12 @@ public:
         sprite.setPosition((float)pos.x*OBJECTUNIT, (float)pos.y*OBJECTUNIT);
 
         if(tex->getImageCount().x > 1) animated=true;
+
+
+        dtm[ {LEFT.x, LEFT.y} ] = 0; 
+        dtm[{UP.x, UP.y}] = 1; 
+        dtm[{RIGHT.x, RIGHT.y}] = 2; 
+        dtm[{DOWN.x, DOWN.y}] = 3;
     };
 
     std::set<uint> whoami(){return identity;}
@@ -101,8 +121,9 @@ public:
         return false;
     };
 
-    virtual void update(){ // Fkt. für Animationen und so
-
+    virtual bool update(){ // Fkt. für Animationen und so
+    // returned false, wenn animation noch nicht fertig - also weiterer input gesperrt werden muss.
+        return true;
     }
     
     ////////////////////////////////////////////////////////////////////////////////
@@ -144,7 +165,6 @@ public:
     // ACHTUNG!! Nur für 1x1-große Objekte gebaut! 
     // Entfernt Objekt restlos.
     void del(){
-        // TODO WARUM GEHT DAS NICHT PROTECTED?????
         removeFromMap();
         delete this;
     };
@@ -243,12 +263,14 @@ protected:
 /// Optik
 ////////////////////////////////////////////////////////////////////////////////
 
-    void setTexType(int row){
+    void setTexType(uint row){
         if(tex->getImageCount().y <= row){
             std::cout << "ERROR: Texsheet hat nicht so viele Modi. Setze Modus 0.";
             row = 0;
         }
-        state=row;
+        animationQueue = std::queue<ani>();
+        addAnimation(row, 0, switchTimeRegular);
+
         sf::Vector2i texsize = (sf::Vector2i) tex->getSize();
         sf::Vector2i position(0, texsize.y * row);
         sprite.setTextureRect(sf::IntRect(position,texsize));
@@ -259,30 +281,60 @@ protected:
         if(!animated){
             return;
         }
+
         frame++;
         if(frame >= tex->getImageCount().x){
             frame = 0;
-            if(cyclesLeft <= 0){
-                // State beendet, Objekt ist wieder in Standard-Row
-                //return updateDirection();
+        }
+
+        
+        if(animationQueue.size() > 1){
+            animationQueue.front().frames--;
+            if(animationQueue.front().frames <= 0){
+                if(animationQueue.front().move != sf::Vector2f(0.,0.)){
+                    // setze endposition, falls floatingpointrechnungen unten böse numerik gemacht haben
+                    //sprite.setPosition(animationQueue.front().endPos);
+                }
+
+                animationQueue.pop();
             }
         }
-        std::cout << "Shifting to\tR: " << state << "\tC: "<< frame << std::endl;
+
+
+        std::cout << "Shifting to\tR: " << animationQueue.front().state << "\tC: "<< frame << "\tRemaining: "<< animationQueue.front().frames << "\tQ: "<< animationQueue.size() << "\tMove: "<< animationQueue.front().move.x << ", " << animationQueue.front().move.y << std::endl;
         sf::Vector2i texsize = (sf::Vector2i) tex->getSize();
-        sf::Vector2i position(texsize.x * frame, texsize.y * state);
+        sf::Vector2i position(texsize.x * frame, texsize.y * animationQueue.front().state);
         sprite.setTextureRect(sf::IntRect(position,texsize));
-        // std::cout << "Texsize: " << texsize.x << ", " << texsize.y * row << std::endl;
+
+        sprite.move(animationQueue.front().move);
+        switchTime = animationQueue.front().time;
     };
+
+
+    void addAnimation(uint row, int frames, sf::Time time, sf::Vector2i startPos=sf::Vector2i(0,0), sf::Vector2i endPos=sf::Vector2i(0,0)){ 
+        // Adds Animation to queue
+        ani a;
+
+        a.endPos = sf::Vector2f(endPos.x*OBJECTUNIT, endPos.y*OBJECTUNIT);
+        
+        a.move=sf::Vector2f(0,0);
+        if(startPos != endPos){
+            sf::Vector2i deltaPos = endPos - startPos;
+            a.move = sf::Vector2f(
+                (float)(deltaPos.x * OBJECTUNIT) / frames, 
+                ((float)deltaPos.y * OBJECTUNIT) / frames);
+        }
+        
+        a.state = row;
+        a.frames = frames;
+        a.time = time;
+        animationQueue.push(a);
+    }
 
     // update texture direction gemäß vorliegendem wert -> wird überschrieben zB bei Objekten mit mehr als 4 richtungen (die blöden Hecken)
     public:
     virtual void updateDirection(){
-        int row;
-        if(dir == LEFT) row = 0;
-        else if(dir == UP) row =1;
-        else if(dir == RIGHT) row = 2;
-        else if(dir == DOWN) row = 3;
-        setTexType(row);
+        setTexType(dtm[{dir.x, dir.y}]);
     }
 
     protected:
