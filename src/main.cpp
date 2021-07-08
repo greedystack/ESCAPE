@@ -17,7 +17,7 @@ const int BGSIZE=100; // minimum half of screensize!! // must be divideable by 2
 const std::string TITLE = "Escape!";
 
 const uint OBJECTUNIT = 20; // Pixel pro Map-Block
-const sf::Time UPDATE_TIME = sf::milliseconds(75); // regular move speed
+const sf::Time UPDATE_TIME = sf::milliseconds(90); // regular move speed
 
 sf::Vector2u WIN_SIZE(2000, 2000); // in Pixel
 float zoom = 0.5f; // inverted (also im Sinne von Kehrwert)
@@ -39,7 +39,6 @@ int main()
     bool updateView = true;
     bool paused = false;
     bool drawAnimation = false;
-    int speedup = 0;
 
     Level* level = new Level(2000, 2000);
     
@@ -91,30 +90,28 @@ int main()
         // make as many updates as needed for the elapsed time
         while (elapsed > UPDATE_TIME)
         {   
-            speedup-=1;
+            uint speed = 2;
+            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Period))speed--;
+            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Comma))speed++;
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
             {
-                level->getPlayer()->step(LEFT);
+                level->getPlayer()->step(LEFT, speed);
                 updateView = true;
-                speedup+=2;
             }
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
             {
-                level->getPlayer()->step(UP);
+                level->getPlayer()->step(UP, speed);
                 updateView = true;
-                speedup+=2;
             }
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
             {
-                level->getPlayer()->step(RIGHT);
+                level->getPlayer()->step(RIGHT, speed);
                 updateView = true;
-                speedup+=2;
             }
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
             {
-                level->getPlayer()->step(DOWN);
+                level->getPlayer()->step(DOWN, speed);
                 updateView = true;
-                speedup+=2;
             }
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
             {
@@ -145,6 +142,7 @@ int main()
             elapsed -= UPDATE_TIME;
         }
 
+
         ////////////////////////////////////////////////
         ///// Animate
         ////////////////////////////////////////////////
@@ -161,23 +159,8 @@ int main()
         }
         
 
-        ////////////////////////////////////////////////
-        ///// Speedup
-        ////////////////////////////////////////////////
-
-        /*
-        if(speedup<0){
-            // keine Bewegung stattgefunden
-            speedup=0;
-            UPDATE_TIME = STD_updateTime; // Stoppe schnelles Laufen.
-        }else if(speedup>3){
-            // Bewegung in `speedup-1` aufeinanderfolgenden Loops stattgefunden.
-            speedup=0;
-            if(UPDATE_TIME >= MAX_updateTime){
-                UPDATE_TIME -= DELTA_updateTime; // Beschleunige
-            }
-        }
-        */
+        
+        
 
         ////////////////////////////////////////////////
         //////////////// Update Window
@@ -248,12 +231,13 @@ int main()
                 );
                 //std::cout << "Drawing: ("<< start.x <<", "<< start.y<<") ";
                 //std::cout << "to ("<< end.x <<", "<< end.y<<")\n";
+                /*
                 std::cout << 
                 "Zoom*Pixel:\tx: " << zoom*WIN_SIZE.x << 
                 "\ty: " << zoom*WIN_SIZE.y << 
                 "\tPixel_x: " << WIN_SIZE.x << 
                 "\tPixel_y: " << WIN_SIZE.y << 
-                "\tzoom: " << zoom << std::endl;
+                "\tzoom: " << zoom << std::endl;*/
             }
 
 

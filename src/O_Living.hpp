@@ -30,7 +30,7 @@ public:
             }
 
             
-            movementAnimation.frames = 6;
+            movementAnimation.frames = 6*factor;
             movementAnimation.time = sf::milliseconds(10);
             movementAnimation.state = dtm[{dir.x, dir.y}] +4;
             movementAnimation.endPos = sf::Vector2i(pos.x * OBJECTUNIT, pos.y * OBJECTUNIT);

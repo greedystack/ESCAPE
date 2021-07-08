@@ -77,7 +77,7 @@ protected:
     struct standingAnimation {
         uint state; // reihe in Texsheet
         uint frame; // also animationsiterationen
-        sf::Time time = sf::milliseconds(300);
+        sf::Time time = sf::milliseconds(500);
         sf::Time last, passed;
     } standingAnimation;
 
@@ -321,7 +321,7 @@ protected:
 
         
 
-        std::cout << "Shifting to\tR: " << movementAnimation.state << "\tC: "<< curFrame << "\tRemaining: "<< movementAnimation.frames << "\tMove: "<< movementAnimation.move.x << ", " << movementAnimation.move.y << std::endl;
+        //std::cout << "Shifting to\tR: " << movementAnimation.state << "\tC: "<< curFrame << "\tRemaining: "<< movementAnimation.frames << "\tMove: "<< movementAnimation.move.x << ", " << movementAnimation.move.y << std::endl;
 
         sprite.move(movementAnimation.move);
 
