@@ -17,10 +17,11 @@ const int BGSIZE=100; // minimum half of screensize!! // must be divideable by 2
 const std::string TITLE = "Escape!";
 
 const uint OBJECTUNIT = 20; // Pixel pro Map-Block
-const sf::Time UPDATE_TIME = sf::milliseconds(70); // regular move speed
+const sf::Time UPDATE_TIME = sf::milliseconds(75); // regular move speed
 
 sf::Vector2u WIN_SIZE(2000, 2000); // in Pixel
 float zoom = 0.5f; // inverted (also im Sinne von Kehrwert)
+// const sf::Vector2u MAX_VIEW_SIZE(); // in Mapblocks - um keinen vorteil durch rauszommen oder resizen zu bekommen
 
 int lvl_count = 2;
 
