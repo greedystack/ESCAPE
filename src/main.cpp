@@ -90,8 +90,8 @@ int main()
         // make as many updates as needed for the elapsed time
         while (elapsed > UPDATE_TIME)
         {   
-            uint speed = 2;
-            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Period))speed--;
+            uint speed = 1;
+            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Period))speed++;
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Comma))speed++;
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
             {
