@@ -264,26 +264,6 @@ protected:
 ////////////////////////////////////////////////////////////////////////////////
 /// Optik
 ////////////////////////////////////////////////////////////////////////////////
-
-/*
-    public:
-    sf::Time getRefreshTime(){
-        if(animationQueue.size() > 0) return  animationQueue.front().time;
-        return standardAnimation.time;
-    }
-
-    bool refresh(sf::Time elapsed){
-        if(!animated) return false;
-
-        passedTime += elapsed;
-        if(passedTime < getRefreshTime()) return false;
-
-        //iterateAnimation();
-        passedTime -= getRefreshTime();
-
-        return true;
-    }
-*/
     
 
     public: bool animate(sf::Time available){
@@ -353,9 +333,6 @@ protected:
 
     }
 
-
-    ////////////////////////////////////////////////////////////////////////////////
-    ////// Nochmal überdenken:
     
     protected:
     void setTexType(uint row){
@@ -371,71 +348,6 @@ protected:
         sprite.setTextureRect(sf::IntRect(position,texsize));
         // std::cout << "Texsize: " << texsize.x << ", " << texsize.y * row << std::endl;
     };
-
-    /*
-    void iterateAnimation2(){
-        if(!animated){
-            return;
-        }
-
-        frame++;
-        if(frame >= tex->getImageCount().x){
-            frame = 0;
-        }
-
-        ani* cur;
-        if(animationQueue.size() <= 0){
-            cur = &standardAnimation;
-            cur->frames++;
-
-        }else{
-            cur = &animationQueue.front();
-            if(cur->frames <= 1){
-                if(cur->move != sf::Vector2i(0,0)){
-                    // setze endposition, falls floatingpointrechnungen unten böse numerik gemacht haben
-                    std::cout << "SET: " << cur->endPos.x << ", " << cur->endPos.y << std::endl;
-                    sprite.setPosition((sf::Vector2f)cur->endPos);
-                }
-                animationQueue.pop();
-            }
-            cur->frames--;
-        }
-
-        
-        
-        sf::Vector2i texsize = (sf::Vector2i) tex->getSize();
-        uint curFrame = (cur->frames)%3;
-        sf::Vector2i position(texsize.x * curFrame, texsize.y * cur->state);
-        sprite.setTextureRect(sf::IntRect(position,texsize));
-
-        
-
-        std::cout << "Shifting to\tR: " << cur->state << "\tC: "<< curFrame << "\tRemaining: "<< cur->frames << "\tQ: "<< animationQueue.size() << "\tMove: "<< cur->move.x << ", " << cur->move.y << std::endl;
-
-        //sprite.setPosition(sprite.getPosition() + (sf::Vector2f)cur->move);
-        switchTime = cur->time;
-    };
-    */
-
-   /*
-    ani createAnimation(uint row, uint frames, sf::Time time, sf::Vector2i startPos=sf::Vector2i(0,0), sf::Vector2i endPos=sf::Vector2i(0,0)){ 
-        // Adds Animation to queue
-        ani a;
-
-        a.endPos = sf::Vector2u(endPos.x*OBJECTUNIT, endPos.y*OBJECTUNIT);
-        
-        a.move=sf::Vector2f(0.,0.);
-        if(startPos != endPos){
-            
-            a.
-        }
-        
-        a.state = row;
-        a.frames = frames;
-        a.time = time;
-        return a;
-    }
-    */
 
     // update texture direction gemäß vorliegendem wert -> wird überschrieben zB bei Objekten mit mehr als 4 richtungen (die blöden Hecken)
     public:

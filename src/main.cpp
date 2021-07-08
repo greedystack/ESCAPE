@@ -29,9 +29,8 @@ int main()
     sf::RenderWindow window(sf::VideoMode(WIN_SIZE.x, WIN_SIZE.y), TITLE);
     sf::View view;
 
-    sf::Clock clock, animationclock;
+    sf::Clock clock;
     sf::Time elapsed = clock.restart();
-    sf::Time animationtime = animationclock.restart();
 
     sf::Vector2u start(0,0), end(0,0); // Mapblocks zum Rendern
     
@@ -48,7 +47,6 @@ int main()
     {
         // add the time passed since the last cycle
         elapsed = elapsed + clock.restart(); // This function puts the time counter back to zero. It also returns the time elapsed since the clock was started.
-        animationtime = animationtime + animationclock.restart();
 
         ////////////////////////////////////////////////
         ///// Events
@@ -146,7 +144,9 @@ int main()
             elapsed -= UPDATE_TIME;
         }
 
-        
+        ////////////////////////////////////////////////
+        ///// Animate
+        ////////////////////////////////////////////////
         for (uint x = start.x; x < end.x; x++){
             for (uint y = start.y; y < end.y; y++){
                 Object* m = level->getObject(sf::Vector2u(x, y));
@@ -176,29 +176,6 @@ int main()
                 UPDATE_TIME -= DELTA_updateTime; // Beschleunige
             }
         }
-        */
-
-        ////////////////////////////////////////////////
-        ///// Animate
-        ////////////////////////////////////////////////
-        /*
-        interactionBlocked = false;
-        for (uint x = start.x; x < end.x; x++){
-            for (uint y = start.y; y < end.y; y++){
-                Object* m = level->getObject(sf::Vector2u(x, y));
-                if (m == nullptr) continue;
-                if(!m->animated) continue;
-                m->passedTime += animationclock.getElapsedTime();
-                if(m->passedTime < m->switchTime) continue;
-                m->passedTime = sf::milliseconds(0);
-                if(!m->update()){
-                    interactionBlocked = true;
-                }
-                updateView=true;
-
-            }
-        }
-        animationclock.restart();
         */
 
         ////////////////////////////////////////////////
