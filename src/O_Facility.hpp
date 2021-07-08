@@ -89,15 +89,32 @@ public:
 class Goal : public Portal {
 public:
     Goal(Object ** map, int x, int y) : 
-        Portal(map, x, y, texsheets["arrow_left"])
+        Portal(map, x, y, texsheets["portal"])
     {
         identity.insert(GOAL);
+        setTexType(0);
+        standingAnimation.time=sf::milliseconds(75);
+        
     };
 
     bool getInteracted(Object* interacter) override{
         std::cout << "GEWONNEN!" << std::endl;
         ((Player*)interacter)->win();
         return true;
+    };
+};
+
+class Start : public Portal {
+public:
+    Start(Object ** map, int x, int y) : 
+        Portal(map, x, y, texsheets["portal"])
+    {
+        identity.insert(START);
+        setTexType(1);
+    };
+
+    bool getInteracted(Object* interacter) override{
+        
     };
 };
 

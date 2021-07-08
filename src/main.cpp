@@ -10,20 +10,17 @@
 
 
 
-// in ObjectUnit:
-const int BGSIZE=100; // minimum half of screensize!! // must be divideable by 2
-
 
 const std::string TITLE = "Escape!";
 
 const uint OBJECTUNIT = 20; // Pixel pro Map-Block
-const sf::Time UPDATE_TIME = sf::milliseconds(90); // regular move speed
+const sf::Time UPDATE_TIME = sf::milliseconds(80);
 
 sf::Vector2u WIN_SIZE(2000, 2000); // in Pixel
 float zoom = 0.5f; // inverted (also im Sinne von Kehrwert)
 // const sf::Vector2u MAX_VIEW_SIZE(); // in Mapblocks - um keinen vorteil durch rauszommen oder resizen zu bekommen
 
-int lvl_count = 2;
+int lvl_count = 3;
 
 int main()
 {
@@ -84,48 +81,76 @@ int main()
             usleep(250000); // Heizung aus! ;)
             continue;
         } 
-        ////////////////////////////////////////////////
-        ///// Eingabe
-        ////////////////////////////////////////////////
+        
         // make as many updates as needed for the elapsed time
         while (elapsed > UPDATE_TIME)
         {   
-            uint speed = 1;
-            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Period))speed++;
-            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Comma))speed++;
-            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
-            {
-                level->getPlayer()->step(LEFT, speed);
-                updateView = true;
+            if(!level->getPlayer()->isParalyzed()){
+                ////////////////////////////////////////////////
+                //////////////// Level Won
+                ////////////////////////////////////////////////
+                if(level->getPlayer()->hasWon()){
+                    lvl_count--;
+                    if(lvl_count <= 0){
+                        // WON GAME
+                        std::cout << "HURRA! HURRA!" << std::endl;
+                        // TODO Win Animation
+                    }else{
+                        std::cout << "init new level" << std::endl;
+                        delete level;
+                        level = new Level(2000, 2000);
+                    }
+                }
+                ////////////////////////////////////////////////
+                //////////////// Killed. Restart level
+                ////////////////////////////////////////////////
+                if(level->getPlayer()->wasKilled()){
+                    level->reset();
+                }
+
+
+                ////////////////////////////////////////////////
+                ///// User Input
+                ////////////////////////////////////////////////
+            
+                uint speed = 1;
+                if(sf::Keyboard::isKeyPressed(sf::Keyboard::Period))speed++;
+                if(sf::Keyboard::isKeyPressed(sf::Keyboard::Comma))speed++;
+                if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
+                {
+                    level->getPlayer()->step(LEFT, speed);
+                    updateView = true;
+                }
+                if(sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+                {
+                    level->getPlayer()->step(UP, speed);
+                    updateView = true;
+                }
+                if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+                {
+                    level->getPlayer()->step(RIGHT, speed);
+                    updateView = true;
+                }
+                if(sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+                {
+                    level->getPlayer()->step(DOWN, speed);
+                    updateView = true;
+                }
+                if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
+                {
+                    // Interact with Object before Player
+                    //level->getPlayer()->interact();
+                    //updateView = true;
+                }
+                if(sf::Keyboard::isKeyPressed(sf::Keyboard::Return) 
+                    || sf::Keyboard::isKeyPressed(sf::Keyboard::Enter))
+                {
+                    // Item Bag
+                    level->getPlayer()->useItem(); // temporarily
+                    updateView = true;
+                }
             }
-            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
-            {
-                level->getPlayer()->step(UP, speed);
-                updateView = true;
-            }
-            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
-            {
-                level->getPlayer()->step(RIGHT, speed);
-                updateView = true;
-            }
-            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
-            {
-                level->getPlayer()->step(DOWN, speed);
-                updateView = true;
-            }
-            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
-            {
-                // Interact with Object before Player
-                level->getPlayer()->interact();
-                updateView = true;
-            }
-            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Return) 
-                || sf::Keyboard::isKeyPressed(sf::Keyboard::Enter))
-            {
-                // Item Bag
-                level->getPlayer()->useItem(); // temporarily
-                updateView = true;
-            }
+
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Add) ||
                 sf::Keyboard::isKeyPressed(sf::Keyboard::M))
             {
@@ -138,6 +163,9 @@ int main()
                 zoom+=0.05;
                 updateView=true;
             }
+
+            
+                
 
             elapsed -= UPDATE_TIME;
         }
@@ -169,22 +197,6 @@ int main()
             if(updateView){
                 //std::cout<< "Beschleunigung: " << updateTime.asSeconds() << "\n";
 
-                ////////////////////////////////////////////////
-                //////////////// Level Won
-                ////////////////////////////////////////////////
-                if(level->getPlayer()->hasWon()){
-                    lvl_count--;
-                    if(lvl_count <= 0){
-                        // WON GAME
-                        std::cout << "HURRA! HURRA!" << std::endl;
-                        // TODO Win Animation
-                    }else{
-                        std::cout << "init new level" << std::endl;
-                        delete level;
-                        level = new Level(2000, 2000);
-                    }
-                }
-                
                 ////////////////////////////////////////////////
                 //////////////// Calculate View Size and View
                 ////////////////////////////////////////////////
@@ -260,7 +272,7 @@ int main()
                     while(m != nullptr){// falls ich Stacking implementiere.
                         //if (!m->visible) continue;
                         //if(x != m->posX || y != m->posY ) continue; // For Objects bigger than 1x1 map-field
-
+    
                         window.draw(m->sprite);
                         //m=m->onTop; // falls ich Stacking implementiere.
                         m=nullptr; // falls nicht

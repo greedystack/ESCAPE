@@ -12,12 +12,18 @@ public:
 
 private:
     Texsheet* texture;
-    float switchTime; // Zeit zwischen frame-wechsel
-    float passedTime; // interne Zeit
-    uint state, frame, cyclesLeft, fallbackState;
+    sf::Time switchTime; // Zeit zwischen frame-wechsel
+    sf::Time passedTime; // interne Zeit
+    uint row, framesLeft, fallbackState;
+    sf::Vector2i move, endPos;
+    Animation followUp;
     // state ist Animationsart (stehen, gehen, attacke... ) := Zeile in Spritesheet
     // frame ist Spalte in Spritesheet, also aktueller Frame der Animation.
     // state ändert sich von außen, frame ändert sich hier.
+
+
+
+
 
 public:
     Animation(Texsheet* _texture, float _switchTime, uint _state=0, uint startframe=0)

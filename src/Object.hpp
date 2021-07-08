@@ -10,9 +10,12 @@
 #include <set>
 #include <map>
 #include <queue>
+#include <functional>
 
 // Ein Objekt auf der Map. IDEE: Könnte von Sprite erben.
 // Problem: Da draw() von Sprite private... 
+
+using namespace std;
 
 const sf::Vector2i RIGHT(1,0);
 const sf::Vector2i LEFT(-1,0);
@@ -29,7 +32,16 @@ const uint ITEM = 1;
 const uint BARRIER = 2;
 const uint PORTAL = 3;
 const uint GOAL = 31;
+const uint START = 32;
 const uint DESTROYER = 11;
+const uint LIVING = 4;
+const uint PLAYER = 41;
+const uint ENEMY = 42;
+
+// Identifier for special animations
+const uint EMPTY = 0;
+const uint KILL = 1;
+const uint KILLED = 2;
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -44,11 +56,16 @@ public:
     static std::map<std::string, Texsheet*> texsheets;
 
     static void loadTexsheets(std::string theme = "standard"){
-        texsheets["bg0"] = new Texsheet("../include/img/boden2.png");
+        texsheets["bg0"] = new Texsheet("../include/img/boden.png");
         texsheets["hecke"] = new Texsheet("../include/img/hecke.png", 1, 16);
         texsheets["wall"] = new Texsheet("../include/img/wall0.png");
         texsheets["arrow_left"] = new Texsheet("../include/img/arrow.png", 1, 4);
         texsheets["panda"] = new Texsheet("../include/img/panda.png", 3, 8);
+        texsheets["panda_standing"] = new Texsheet("../include/img/panda_standing.png", 8, 4);
+
+        texsheets["panda_move"] = new Texsheet("../include/img/panda_move.png", 3, 4);
+        texsheets["panda_killed"] = new Texsheet("../include/img/panda_killed.png", 19, 4);
+        texsheets["portal"] = new Texsheet("../include/img/portal.png", 21, 2);
     }
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -58,7 +75,7 @@ public:
     bool animated=false, visible=false;
 
     // Animation:
-    sf::Time passedTime, switchTimeRegular = sf::milliseconds(1000), switchTime = switchTimeRegular;
+    //sf::Time passedTime, switchTimeRegular = sf::milliseconds(1000), switchTime = switchTimeRegular;
     
 protected:
     Texsheet *tex;
@@ -66,20 +83,15 @@ protected:
     //int OBJECTUNIT = 20;
     std::set<uint> identity;
 
-    // Animation:
-    struct movementAnimation {
-        uint state; // reihe in Texsheet
-        uint frames = 0; // also animationsiterationen
-        sf::Time time;
-        sf::Vector2i endPos;
-        sf::Vector2f move;
-    } movementAnimation;
+
+
     struct standingAnimation {
         uint state; // reihe in Texsheet
         uint frame; // also animationsiterationen
         sf::Time time = sf::milliseconds(500);
         sf::Time last, passed;
     } standingAnimation;
+    
 
     std::map<std::array<int, 2>, uint> dtm; //direction texsheet map
 
@@ -267,16 +279,12 @@ protected:
 
     
 
-    public: bool animate(sf::Time available){
+    public: virtual bool animate(sf::Time available){
         // FKT bekommt insgesamt noch für die ganze AnimationQueue zur Abarbeitung zur Verfügung stehende Zeit
 
         if(!animated)return false;
 
-        if(movementAnimation.frames > 0){
-            standingAnimation.passed = sf::milliseconds(0);
-            return animateMovement(available); 
-        }
-        else return animateStanding(available);
+        return animateStanding(available);
     };
 
     bool animateStanding(sf::Time available){
@@ -290,6 +298,7 @@ protected:
         if(standingAnimation.passed < standingAnimation.time){
             return false;
         }
+        sprite.setTexture(tex->texture);
 
         standingAnimation.frame++;
         if(standingAnimation.frame >= tex->getImageCount().x)
@@ -305,34 +314,7 @@ protected:
         return true;
     }
 
-    bool animateMovement(sf::Time available){
-        if(movementAnimation.frames <= 0) return false;
-        sf::Time timePerStep = available / (float)movementAnimation.frames;
-        if(timePerStep > movementAnimation.time){
-            return false;
-        }
-
-        movementAnimation.frames--;
-
-        sf::Vector2i texsize = (sf::Vector2i) tex->getSize();
-        uint curFrame = (movementAnimation.frames)%3; // TODO @HARDCODED
-        sf::Vector2i position(texsize.x * curFrame, texsize.y * movementAnimation.state);
-        sprite.setTextureRect(sf::IntRect(position,texsize));
-
-        
-
-        //std::cout << "Shifting to\tR: " << movementAnimation.state << "\tC: "<< curFrame << "\tRemaining: "<< movementAnimation.frames << "\tMove: "<< movementAnimation.move.x << ", " << movementAnimation.move.y << std::endl;
-
-        sprite.move(movementAnimation.move);
-
-        if(movementAnimation.frames <= 0){
-                // setze endposition, falls floatingpointrechnungen unten böse numerik gemacht haben
-                sprite.setPosition((sf::Vector2f)movementAnimation.endPos);
-        }
-
-        return true;
-
-    }
+ 
 
     
     protected:

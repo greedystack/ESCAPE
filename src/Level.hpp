@@ -18,6 +18,10 @@
 #include "O_Facility.hpp"
 #include "O_Item.hpp"
 
+
+extern const uint OBJECTUNIT;
+extern const sf::Time UPDATE_TIME;
+
 // Stellt ein Level dar und verwaltet die Map etc.
 
 class Level {
@@ -28,7 +32,6 @@ public:
 private:
     Object** map;
     Player* player;
-    int OBJECTUNIT = 20;
 
     /*
     sf::Sprite** bg;
@@ -38,8 +41,13 @@ private:
     int bgsize = 10;
     sf::Sprite bg;
 
-    int mapsizex, mapsizey;
+    uint64_t mapsizex, mapsizey;
 
+
+    // For Reset:
+    std::set<std::array<uint, 2>> walls;
+    std::set<std::array<uint, 2>> enemies;
+    std::array<uint, 2> start, end;
     
 public:
     
@@ -47,66 +55,21 @@ public:
         : mapsizex(x), mapsizey(y)
     {
 
-        map = (Object**)(malloc((2 + x * y) * sizeof(Object *)));
-        for(int i=0; i<(x*y +2); i++){
-            map[i] = nullptr;
-        }
-        map[0] = (Object*)x;
-        map[1] = (Object*)y;
-
-        printf("Map allocated \n");
+        allocateMap();
 
         Object::loadTexsheets();
-
-        /*
-        // Das frisst zu viel RAM
-        bgsizex = (uint) std::ceil((float)mapsizex / (float)bgsize);
-        bgsizey = (uint) std::ceil((float)mapsizey / (float)bgsize);
-        bg = (sf::Sprite**)(malloc((bgsizex * bgsizey) * sizeof(sf::Sprite *)));
-        for(int i=0; i<(bgsizex*bgsizey); i++){
-            bg[i] = nullptr;
-        }
-        drawBackground();
-        */
-        
         createBackground();
+        loadFonts();
+        
+        
 
         
-        loadFonts();
-
-        buildOuterBorders();
-        dfs(sf::Vector2u(25, 25));
+        dfs(sf::Vector2u(5, 5));
+        buildMap();
     }
 
     ~Level(){
-        for(int x = 0; x < mapsizex; x++){
-            for(int y = 0; y < mapsizey; y++){
-                Object* obj = getObject(sf::Vector2u(x, y));
-                if(obj != nullptr){
-                    delete obj;
-                    //std::cout << "deleted object on ("<<x<<" , "<<y<<").\n";
-                }
-            }
-        }
-        free(map);
-        map = nullptr;
-
-        /*
-        for(int x = 0; x < bgsizex; x++){
-            for(int y = 0; y < bgsizey; y++){
-                sf::Sprite* obj = getBackground(sf::Vector2u(x, y));
-                if(obj != nullptr){
-                    delete obj;
-                    //std::cout << "deleted object on ("<<x<<" , "<<y<<").\n";
-                }
-            }
-        }
-        free(bg);
-        bg = nullptr;
-        */
-        
-        
-        printf("Map freed \n");
+        purgeMap();
     }
     
     //////////////////////////////////////////////////////////////////////////////////////////////
@@ -140,6 +103,52 @@ public:
         return bg;
     }
 
+    void buildMap(){
+        buildOuterBorders();
+        new Goal(map, start[0], start[1]);
+        player = new Player(map, end[0], end[1]);
+    
+        for(auto e : enemies){
+            new Enemy(map, e[0], e[1]);
+        }
+        for(auto wall : walls) {
+            new Barrier(map, wall[0], wall[1]);
+        }
+
+    }
+
+    void allocateMap(){
+        map = (Object**)(malloc((2 + mapsizex * mapsizey) * sizeof(Object *)));
+        for(int i=0; i<(mapsizex*mapsizey +2); i++){
+            map[i] = nullptr;
+        }
+        map[0] = (Object*)mapsizex;
+        map[1] = (Object*)mapsizey;
+
+        printf("Map allocated \n");
+    }
+
+    void purgeMap(){
+        for(int x = 0; x < mapsizex; x++){
+            for(int y = 0; y < mapsizey; y++){
+                Object* obj = getObject(sf::Vector2u(x, y));
+                if(obj != nullptr){
+                    delete obj;
+                    //std::cout << "deleted object on ("<<x<<" , "<<y<<").\n";
+                }
+            }
+        }
+        free(map);
+        map = nullptr;
+        
+        printf("Map freed \n");
+    }
+
+    void reset(){
+        purgeMap();
+        allocateMap();
+        buildMap();
+    }
 
 private:
 
@@ -176,7 +185,7 @@ void createBackground(){
     Texsheet* tex = Object::texsheets["bg0"];
     tex->texture.setRepeated(true);
     bg.setTexture(tex->texture);
-    bg.setTextureRect({0, 0, mapsizex*OBJECTUNIT, mapsizey*OBJECTUNIT});
+    bg.setTextureRect({0, 0, (int)(mapsizex*OBJECTUNIT), (int)(mapsizey*OBJECTUNIT)});
 }
 
 
@@ -198,7 +207,6 @@ void dfs(sf::Vector2u size){
     uint scalar = 2; // wie viele Mapfields hat ein DFS-Node (zu deutsch: wie breit sind die Gänge)
 
 
-    std::array<uint, 2> start, end;
     std::set<std::array<uint, 2>> noWall; // durchgang, hier keine wall platzieren
     std::stack<std::array<uint, 2>> maxPath;
     srand (time(NULL));
@@ -363,8 +371,13 @@ void dfs(sf::Vector2u size){
     end = maxPath.top();
     end = getMapField(end);
 
-    new Goal(map, start[0], start[1]);
-    player = new Player(map, end[0], end[1]);
+    for(uint i=0; i<5; i++) maxPath.pop();
+    enemies.insert(getMapField(maxPath.top()));
+    for(uint i=0; i<3; i++) maxPath.pop();
+    enemies.insert(getMapField(maxPath.top()));
+
+    
+
 
     /*
     while(maxPath.size() > 1) {
@@ -394,12 +407,9 @@ void dfs(sf::Vector2u size){
         //std::cout <<  "possible walls: " << possibleWalls.size() << "\n";
     }
 
-    std::set<std::array<uint, 2>> walls;
+    
     std::set_difference(possibleWalls.begin(), possibleWalls.end(), noWall.begin(), noWall.end(), std::inserter(walls, walls.end()));
 
-    for(auto wall : walls) {
-        new Barrier(map, wall[0], wall[1]);
-    }
 
 
     // TODO Navi-Items, Brot, Bambus, Minotauren zufällig verteilen.
@@ -410,6 +420,10 @@ void dfs(sf::Vector2u size){
     //  Das ist effizient und pro 1 Minotaurus können danach (bei umgekehrter DFS, sonst halt andersrum) n Bambusse verteilt werden
     // Navi und Brot: An den Anfang mehr, sonst aber gleichverteilt, an Ende weniger.
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+
 
 
 ////////////////////////////////////////////////////////////////////////////////
