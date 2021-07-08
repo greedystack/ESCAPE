@@ -19,7 +19,7 @@ const std::string TITLE = "Escape!";
 const uint OBJECTUNIT = 20; // Pixel pro Map-Block
 const sf::Time UPDATE_TIME = sf::milliseconds(70); // regular move speed
 
-sf::Vector2u WIN_SIZE(1024, 1024); // in Pixel
+sf::Vector2u WIN_SIZE(2000, 2000); // in Pixel
 float zoom = 0.5f; // inverted (also im Sinne von Kehrwert)
 
 int lvl_count = 2;
@@ -204,6 +204,7 @@ int main()
                 ////////////////////////////////////////////////
                 //////////////// Calculate View Size and View
                 ////////////////////////////////////////////////
+
                 sf::Vector2f playerpos = level->getPlayer()->sprite.getPosition();
                 float xfrom, yfrom;
 
@@ -241,11 +242,17 @@ int main()
                     yfrom/OBJECTUNIT
                 );
                 end= sf::Vector2u(
-                    (xfrom + WIN_SIZE.x*zoom +1)/OBJECTUNIT,
-                    (yfrom + WIN_SIZE.y*zoom +1)/OBJECTUNIT
+                    ((xfrom + WIN_SIZE.x*zoom)/OBJECTUNIT)+1,
+                    ((yfrom + WIN_SIZE.y*zoom)/OBJECTUNIT)+1
                 );
                 //std::cout << "Drawing: ("<< start.x <<", "<< start.y<<") ";
                 //std::cout << "to ("<< end.x <<", "<< end.y<<")\n";
+                std::cout << 
+                "Zoom*Pixel:\tx: " << zoom*WIN_SIZE.x << 
+                "\ty: " << zoom*WIN_SIZE.y << 
+                "\tPixel_x: " << WIN_SIZE.x << 
+                "\tPixel_y: " << WIN_SIZE.y << 
+                "\tzoom: " << zoom << std::endl;
             }
 
 
