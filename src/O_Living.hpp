@@ -23,28 +23,27 @@ public:
             return;
         }
 
+        sf::Vector2i startpos = pos;
         for(uint i=1; i <= factor; i++){
-            sf::Vector2i startpos = pos;
             if(!setMapPosition(pos + _dir)){
                 return;
             }
-            //sprite.setPosition((float)pos.x*OBJECTUNIT, (float)pos.y*OBJECTUNIT);
+
             
-            // Statt pending steps direction etc. besser: AnimationQueue-Datenstruktur, die row und duration und 
-            movementAnimation = createAnimation(dtm[{dir.x, dir.y}] +4, 6, sf::milliseconds(10), startpos, pos);
+            movementAnimation.frames = 6;
+            movementAnimation.time = sf::milliseconds(10);
+            movementAnimation.state = dtm[{dir.x, dir.y}] +4;
+            movementAnimation.endPos = sf::Vector2i(pos.x * OBJECTUNIT, pos.y * OBJECTUNIT);
+
+            sf::Vector2i deltaPos = pos - startpos;
+            movementAnimation.move = sf::Vector2f( 
+                ((float)deltaPos.x * (float)OBJECTUNIT) / (float)movementAnimation.frames, 
+                ((float)deltaPos.y * (float)OBJECTUNIT) / (float)movementAnimation.frames);
         }
-        //addAnimation(dtm[{dir.x, dir.y}] , 0, switchTimeRegular);
     };
 
     virtual bool update() override { 
         return true;
-    }
-
-protected:
-    //std::queue<std::function> aniQueue;
-
-    void animateStepRight(){
-
     }
 
 };

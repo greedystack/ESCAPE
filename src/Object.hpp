@@ -18,9 +18,9 @@ const sf::Vector2i RIGHT(1,0);
 const sf::Vector2i LEFT(-1,0);
 const sf::Vector2i UP(0,-1);
 const sf::Vector2i DOWN(0,1);
-    
 
-const uint ANIMATION_STEPS_PER_FIELD = 10;
+extern const uint OBJECTUNIT;
+extern const sf::Time UPDATE_TIME;
 
 
 // Identifier for whoami()
@@ -63,21 +63,23 @@ public:
 protected:
     Texsheet *tex;
     Object** map;
-    int OBJECTUNIT = 20;
+    //int OBJECTUNIT = 20;
     std::set<uint> identity;
 
     // Animation:
-    uint frame;
-    struct ani {
+    struct movementAnimation {
         uint state; // reihe in Texsheet
-        uint frames; // also animationsiterationen
+        uint frames = 0; // also animationsiterationen
         sf::Time time;
-        sf::Vector2u endPos;
+        sf::Vector2i endPos;
         sf::Vector2f move;
-    } ;
-    std::queue<ani> animationQueue;
-    ani standardAnimation;
-    ani movementAnimation;
+    } movementAnimation;
+    struct standingAnimation {
+        uint state; // reihe in Texsheet
+        uint frame; // also animationsiterationen
+        sf::Time time = sf::milliseconds(300);
+        sf::Time last, passed;
+    } standingAnimation;
 
     std::map<std::array<int, 2>, uint> dtm; //direction texsheet map
 
@@ -263,6 +265,7 @@ protected:
 /// Optik
 ////////////////////////////////////////////////////////////////////////////////
 
+/*
     public:
     sf::Time getRefreshTime(){
         if(animationQueue.size() > 0) return  animationQueue.front().time;
@@ -280,24 +283,49 @@ protected:
 
         return true;
     }
-
+*/
     
 
-    bool animate(sf::Time available){
+    public: bool animate(sf::Time available){
         // FKT bekommt insgesamt noch für die ganze AnimationQueue zur Abarbeitung zur Verfügung stehende Zeit
 
         if(!animated)return false;
 
-        ani* a;
-        if(movementAnimation.frames <= 0) return animateStanding(available);
-        else return animateMovement(available);
+        if(movementAnimation.frames > 0){
+            standingAnimation.passed = sf::milliseconds(0);
+            return animateMovement(available); 
+        }
+        else return animateStanding(available);
     };
 
     bool animateStanding(sf::Time available){
-        return false;
+        if(available > standingAnimation.last){
+            standingAnimation.passed += standingAnimation.last + available - UPDATE_TIME;
+        }else{
+            standingAnimation.passed += standingAnimation.last - available;
+        } 
+        standingAnimation.last = available;
+
+        if(standingAnimation.passed < standingAnimation.time){
+            return false;
+        }
+
+        standingAnimation.frame++;
+        if(standingAnimation.frame >= tex->getImageCount().x)
+            standingAnimation.frame = 0;
+
+
+        sf::Vector2i texsize = (sf::Vector2i) tex->getSize();
+        sf::Vector2i position(texsize.x * standingAnimation.frame, texsize.y * standingAnimation.state);
+        sprite.setTextureRect(sf::IntRect(position,texsize));
+
+
+        standingAnimation.passed = sf::milliseconds(0);
+        return true;
     }
 
     bool animateMovement(sf::Time available){
+        if(movementAnimation.frames <= 0) return false;
         sf::Time timePerStep = available / (float)movementAnimation.frames;
         if(timePerStep > movementAnimation.time){
             return false;
@@ -312,13 +340,12 @@ protected:
 
         
 
-        std::cout << "Shifting to\tR: " << movementAnimation.state << "\tC: "<< curFrame << "\tRemaining: "<< movementAnimation.frames << "\tQ: "<< animationQueue.size() << "\tMove: "<< movementAnimation.move.x << ", " << movementAnimation.move.y << std::endl;
+        std::cout << "Shifting to\tR: " << movementAnimation.state << "\tC: "<< curFrame << "\tRemaining: "<< movementAnimation.frames << "\tMove: "<< movementAnimation.move.x << ", " << movementAnimation.move.y << std::endl;
 
         sprite.move(movementAnimation.move);
 
         if(movementAnimation.frames <= 0){
                 // setze endposition, falls floatingpointrechnungen unten böse numerik gemacht haben
-                std::cout << "SET: " << movementAnimation.endPos.x << ", " << movementAnimation.endPos.y << std::endl;
                 sprite.setPosition((sf::Vector2f)movementAnimation.endPos);
         }
 
@@ -336,7 +363,8 @@ protected:
             std::cout << "ERROR: Texsheet hat nicht so viele Modi. Setze Modus 0.";
             row = 0;
         }
-        standardAnimation = createAnimation(row, 0, switchTimeRegular);
+        standingAnimation.state = row;
+        standingAnimation.frame = 0;
 
         sf::Vector2i texsize = (sf::Vector2i) tex->getSize();
         sf::Vector2i position(0, texsize.y * row);
@@ -389,7 +417,7 @@ protected:
     };
     */
 
-
+   /*
     ani createAnimation(uint row, uint frames, sf::Time time, sf::Vector2i startPos=sf::Vector2i(0,0), sf::Vector2i endPos=sf::Vector2i(0,0)){ 
         // Adds Animation to queue
         ani a;
@@ -398,10 +426,8 @@ protected:
         
         a.move=sf::Vector2f(0.,0.);
         if(startPos != endPos){
-            sf::Vector2i deltaPos = (sf::Vector2i)endPos - (sf::Vector2i)startPos;
-            a.move = sf::Vector2f(
-                (float)(deltaPos.x * OBJECTUNIT) / frames, 
-                (float)(deltaPos.y * OBJECTUNIT) / frames);
+            
+            a.
         }
         
         a.state = row;
@@ -409,6 +435,7 @@ protected:
         a.time = time;
         return a;
     }
+    */
 
     // update texture direction gemäß vorliegendem wert -> wird überschrieben zB bei Objekten mit mehr als 4 richtungen (die blöden Hecken)
     public:
