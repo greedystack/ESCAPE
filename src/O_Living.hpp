@@ -31,16 +31,12 @@ public:
             //sprite.setPosition((float)pos.x*OBJECTUNIT, (float)pos.y*OBJECTUNIT);
             
             // Statt pending steps direction etc. besser: AnimationQueue-Datenstruktur, die row und duration und 
-            addAnimation(dtm[{dir.x, dir.y}] +4, 9, sf::milliseconds(5), startpos, pos);
+            movementAnimation = createAnimation(dtm[{dir.x, dir.y}] +4, 6, sf::milliseconds(10), startpos, pos);
         }
-        addAnimation(dtm[{dir.x, dir.y}] , 0, switchTimeRegular);
+        //addAnimation(dtm[{dir.x, dir.y}] , 0, switchTimeRegular);
     };
 
     virtual bool update() override { 
-        
-        iterateAnimation();
-
-        if(animationQueue.size() > 1) return false;
         return true;
     }
 

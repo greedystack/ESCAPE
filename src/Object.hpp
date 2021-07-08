@@ -58,7 +58,7 @@ public:
     bool animated=false, visible=false;
 
     // Animation:
-    sf::Time passedTime, switchTimeRegular = sf::milliseconds(500), switchTime = switchTimeRegular;
+    sf::Time passedTime, switchTimeRegular = sf::milliseconds(1000), switchTime = switchTimeRegular;
     
 protected:
     Texsheet *tex;
@@ -70,14 +70,14 @@ protected:
     uint frame;
     struct ani {
         uint state; // reihe in Texsheet
-        int frames; // also animationsiterationen
+        uint frames; // also animationsiterationen
         sf::Time time;
-        sf::Vector2f endPos;
+        sf::Vector2u endPos;
         sf::Vector2f move;
     } ;
     std::queue<ani> animationQueue;
     ani standardAnimation;
-        // TODO: StandardAnimation ststt letztes Queue-Objekt!
+    ani movementAnimation;
 
     std::map<std::array<int, 2>, uint> dtm; //direction texsheet map
 
@@ -263,13 +263,80 @@ protected:
 /// Optik
 ////////////////////////////////////////////////////////////////////////////////
 
+    public:
+    sf::Time getRefreshTime(){
+        if(animationQueue.size() > 0) return  animationQueue.front().time;
+        return standardAnimation.time;
+    }
+
+    bool refresh(sf::Time elapsed){
+        if(!animated) return false;
+
+        passedTime += elapsed;
+        if(passedTime < getRefreshTime()) return false;
+
+        //iterateAnimation();
+        passedTime -= getRefreshTime();
+
+        return true;
+    }
+
+    
+
+    bool animate(sf::Time available){
+        // FKT bekommt insgesamt noch für die ganze AnimationQueue zur Abarbeitung zur Verfügung stehende Zeit
+
+        if(!animated)return false;
+
+        ani* a;
+        if(movementAnimation.frames <= 0) return animateStanding(available);
+        else return animateMovement(available);
+    };
+
+    bool animateStanding(sf::Time available){
+        return false;
+    }
+
+    bool animateMovement(sf::Time available){
+        sf::Time timePerStep = available / (float)movementAnimation.frames;
+        if(timePerStep > movementAnimation.time){
+            return false;
+        }
+
+        movementAnimation.frames--;
+
+        sf::Vector2i texsize = (sf::Vector2i) tex->getSize();
+        uint curFrame = (movementAnimation.frames)%3; // TODO @HARDCODED
+        sf::Vector2i position(texsize.x * curFrame, texsize.y * movementAnimation.state);
+        sprite.setTextureRect(sf::IntRect(position,texsize));
+
+        
+
+        std::cout << "Shifting to\tR: " << movementAnimation.state << "\tC: "<< curFrame << "\tRemaining: "<< movementAnimation.frames << "\tQ: "<< animationQueue.size() << "\tMove: "<< movementAnimation.move.x << ", " << movementAnimation.move.y << std::endl;
+
+        sprite.move(movementAnimation.move);
+
+        if(movementAnimation.frames <= 0){
+                // setze endposition, falls floatingpointrechnungen unten böse numerik gemacht haben
+                std::cout << "SET: " << movementAnimation.endPos.x << ", " << movementAnimation.endPos.y << std::endl;
+                sprite.setPosition((sf::Vector2f)movementAnimation.endPos);
+        }
+
+        return true;
+
+    }
+
+
+    ////////////////////////////////////////////////////////////////////////////////
+    ////// Nochmal überdenken:
+    
+    protected:
     void setTexType(uint row){
         if(tex->getImageCount().y <= row){
             std::cout << "ERROR: Texsheet hat nicht so viele Modi. Setze Modus 0.";
             row = 0;
         }
-        animationQueue = std::queue<ani>();
-        addAnimation(row, 0, switchTimeRegular);
+        standardAnimation = createAnimation(row, 0, switchTimeRegular);
 
         sf::Vector2i texsize = (sf::Vector2i) tex->getSize();
         sf::Vector2i position(0, texsize.y * row);
@@ -277,7 +344,8 @@ protected:
         // std::cout << "Texsize: " << texsize.x << ", " << texsize.y * row << std::endl;
     };
 
-    void iterateAnimation(){
+    /*
+    void iterateAnimation2(){
         if(!animated){
             return;
         }
@@ -287,48 +355,59 @@ protected:
             frame = 0;
         }
 
-        
-        if(animationQueue.size() > 1){
-            animationQueue.front().frames--;
-            if(animationQueue.front().frames <= 0){
-                if(animationQueue.front().move != sf::Vector2f(0.,0.)){
-                    // setze endposition, falls floatingpointrechnungen unten böse numerik gemacht haben
-                    //sprite.setPosition(animationQueue.front().endPos);
-                }
+        ani* cur;
+        if(animationQueue.size() <= 0){
+            cur = &standardAnimation;
+            cur->frames++;
 
+        }else{
+            cur = &animationQueue.front();
+            if(cur->frames <= 1){
+                if(cur->move != sf::Vector2i(0,0)){
+                    // setze endposition, falls floatingpointrechnungen unten böse numerik gemacht haben
+                    std::cout << "SET: " << cur->endPos.x << ", " << cur->endPos.y << std::endl;
+                    sprite.setPosition((sf::Vector2f)cur->endPos);
+                }
                 animationQueue.pop();
             }
+            cur->frames--;
         }
 
-
-        std::cout << "Shifting to\tR: " << animationQueue.front().state << "\tC: "<< frame << "\tRemaining: "<< animationQueue.front().frames << "\tQ: "<< animationQueue.size() << "\tMove: "<< animationQueue.front().move.x << ", " << animationQueue.front().move.y << std::endl;
+        
+        
         sf::Vector2i texsize = (sf::Vector2i) tex->getSize();
-        sf::Vector2i position(texsize.x * frame, texsize.y * animationQueue.front().state);
+        uint curFrame = (cur->frames)%3;
+        sf::Vector2i position(texsize.x * curFrame, texsize.y * cur->state);
         sprite.setTextureRect(sf::IntRect(position,texsize));
 
-        sprite.move(animationQueue.front().move);
-        switchTime = animationQueue.front().time;
+        
+
+        std::cout << "Shifting to\tR: " << cur->state << "\tC: "<< curFrame << "\tRemaining: "<< cur->frames << "\tQ: "<< animationQueue.size() << "\tMove: "<< cur->move.x << ", " << cur->move.y << std::endl;
+
+        //sprite.setPosition(sprite.getPosition() + (sf::Vector2f)cur->move);
+        switchTime = cur->time;
     };
+    */
 
 
-    void addAnimation(uint row, int frames, sf::Time time, sf::Vector2i startPos=sf::Vector2i(0,0), sf::Vector2i endPos=sf::Vector2i(0,0)){ 
+    ani createAnimation(uint row, uint frames, sf::Time time, sf::Vector2i startPos=sf::Vector2i(0,0), sf::Vector2i endPos=sf::Vector2i(0,0)){ 
         // Adds Animation to queue
         ani a;
 
-        a.endPos = sf::Vector2f(endPos.x*OBJECTUNIT, endPos.y*OBJECTUNIT);
+        a.endPos = sf::Vector2u(endPos.x*OBJECTUNIT, endPos.y*OBJECTUNIT);
         
-        a.move=sf::Vector2f(0,0);
+        a.move=sf::Vector2f(0.,0.);
         if(startPos != endPos){
-            sf::Vector2i deltaPos = endPos - startPos;
+            sf::Vector2i deltaPos = (sf::Vector2i)endPos - (sf::Vector2i)startPos;
             a.move = sf::Vector2f(
                 (float)(deltaPos.x * OBJECTUNIT) / frames, 
-                ((float)deltaPos.y * OBJECTUNIT) / frames);
+                (float)(deltaPos.y * OBJECTUNIT) / frames);
         }
         
         a.state = row;
         a.frames = frames;
         a.time = time;
-        animationQueue.push(a);
+        return a;
     }
 
     // update texture direction gemäß vorliegendem wert -> wird überschrieben zB bei Objekten mit mehr als 4 richtungen (die blöden Hecken)

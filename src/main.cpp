@@ -17,11 +17,8 @@ const int BGSIZE=100; // minimum half of screensize!! // must be divideable by 2
 const std::string TITLE = "Escape!";
 
 const uint OBJECTUNIT = 20; // Pixel pro Map-Block
-const sf::Time MAX_updateTime = sf::milliseconds(10); // fastest possible move speed
-const sf::Time STD_updateTime = sf::milliseconds(45); // regular move speed
-const sf::Time DELTA_updateTime = sf::milliseconds(2); // änderungsvektor für beschleunigung
+const sf::Time UPDATE_TIME = sf::milliseconds(70); // regular move speed
 
-sf::Time UPDATE_TIME = STD_updateTime;
 sf::Vector2u WIN_SIZE(1024, 1024); // in Pixel
 float zoom = 0.5f; // inverted (also im Sinne von Kehrwert)
 
@@ -34,6 +31,7 @@ int main()
 
     sf::Clock clock, animationclock;
     sf::Time elapsed = clock.restart();
+    sf::Time animationtime = animationclock.restart();
 
     sf::Vector2u start(0,0), end(0,0); // Mapblocks zum Rendern
     
@@ -41,7 +39,6 @@ int main()
     bool updateView = true;
     bool paused = false;
     bool drawAnimation = false;
-    bool interactionBlocked = false;
     int speedup = 0;
 
     Level* level = new Level(2000, 2000);
@@ -51,6 +48,7 @@ int main()
     {
         // add the time passed since the last cycle
         elapsed = elapsed + clock.restart(); // This function puts the time counter back to zero. It also returns the time elapsed since the clock was started.
+        animationtime = animationtime + animationclock.restart();
 
         ////////////////////////////////////////////////
         ///// Events
@@ -92,68 +90,81 @@ int main()
         ///// Eingabe
         ////////////////////////////////////////////////
         // make as many updates as needed for the elapsed time
-        if(!interactionBlocked){
-            while (elapsed > UPDATE_TIME)
-            {   
-                speedup-=1;
-                if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
-                {
-                    level->getPlayer()->step(LEFT);
-                    updateView = true;
-                    speedup+=2;
-                }
-                if(sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
-                {
-                    level->getPlayer()->step(UP);
-                    updateView = true;
-                    speedup+=2;
-                }
-                if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
-                {
-                    level->getPlayer()->step(RIGHT);
-                    updateView = true;
-                    speedup+=2;
-                }
-                if(sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
-                {
-                    level->getPlayer()->step(DOWN);
-                    updateView = true;
-                    speedup+=2;
-                }
-                if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
-                {
-                    // Interact with Object before Player
-                    level->getPlayer()->interact();
-                    updateView = true;
-                }
-                if(sf::Keyboard::isKeyPressed(sf::Keyboard::Return) 
-                    || sf::Keyboard::isKeyPressed(sf::Keyboard::Enter))
-                {
-                    // Item Bag
-                    level->getPlayer()->useItem(); // temporarily
-                    updateView = true;
-                }
-                if(sf::Keyboard::isKeyPressed(sf::Keyboard::Add) ||
-                    sf::Keyboard::isKeyPressed(sf::Keyboard::M))
-                {
-                    zoom-=0.05;
-                    updateView = true;
-                }
-                if(sf::Keyboard::isKeyPressed(sf::Keyboard::Subtract) ||
-                    sf::Keyboard::isKeyPressed(sf::Keyboard::N))
-                {
-                    zoom+=0.05;
+        while (elapsed > UPDATE_TIME)
+        {   
+            speedup-=1;
+            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
+            {
+                level->getPlayer()->step(LEFT);
+                updateView = true;
+                speedup+=2;
+            }
+            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+            {
+                level->getPlayer()->step(UP);
+                updateView = true;
+                speedup+=2;
+            }
+            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+            {
+                level->getPlayer()->step(RIGHT);
+                updateView = true;
+                speedup+=2;
+            }
+            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+            {
+                level->getPlayer()->step(DOWN);
+                updateView = true;
+                speedup+=2;
+            }
+            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
+            {
+                // Interact with Object before Player
+                level->getPlayer()->interact();
+                updateView = true;
+            }
+            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Return) 
+                || sf::Keyboard::isKeyPressed(sf::Keyboard::Enter))
+            {
+                // Item Bag
+                level->getPlayer()->useItem(); // temporarily
+                updateView = true;
+            }
+            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Add) ||
+                sf::Keyboard::isKeyPressed(sf::Keyboard::M))
+            {
+                zoom-=0.05;
+                updateView = true;
+            }
+            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Subtract) ||
+                sf::Keyboard::isKeyPressed(sf::Keyboard::N))
+            {
+                zoom+=0.05;
+                updateView=true;
+            }
+
+            elapsed -= UPDATE_TIME;
+        }
+
+        
+        for (uint x = start.x; x < end.x; x++){
+            for (uint y = start.y; y < end.y; y++){
+                Object* m = level->getObject(sf::Vector2u(x, y));
+                if (m == nullptr) continue;
+                // Idee: Hier Zeit mitgeben, wie lang insgesamt noch für alle Animationen zur Verfügung steht.
+                if(m->animate(UPDATE_TIME - elapsed)){
                     updateView=true;
                 }
-
-                elapsed -= UPDATE_TIME;
+                
             }
         }
+        
 
         ////////////////////////////////////////////////
         ///// Speedup
         ////////////////////////////////////////////////
 
+        /*
         if(speedup<0){
             // keine Bewegung stattgefunden
             speedup=0;
@@ -165,10 +176,12 @@ int main()
                 UPDATE_TIME -= DELTA_updateTime; // Beschleunige
             }
         }
+        */
 
         ////////////////////////////////////////////////
         ///// Animate
         ////////////////////////////////////////////////
+        /*
         interactionBlocked = false;
         for (uint x = start.x; x < end.x; x++){
             for (uint y = start.y; y < end.y; y++){
@@ -186,6 +199,7 @@ int main()
             }
         }
         animationclock.restart();
+        */
 
         ////////////////////////////////////////////////
         //////////////// Update Window
@@ -250,8 +264,8 @@ int main()
                     yfrom/OBJECTUNIT
                 );
                 end= sf::Vector2u(
-                    (xfrom + WIN_SIZE.x*zoom)/OBJECTUNIT,
-                    (yfrom + WIN_SIZE.x*zoom)/OBJECTUNIT
+                    (xfrom + WIN_SIZE.x*zoom +1)/OBJECTUNIT,
+                    (yfrom + WIN_SIZE.y*zoom +1)/OBJECTUNIT
                 );
                 //std::cout << "Drawing: ("<< start.x <<", "<< start.y<<") ";
                 //std::cout << "to ("<< end.x <<", "<< end.y<<")\n";
