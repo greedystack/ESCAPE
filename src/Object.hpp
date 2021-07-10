@@ -58,14 +58,23 @@ public:
     static void loadTexsheets(std::string theme = "standard"){
         texsheets["bg0"] = new Texsheet("../include/img/boden.png");
         texsheets["hecke"] = new Texsheet("../include/img/hecke.png", 1, 16);
+
+        texsheets["panda_standing"] = new Texsheet("../include/img/panda_standing.png", 8, 4);
+        texsheets["panda_move"] = new Texsheet("../include/img/panda_move.png", 3, 4);
+        texsheets["panda_kill"] = new Texsheet("../include/img/panda_kill.png", 11, 4);
+        texsheets["panda_killed"] = new Texsheet("../include/img/panda_killed.png", 19, 4);
+
+        texsheets["portal"] = new Texsheet("../include/img/portal.png", 21, 2);
+
+        texsheets["bambus"] = new Texsheet("../include/img/bambus.png", 1, 1);
+        texsheets["navi"] = new Texsheet("../include/img/navi.png", 1, 1);
+        texsheets["bread"] = new Texsheet("../include/img/bread.png", 1, 1);
+        texsheets["breadcrumbs"] = new Texsheet("../include/img/breadcrumbs.png", 1, 1);
+
+
         texsheets["wall"] = new Texsheet("../include/img/wall0.png");
         texsheets["arrow_left"] = new Texsheet("../include/img/arrow.png", 1, 4);
         texsheets["panda"] = new Texsheet("../include/img/panda.png", 3, 8);
-        texsheets["panda_standing"] = new Texsheet("../include/img/panda_standing.png", 8, 4);
-
-        texsheets["panda_move"] = new Texsheet("../include/img/panda_move.png", 3, 4);
-        texsheets["panda_killed"] = new Texsheet("../include/img/panda_killed.png", 19, 4);
-        texsheets["portal"] = new Texsheet("../include/img/portal.png", 21, 2);
     }
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -135,9 +144,8 @@ public:
         return false;
     };
 
-    virtual bool update(){ // Fkt. für Animationen und so
-    // returned false, wenn animation noch nicht fertig - also weiterer input gesperrt werden muss.
-        return true;
+    virtual void update(){
+        
     }
     
     ////////////////////////////////////////////////////////////////////////////////
@@ -175,6 +183,10 @@ public:
     Object* neighbor(sf::Vector2i _dir){
         return getObject(pos+_dir);
     };
+
+    sf::Vector2i invertDirection(sf::Vector2i _dir){
+        return sf::Vector2i(_dir.x * (-1), _dir.y * (-1));
+    }
 
     // ACHTUNG!! Nur für 1x1-große Objekte gebaut! 
     // Entfernt Objekt restlos.
@@ -338,7 +350,7 @@ protected:
         setTexType(dtm[{dir.x, dir.y}]);
     }
 
-    protected:
+    //protected:
     // Change direction to provided direction and change texture
     void setDirection(sf::Vector2i _dir){
         if(dir == _dir) return;
@@ -346,6 +358,7 @@ protected:
         updateDirection();
     };
 
+    protected:
     void setScale(){
         sf::Vector2f scale(
             (float) (OBJECTUNIT * size.x) / tex->getSize().x,

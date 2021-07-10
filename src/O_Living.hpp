@@ -12,6 +12,7 @@ class LivingObject : public Object {
 protected:
     Texsheet* tex_moving;
     std::map<uint, Texsheet*> tex_special;
+    bool killed = false;
     // Animation:
     struct movementAnimation {
         uint state; // reihe in Texsheet
@@ -20,9 +21,9 @@ protected:
         sf::Time time;
         sf::Vector2i endPos;
         sf::Vector2f move;
-        bool interact;
     } movementAnimation;
 
+public:
     struct specialAnimation {
         uint type;
         uint frames=0;
@@ -59,7 +60,7 @@ public:
 
             
             movementAnimation.frames = 6*factor;
-            movementAnimation.time = sf::milliseconds(10);
+            movementAnimation.time = sf::milliseconds(20);
             movementAnimation.state = dtm[{dir.x, dir.y}];
             movementAnimation.endPos = sf::Vector2i(pos.x * OBJECTUNIT, pos.y * OBJECTUNIT);
 
@@ -110,18 +111,13 @@ public:
         if(movementAnimation.frames <= 0){
                 // setze endposition, falls floatingpointrechnungen unten böse numerik gemacht haben
                 sprite.setPosition((sf::Vector2f)movementAnimation.endPos);
-
-
-                // TODO das dann doch lieber über eine queue lösen... Hier müsste eigentlich dann direkt die kill/getkilled animation folgen.
-                if(movementAnimation.interact){
-                    movementAnimation.interact = false;
-                    interact(this);
-                }
         }
 
         return true;
 
     }
+
+    ///////////////////
 
     bool animateSpecial(sf::Time available){
         if(available > specialAnimation.last){
@@ -149,30 +145,14 @@ public:
             sprite.setTextureRect(sf::IntRect(position,texsize));
         }
 
-
-        if(specialAnimation.frames <= 0){
-            switch(specialAnimation.type){
-                case KILL:
-                    
-                    break;
-                case KILLED:
-                    kill();
-                    break;
-                default:
-                    break;
-            }
-        }
-
-
-
         return true;
     }
 
-    virtual void kill(){}
+    ////////////////////////////////////////////////////////////////////////////////
 
 };
 
-////////////////////////////////////////////////////////////////////////////////
+
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 // LAYER 2
@@ -181,7 +161,7 @@ public:
 class Player : public LivingObject {
 private:
     std::list<Object*> bag;
-    bool won = false, killed = false;
+    bool won = false;
     uint bambus, navi, bread;
 public:
 
@@ -189,7 +169,7 @@ public:
         LivingObject(map, x, y, texsheets["panda_standing"], DOWN)
     {
         identity.insert(PLAYER);
-        tex_special[KILL] = texsheets["panda_killed"];
+        tex_special[KILL] = texsheets["panda_kill"];
         tex_special[KILLED] = texsheets["panda_killed"];
         tex_moving = texsheets["panda_move"];
         bambus = 5;
@@ -220,18 +200,17 @@ public:
         if(nb->whoami().contains(ENEMY)){
             if(bambus >= 5){
                 specialAnimation.type=KILL;
-                specialAnimation.frames=19;
+                specialAnimation.frames=11;
                 specialAnimation.time = sf::milliseconds(100);
-                
+                nb->getInteracted(this);
                 bambus -= 5;
-                return true;
             }else{
                 specialAnimation.type=KILLED;
                 specialAnimation.frames=19;
                 specialAnimation.time = sf::milliseconds(100);
-
-                //killed = true;
-                return true;
+                
+                nb->interact(this);
+                killed = true;
             }
             return true;
         }
@@ -240,7 +219,6 @@ public:
 
 
     bool hasWon(){return won;}
-    virtual void kill() override {killed = true;}
     bool wasKilled(){return killed;}
     bool isParalyzed(){return specialAnimation.frames > 0;}
 
@@ -291,6 +269,9 @@ public:
         LivingObject(map, x, y, texsheets["panda"], UP)
     {
         identity.insert(ENEMY);
+        tex_special[KILL] = texsheets["panda_kill"];
+        tex_special[KILLED] = texsheets["panda_killed"];
+        tex_moving = texsheets["panda_move"];
     };
 
     virtual bool interact(Object* interactee=nullptr) override{
@@ -299,20 +280,32 @@ public:
             sf::Vector2i playerDir = interactee->pos - pos;
             setDirection(playerDir);
             
-            // TODO Killanimation
+            specialAnimation.type=KILL;
+            specialAnimation.frames=11;
+            specialAnimation.time = sf::milliseconds(100);
         }
     };
 
     virtual bool getInteracted(Object* interacter=nullptr) override{
         if(interacter->whoami().contains(PLAYER)){
             // Wurde vom Player getötet.
-            // TODO Sterbeanimation
-            cout << "enemy killed" << endl;
-            del();
+            sf::Vector2i playerDir = interacter->pos - pos;
+            setDirection(playerDir);
+
+            specialAnimation.type=KILLED;
+            specialAnimation.frames=19;
+            specialAnimation.time = sf::milliseconds(100);
+            killed = true;
         }
     };
 
-    virtual void kill() override {del();}
+    virtual void update() override{
+        if(killed && specialAnimation.frames < 1){
+            del();
+        }
+    }
+    
+    //virtual void kill() override {del();}
 
 };
 ////////////////////////////////////////////////////////////////////////////////

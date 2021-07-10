@@ -14,7 +14,7 @@
 const std::string TITLE = "Escape!";
 
 const uint OBJECTUNIT = 20; // Pixel pro Map-Block
-const sf::Time UPDATE_TIME = sf::milliseconds(80);
+const sf::Time UPDATE_TIME = sf::milliseconds(85);
 
 sf::Vector2u WIN_SIZE(2000, 2000); // in Pixel
 float zoom = 0.5f; // inverted (also im Sinne von Kehrwert)
@@ -269,14 +269,18 @@ int main()
                 for (uint y = start.y; y < end.y; y++){
                     Object* m = level->getObject(sf::Vector2u(x, y));
                     if (m == nullptr) continue;
+                    
                     while(m != nullptr){// falls ich Stacking implementiere.
+
                         //if (!m->visible) continue;
                         //if(x != m->posX || y != m->posY ) continue; // For Objects bigger than 1x1 map-field
     
                         window.draw(m->sprite);
                         //m=m->onTop; // falls ich Stacking implementiere.
+                        m->update();
                         m=nullptr; // falls nicht
                     }
+                    
                 }
             } 
 
