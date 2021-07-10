@@ -188,9 +188,7 @@ public:
             if(neighbor(d) == nullptr) continue;
             if(neighbor(d)->whoami().contains(ENEMY)){
                 setDirection(d);
-                cout << "interact from PLAYER" << endl;
                 interact(this);
-                cout << "interact from PLAYER done" << endl;
             }
         }
     }
@@ -309,8 +307,40 @@ public:
     };
 
     virtual void update() override{
-        if(killed && specialAnimation.frames < 1){
-            del();
+        if(specialAnimation.frames < 1){
+            if(killed){
+                del();
+            }
+            else{
+                // Do a step ... maybe.
+                uint r = rand() % 7;
+                if(r == 0){
+                    sf::Vector2i _dir;
+                    r = rand() % 2;
+                    if(r == 0){
+                        // choose direction
+                        r = rand() % 4;
+                        std::array directions = {LEFT, UP, RIGHT, DOWN};
+                        _dir = directions[r];
+                    } else {
+                        // use same direction
+                        _dir = dir;
+                    }
+                    r = rand() % 2 +1; // step size
+                    step(_dir, r);
+                }
+            }
+        }
+    }
+
+    virtual void step(sf::Vector2i _dir, uint factor=1) override {
+        LivingObject::step(_dir, factor);
+        for(auto d : {RIGHT, UP, LEFT, DOWN}){
+            if(neighbor(d) == nullptr) continue;
+            if(neighbor(d)->whoami().contains(PLAYER)){
+                setDirection(d);
+                neighbor(d)->interact(this);
+            }
         }
     }
     

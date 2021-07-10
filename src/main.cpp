@@ -164,8 +164,17 @@ int main()
                 updateView=true;
             }
 
-            
-                
+            ////////////////////////////////////////////////
+            ///// Animate
+            ////////////////////////////////////////////////
+            for (uint x = start.x; x < end.x; x++){
+                for (uint y = start.y; y < end.y; y++){
+                    Object* m = level->getObject(sf::Vector2u(x, y));
+                    if (m == nullptr) continue;
+                    m->update();
+                }
+            }
+
 
             elapsed -= UPDATE_TIME;
         }
@@ -277,7 +286,6 @@ int main()
     
                         window.draw(m->sprite);
                         //m=m->onTop; // falls ich Stacking implementiere.
-                        m->update();
                         m=nullptr; // falls nicht
                     }
                     
