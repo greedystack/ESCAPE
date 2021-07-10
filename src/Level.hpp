@@ -44,13 +44,14 @@ private:
     uint64_t mapsizex, mapsizey;
 
 
-    // For Reset:
     std::set<std::array<uint, 2>> walls;
     std::set<std::array<uint, 2>> enemies;
     std::set<std::array<uint, 2>> food;
     std::set<std::array<uint, 2>> navis;
     std::set<std::array<uint, 2>> marker;
     std::array<uint, 2> start, end;
+
+    std::map< std::array<uint, 2>, std::array<uint, 2> > navigation;
     
 public:
     
@@ -80,6 +81,9 @@ public:
     Player* getPlayer(){return player;};
     int getMapX(){return mapsizex;};
     int getMapY(){return mapsizey;};
+    sf::Sprite getBackground(){
+        return bg;
+    }
 
 
 
@@ -100,10 +104,6 @@ public:
             return nullptr;
         }
         return *getNode(position);
-    }
-
-    sf::Sprite getBackground(){
-        return bg;
     }
 
     void buildMap(){
@@ -161,6 +161,13 @@ public:
         purgeMap();
         allocateMap();
         buildMap();
+    }
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+    sf::Vector2i getDirection(uint x, uint y){
+        sf::Vector2i next(navigation[{x, y}][0],  navigation[{x, y}][1]);
+        return next - sf::Vector2i(x, y);
     }
 
 private:
@@ -351,7 +358,11 @@ void dfs(sf::Vector2u size){
         std::set<std::array<uint, 2>> neighbors = getUnvisitedNeighbors(stack.top(), visited);
 
         if(neighbors.empty()){
+            std::array<uint, 2> from = stack.top();
             stack.pop();
+            if(stack.size() >0){
+                navigation[getMapField(from)] = getMapField(stack.top());
+            }
             depth--;
         }else{
             uint r = rand() % neighbors.size();
@@ -394,22 +405,9 @@ void dfs(sf::Vector2u size){
     
 
 
-    /*
-    while(maxPath.size() > 1) {
-        std::array<uint, 2> cell1 = maxPath.top();
-        maxPath.pop();
-        std::array<uint, 2> cell2 = maxPath.top();
-
-        std::cout << "(" << cell2[0] << ", " << cell2[1] << ")  ->  (" << cell1[0] << ", " << cell1[1] << ")" << std::endl;
-        noWall.merge(getBorderFields(cell1, cell2));
-    }
-    */
-
-
-
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////
     /////// Walls
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
 
     std::set<std::array<uint, 2>> possibleWalls;

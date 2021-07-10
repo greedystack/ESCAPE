@@ -165,7 +165,7 @@ int main()
             }
 
             ////////////////////////////////////////////////
-            ///// Animate
+            ///// Update (z.B. Enemies bewegen)
             ////////////////////////////////////////////////
             for (uint x = start.x; x < end.x; x++){
                 for (uint y = start.y; y < end.y; y++){
@@ -194,6 +194,10 @@ int main()
                 
             }
         }
+
+        
+
+
         
 
         
@@ -272,6 +276,11 @@ int main()
 
             
             window.draw(level->getBackground());
+            sf::Sprite nav = level->getPlayer()->getNavi(
+                level->getDirection(level->getPlayer()->pos.x, level->getPlayer()->pos.y)
+            );
+            if(level->getPlayer()->getNaviSteps() > 0) window.draw(nav);
+
 
             // Render only Objects inside View
             for (uint x = start.x; x < end.x; x++){

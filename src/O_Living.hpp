@@ -162,7 +162,9 @@ class Player : public LivingObject {
 private:
     std::list<Object*> bag;
     bool won = false;
-    uint food, navi, marker;
+    uint food, navis, marker;
+    int navisteps, markersteps;
+    sf::Sprite navi;
 public:
 
     Player(Object ** map, int x, int y) : 
@@ -170,7 +172,19 @@ public:
     {
         identity.insert(PLAYER);
         tex_moving = texsheets["panda_move"];
+
         food = 10;
+        navisteps = 1;
+
+
+        ///////////////////////////////
+
+        navi.setTexture(texsheets["arrow"]->texture);
+        sf::Vector2f scale(
+            (float) OBJECTUNIT / texsheets["arrow"]->getSize().x,
+            (float) OBJECTUNIT / texsheets["arrow"]->getSize().y);
+        navi.scale(scale);
+        
     };
     ~Player(){
         for (Object* i : bag) {
@@ -188,6 +202,9 @@ public:
                 interact(this);
             }
         }
+
+        //if(navisteps > 0) navisteps -= factor;
+        if(navisteps < 0) navisteps = 0;
     }
 
     // Hier und an der neighbor() scheitert aktuell die variable Objektgröße. Fix this!
@@ -226,7 +243,7 @@ public:
             interactee->getInteracted(this);
         }
         else if(interactee->whoami().contains(NAVI)){
-            navi++;
+            navis++;
             interactee->getInteracted(this);
         }
         else if(interactee->whoami().contains(MARKER)){
@@ -247,7 +264,7 @@ public:
         }
     }
 
-
+    
     bool hasWon(){return won;}
     bool isParalyzed(){return specialAnimation.frames > 0;}
 
@@ -271,7 +288,27 @@ public:
         won=true;
     }
 
+    //////////
 
+    int getNaviSteps(){return navisteps;}
+
+    // TODO: Objects ohne Mapverankerung bauen!
+    sf::Sprite getNavi(sf::Vector2i _dir){
+        sf::Vector2i texsize = (sf::Vector2i) texsheets["arrow"]->getSize();
+        sf::Vector2i position(0, texsize.y * dtm[{_dir.x, _dir.y}]);
+        navi.setTextureRect(sf::IntRect(position,texsize));
+        sf::Vector2i newpos = (pos + _dir);
+        navi.setPosition(newpos.x*OBJECTUNIT, newpos.y*OBJECTUNIT);
+        return navi;
+    }
+
+    void activateNavi(){
+        if(navis <= 0) return;
+        navisteps += 20;
+        navis--;
+    }
+
+    //////////
 
     void putInBag(Object* item){
         bag.push_back(item);

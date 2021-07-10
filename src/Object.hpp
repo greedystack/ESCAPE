@@ -73,7 +73,7 @@ public:
 
 
         texsheets["wall"] = new Texsheet("../include/img/wall0.png");
-        texsheets["arrow_left"] = new Texsheet("../include/img/arrow.png", 1, 4);
+        texsheets["arrow"] = new Texsheet("../include/img/arrow.png", 1, 4);
     }
 ////////////////////////////////////////////////////////////////////////////////
 
