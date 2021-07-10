@@ -22,8 +22,6 @@ protected:
         sf::Vector2i endPos;
         sf::Vector2f move;
     } movementAnimation;
-
-public:
     struct specialAnimation {
         uint type;
         uint frames=0;
@@ -39,7 +37,7 @@ public:
     {
         identity.insert(LIVING);
     };
-
+    bool wasKilled(){return killed;}
     // nur genau einen Schritt moven
     virtual void step(sf::Vector2i _dir, uint factor=1){
          // vorerst über teleport() -> Bei größeren objekten (also größer als 1x1) ist es aber sinnvoller, nicht alle Felder jedes Mal neu zu belegen, sondern immer nur das erste Feld in die zu bewegende richtung.
@@ -53,14 +51,15 @@ public:
         for(uint i=1; i <= factor; i++){
             if(!setMapPosition(pos + _dir)){
                 // Living Obj. ist wogegen gelaufen. -> interact.
-                std::cout << "interaction throgh touching" << std::endl;
+                std::cout << "interaction throgh touching " << std::endl;
                 interact(this);
+                std::cout << "interaction throgh touching done" << std::endl;
                 return;
             }
 
             
-            movementAnimation.frames = 6*factor;
-            movementAnimation.time = sf::milliseconds(20);
+            movementAnimation.frames = 8*factor;
+            movementAnimation.time = sf::milliseconds(10);
             movementAnimation.state = dtm[{dir.x, dir.y}];
             movementAnimation.endPos = sf::Vector2i(pos.x * OBJECTUNIT, pos.y * OBJECTUNIT);
 
@@ -140,7 +139,9 @@ public:
 
             sprite.setTexture(tex_special[specialAnimation.type]->texture);
             sf::Vector2i texsize = (sf::Vector2i) tex_special[specialAnimation.type]->getSize();
-            uint curFrame = (specialAnimation.frames) % tex_special[specialAnimation.type]->getImageCount().x;
+            uint imgcount = tex_special[specialAnimation.type]->getImageCount().x;
+
+            uint curFrame = imgcount -((specialAnimation.frames) % imgcount) -1;
             sf::Vector2i position(texsize.x * curFrame, texsize.y * dtm[{dir.x, dir.y}]);
             sprite.setTextureRect(sf::IntRect(position,texsize));
         }
@@ -172,7 +173,7 @@ public:
         tex_special[KILL] = texsheets["panda_kill"];
         tex_special[KILLED] = texsheets["panda_killed"];
         tex_moving = texsheets["panda_move"];
-        bambus = 5;
+        bambus = 10;
     };
     ~Player(){
         for (Object* i : bag) {
@@ -187,7 +188,9 @@ public:
             if(neighbor(d) == nullptr) continue;
             if(neighbor(d)->whoami().contains(ENEMY)){
                 setDirection(d);
+                cout << "interact from PLAYER" << endl;
                 interact(this);
+                cout << "interact from PLAYER done" << endl;
             }
         }
     }
@@ -198,19 +201,21 @@ public:
         Object* nb = neighbor(dir);
         if(nb == nullptr) return false;
         if(nb->whoami().contains(ENEMY)){
-            if(bambus >= 5){
-                specialAnimation.type=KILL;
-                specialAnimation.frames=11;
-                specialAnimation.time = sf::milliseconds(100);
-                nb->getInteracted(this);
-                bambus -= 5;
-            }else{
-                specialAnimation.type=KILLED;
-                specialAnimation.frames=19;
-                specialAnimation.time = sf::milliseconds(100);
-                
-                nb->interact(this);
-                killed = true;
+            if(!((LivingObject*)nb)->wasKilled()){
+                if(bambus >= 5){
+                    specialAnimation.type=KILL;
+                    specialAnimation.frames=11;
+                    specialAnimation.time = sf::milliseconds(30);
+                    nb->getInteracted(this);
+                    bambus -= 5;
+                }else{
+                    specialAnimation.type=KILLED;
+                    specialAnimation.frames=19;
+                    specialAnimation.time = sf::milliseconds(50);
+                    
+                    nb->interact(this);
+                    killed = true;
+                }
             }
             return true;
         }
@@ -219,13 +224,12 @@ public:
 
 
     bool hasWon(){return won;}
-    bool wasKilled(){return killed;}
     bool isParalyzed(){return specialAnimation.frames > 0;}
 
     void win(){
-        movementAnimation.frames = 6;
-        movementAnimation.time = sf::milliseconds(10);
-        movementAnimation.state = dtm[{dir.x, dir.y}] +4;
+        movementAnimation.frames = 3;
+        movementAnimation.time = sf::milliseconds(100);
+        movementAnimation.state = dtm[{dir.x, dir.y}];
 
         sf::Vector2i endPos = pos + dir;
         movementAnimation.endPos = sf::Vector2i(endPos.x * OBJECTUNIT, endPos.y * OBJECTUNIT);
@@ -234,6 +238,11 @@ public:
         movementAnimation.move = sf::Vector2f( 
             ((float)deltaPos.x * (float)OBJECTUNIT) / (float)movementAnimation.frames, 
             ((float)deltaPos.y * (float)OBJECTUNIT) / (float)movementAnimation.frames);
+
+        // Lähmen:
+        specialAnimation.type=EMPTY;
+        specialAnimation.frames = 3;
+        specialAnimation.time = sf::milliseconds(50);
         won=true;
     }
 
@@ -266,7 +275,7 @@ public:
 class Enemy : public LivingObject {
 public:
     Enemy(Object ** map, int x, int y) : 
-        LivingObject(map, x, y, texsheets["panda"], UP)
+        LivingObject(map, x, y, texsheets["panda_standing"], UP)
     {
         identity.insert(ENEMY);
         tex_special[KILL] = texsheets["panda_kill"];
@@ -282,7 +291,7 @@ public:
             
             specialAnimation.type=KILL;
             specialAnimation.frames=11;
-            specialAnimation.time = sf::milliseconds(100);
+            specialAnimation.time = sf::milliseconds(70);
         }
     };
 
@@ -294,7 +303,7 @@ public:
 
             specialAnimation.type=KILLED;
             specialAnimation.frames=19;
-            specialAnimation.time = sf::milliseconds(100);
+            specialAnimation.time = sf::milliseconds(80);
             killed = true;
         }
     };
