@@ -80,6 +80,24 @@ public:
 
 };
 
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+class Collectable : public Object {
+public:
+    Collectable(Object ** map, int x, int y, Texsheet* t) : 
+        Object(map, x, y, t)
+    {
+        identity.insert(COLLECTABLE);
+    };
+
+    virtual bool getInteracted(Object* interacter=nullptr) override{
+        del();
+        return true;
+    }
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 // LAYER 2
@@ -97,11 +115,6 @@ public:
         
     };
 
-    bool getInteracted(Object* interacter) override{
-        std::cout << "GEWONNEN!" << std::endl;
-        ((Player*)interacter)->win();
-        return true;
-    };
 };
 
 class Start : public Portal {
@@ -113,7 +126,41 @@ public:
         setTexType(1);
     };
 
-    bool getInteracted(Object* interacter) override{
+};
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+class Food : public Collectable {
+public:
+    Food(Object** map, int x, int y) : 
+        Collectable(map, x, y, texsheets["bambus"])
+    {
+        identity.insert(FOOD);
+        setTexType(0);
+        
+    };
+};
+
+class Navi : public Collectable {
+public:
+    Navi(Object** map, int x, int y) : 
+        Collectable(map, x, y, texsheets["navi"])
+    {
+        identity.insert(NAVI);
+        setTexType(0);
+        
+    };
+};
+
+
+class Marker : public Collectable {
+public:
+    Marker(Object** map, int x, int y) : 
+        Collectable(map, x, y, texsheets["bread"])
+    {
+        identity.insert(MARKER);
+        setTexType(0);
         
     };
 };

@@ -14,7 +14,7 @@
 const std::string TITLE = "Escape!";
 
 const uint OBJECTUNIT = 20; // Pixel pro Map-Block
-const sf::Time UPDATE_TIME = sf::milliseconds(80);
+const sf::Time UPDATE_TIME = sf::milliseconds(99);
 
 sf::Vector2u WIN_SIZE(2000, 2000); // in Pixel
 float zoom = 0.5f; // inverted (also im Sinne von Kehrwert)

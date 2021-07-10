@@ -11,7 +11,6 @@
 class LivingObject : public Object {
 protected:
     Texsheet* tex_moving;
-    std::map<uint, Texsheet*> tex_special;
     bool killed = false;
     // Animation:
     struct movementAnimation {
@@ -23,7 +22,7 @@ protected:
         sf::Vector2f move;
     } movementAnimation;
     struct specialAnimation {
-        uint type;
+        Texsheet* tex;
         uint frames=0;
         sf::Time time, last, passed;
     }specialAnimation;
@@ -58,8 +57,8 @@ public:
             }
 
             
-            movementAnimation.frames = 8*factor;
-            movementAnimation.time = sf::milliseconds(10);
+            movementAnimation.frames = 11*factor;
+            movementAnimation.time = sf::milliseconds(9);
             movementAnimation.state = dtm[{dir.x, dir.y}];
             movementAnimation.endPos = sf::Vector2i(pos.x * OBJECTUNIT, pos.y * OBJECTUNIT);
 
@@ -135,11 +134,11 @@ public:
 
         std::cout << "Remaining: "<< specialAnimation.frames << std::endl;
 
-        if(tex_special[specialAnimation.type] != nullptr){
+        if(specialAnimation.tex != nullptr){
 
-            sprite.setTexture(tex_special[specialAnimation.type]->texture);
-            sf::Vector2i texsize = (sf::Vector2i) tex_special[specialAnimation.type]->getSize();
-            uint imgcount = tex_special[specialAnimation.type]->getImageCount().x;
+            sprite.setTexture(specialAnimation.tex->texture);
+            sf::Vector2i texsize = (sf::Vector2i) specialAnimation.tex->getSize();
+            uint imgcount = specialAnimation.tex->getImageCount().x;
 
             uint curFrame = imgcount -((specialAnimation.frames) % imgcount) -1;
             sf::Vector2i position(texsize.x * curFrame, texsize.y * dtm[{dir.x, dir.y}]);
@@ -163,17 +162,15 @@ class Player : public LivingObject {
 private:
     std::list<Object*> bag;
     bool won = false;
-    uint bambus, navi, bread;
+    uint food, navi, marker;
 public:
 
     Player(Object ** map, int x, int y) : 
         LivingObject(map, x, y, texsheets["panda_standing"], DOWN)
     {
         identity.insert(PLAYER);
-        tex_special[KILL] = texsheets["panda_kill"];
-        tex_special[KILLED] = texsheets["panda_killed"];
         tex_moving = texsheets["panda_move"];
-        bambus = 10;
+        food = 10;
     };
     ~Player(){
         for (Object* i : bag) {
@@ -195,30 +192,60 @@ public:
 
     // Hier und an der neighbor() scheitert aktuell die variable Objektgröße. Fix this!
     // z.B. fixbar durch loop, in der dann mit alllen adjazenten, interactable Objects interagiert wird.
-    virtual bool interact(Object* interacter=nullptr) override{
-        Object* nb = neighbor(dir);
-        if(nb == nullptr) return false;
-        if(nb->whoami().contains(ENEMY)){
-            if(!((LivingObject*)nb)->wasKilled()){
-                if(bambus >= 5){
-                    specialAnimation.type=KILL;
+    virtual bool interact(Object* interactee=nullptr) override {
+        if(interactee == nullptr || interactee == this){
+            interactee = neighbor(dir);
+        }
+        if(interactee == nullptr) return false;
+
+        if(interactee->whoami().contains(ENEMY)){
+            if(!((LivingObject*)interactee)->wasKilled()){
+                if(food >= 5){
+                    specialAnimation.tex=texsheets["panda_kill"];
                     specialAnimation.frames=11;
                     specialAnimation.time = sf::milliseconds(30);
-                    nb->getInteracted(this);
-                    bambus -= 5;
+                    interactee->getInteracted(this);
+                    food -= 5;
                 }else{
-                    specialAnimation.type=KILLED;
+                    specialAnimation.tex=texsheets["panda_killed"];
                     specialAnimation.frames=19;
                     specialAnimation.time = sf::milliseconds(50);
                     
-                    nb->interact(this);
+                    interactee->interact(this);
                     killed = true;
                 }
             }
             return true;
         }
-        return nb->getInteracted(this);
+        else if(interactee->whoami().contains(GOAL)){
+            win();
+            return interactee->getInteracted(this);
+        }
+        else if(interactee->whoami().contains(FOOD)){
+            if(food < 5) food++;
+            interactee->getInteracted(this);
+        }
+        else if(interactee->whoami().contains(NAVI)){
+            navi++;
+            interactee->getInteracted(this);
+        }
+        else if(interactee->whoami().contains(MARKER)){
+            marker++;
+            interactee->getInteracted(this);
+        } 
+        else {
+            return interactee->getInteracted(this);
+        }
+
+        return false;
     };
+
+    virtual bool getInteracted(Object* interacter=nullptr) override {
+        if(interacter->whoami().contains(ENEMY)){
+            setDirection(invertDirection(interacter->dir));
+            interact(this);
+        }
+    }
 
 
     bool hasWon(){return won;}
@@ -238,7 +265,7 @@ public:
             ((float)deltaPos.y * (float)OBJECTUNIT) / (float)movementAnimation.frames);
 
         // Lähmen:
-        specialAnimation.type=EMPTY;
+        specialAnimation.tex=nullptr;
         specialAnimation.frames = 3;
         specialAnimation.time = sf::milliseconds(50);
         won=true;
@@ -276,8 +303,6 @@ public:
         LivingObject(map, x, y, texsheets["panda_standing"], UP)
     {
         identity.insert(ENEMY);
-        tex_special[KILL] = texsheets["panda_kill"];
-        tex_special[KILLED] = texsheets["panda_killed"];
         tex_moving = texsheets["panda_move"];
     };
 
@@ -287,7 +312,7 @@ public:
             sf::Vector2i playerDir = interactee->pos - pos;
             setDirection(playerDir);
             
-            specialAnimation.type=KILL;
+            specialAnimation.tex=texsheets["panda_kill"];
             specialAnimation.frames=11;
             specialAnimation.time = sf::milliseconds(70);
         }
@@ -299,12 +324,23 @@ public:
             sf::Vector2i playerDir = interacter->pos - pos;
             setDirection(playerDir);
 
-            specialAnimation.type=KILLED;
+            specialAnimation.tex=texsheets["panda_killed"];
             specialAnimation.frames=19;
             specialAnimation.time = sf::milliseconds(80);
             killed = true;
         }
     };
+
+    virtual void step(sf::Vector2i _dir, uint factor=1) override {
+        LivingObject::step(_dir, factor);
+        for(auto d : {RIGHT, UP, LEFT, DOWN}){
+            if(neighbor(d) == nullptr) continue;
+            if(neighbor(d)->whoami().contains(PLAYER)){
+                setDirection(d);
+                neighbor(d)->getInteracted(this);
+            }
+        }
+    }
 
     virtual void update() override{
         if(specialAnimation.frames < 1){
@@ -313,7 +349,7 @@ public:
             }
             else{
                 // Do a step ... maybe.
-                uint r = rand() % 7;
+                uint r = rand() % 5;
                 if(r == 0){
                     sf::Vector2i _dir;
                     r = rand() % 2;
@@ -326,23 +362,13 @@ public:
                         // use same direction
                         _dir = dir;
                     }
-                    r = rand() % 2 +1; // step size
-                    step(_dir, r);
+                    step(_dir);
                 }
             }
         }
     }
 
-    virtual void step(sf::Vector2i _dir, uint factor=1) override {
-        LivingObject::step(_dir, factor);
-        for(auto d : {RIGHT, UP, LEFT, DOWN}){
-            if(neighbor(d) == nullptr) continue;
-            if(neighbor(d)->whoami().contains(PLAYER)){
-                setDirection(d);
-                neighbor(d)->interact(this);
-            }
-        }
-    }
+    
     
     //virtual void kill() override {del();}
 

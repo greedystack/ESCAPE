@@ -47,6 +47,9 @@ private:
     // For Reset:
     std::set<std::array<uint, 2>> walls;
     std::set<std::array<uint, 2>> enemies;
+    std::set<std::array<uint, 2>> food;
+    std::set<std::array<uint, 2>> navis;
+    std::set<std::array<uint, 2>> marker;
     std::array<uint, 2> start, end;
     
 public:
@@ -64,7 +67,7 @@ public:
         
 
         
-        dfs(sf::Vector2u(5, 5));
+        dfs(sf::Vector2u(10, 10));
         buildMap();
     }
 
@@ -113,6 +116,16 @@ public:
         }
         for(auto wall : walls) {
             new Barrier(map, wall[0], wall[1]);
+        }
+
+        for(auto f : food) {
+            new Food(map, f[0], f[1]);
+        }
+        for(auto n : navis) {
+            new Navi(map, n[0], n[1]);
+        }
+        for(auto m : marker) {
+            new Marker(map, m[0], m[1]);
         }
 
     }
@@ -371,6 +384,8 @@ void dfs(sf::Vector2u size){
     end = maxPath.top();
     end = getMapField(end);
 
+    for(uint i=0; i<3; i++) maxPath.pop();
+    food.insert(getMapField(maxPath.top()));
     for(uint i=0; i<5; i++) maxPath.pop();
     enemies.insert(getMapField(maxPath.top()));
     for(uint i=0; i<3; i++) maxPath.pop();

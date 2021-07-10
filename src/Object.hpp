@@ -37,11 +37,11 @@ const uint DESTROYER = 11;
 const uint LIVING = 4;
 const uint PLAYER = 41;
 const uint ENEMY = 42;
+const uint COLLECTABLE = 5;
+const uint FOOD = 51;
+const uint NAVI = 52;
+const uint MARKER = 53;
 
-// Identifier for special animations
-const uint EMPTY = 0;
-const uint KILL = 1;
-const uint KILLED = 2;
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
