@@ -198,6 +198,10 @@ public:
         return sf::Vector2i(newnode[0]-dfsnode[0], newnode[1]-dfsnode[1]);
     }
 
+    Object getMarkerTemplate(uint x=0, uint y=0){
+        return Object(nullptr, x, y, Object::texsheets["breadcrumbs"]);
+    }
+
 private:
 
 //////////////////////////////////////////////////////////////////////////////////////////////

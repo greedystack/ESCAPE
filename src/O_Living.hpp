@@ -165,6 +165,7 @@ private:
     uint food, navis, marker;
     int navisteps, markersteps;
     Object navi = Object(nullptr, 0, 0, texsheets["arrow"]);
+    std::set<std::array<uint, 2>> markedFields;
 public:
 
     Player(Object ** map, int x, int y) : 
@@ -174,7 +175,8 @@ public:
         tex_moving = texsheets["panda_move"];
 
         food = 10;
-        navisteps = 1;
+        navisteps = 20;
+        markersteps = 20;
 
 
         ///////////////////////////////
@@ -188,6 +190,8 @@ public:
     };
 
     virtual void step(sf::Vector2i _dir, uint factor=1) override {
+        if(markersteps > 0) markedFields.insert({(uint)pos.x, (uint)pos.y});
+
         LivingObject::step(_dir, factor);
         for(auto d : {RIGHT, UP, LEFT, DOWN}){
             if(neighbor(d) == nullptr) continue;
@@ -197,8 +201,10 @@ public:
             }
         }
 
-        //if(navisteps > 0) navisteps -= factor;
+        if(navisteps > 0) navisteps -= factor;
         if(navisteps < 0) navisteps = 0;
+        if(markersteps > 0) markersteps -= factor;
+        if(markersteps < 0) markersteps = 0;
     }
 
     // Hier und an der neighbor() scheitert aktuell die variable Objektgröße. Fix this!
@@ -285,6 +291,11 @@ public:
     //////////////////////////////
 
     int getNaviSteps(){return navisteps;}
+    void activateNavi(){
+        if(navis <= 0) return;
+        navisteps += 20;
+        navis--;
+    }
 
     Object getNavi(sf::Vector2i _dir){
         navi.teleport(pos+_dir);
@@ -292,11 +303,15 @@ public:
         return navi;
     }
 
-    void activateNavi(){
-        if(navis <= 0) return;
-        navisteps += 20;
-        navis--;
+
+    int getMarkerSteps(){return markersteps;}
+    void activateMarker(){
+        if(marker <= 0) return;
+        markersteps += 20;
+        marker--;
     }
+
+    bool isMarked(uint x, uint y){return markedFields.contains({x, y});}
 
     //////////////////////////////
 

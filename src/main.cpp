@@ -287,6 +287,11 @@ int main()
             // Render only Objects inside View
             for (uint x = start.x; x < end.x; x++){
                 for (uint y = start.y; y < end.y; y++){
+                    if(level->getPlayer()->isMarked(x, y)){
+                        Object marker = level->getMarkerTemplate(x, y);
+                        window.draw(marker.sprite);
+                    }
+                    
                     Object* m = level->getObject(sf::Vector2u(x, y));
                     if (m == nullptr || m == level->getPlayer()) continue;
                     
@@ -299,7 +304,6 @@ int main()
                         //m=m->onTop; // falls ich Stacking implementiere.
                         m=nullptr; // falls nicht
                     }
-                    
                 }
             }
             window.draw(level->getPlayer()->sprite);
