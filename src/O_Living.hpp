@@ -215,6 +215,7 @@ public:
         }
         if(interactee == nullptr) return false;
 
+        // TODO: Animation queue! 
         if(interactee->whoami().contains(ENEMY)){
             if(!((LivingObject*)interactee)->wasKilled()){
                 if(food >= 5){
@@ -390,6 +391,7 @@ public:
                 del();
             }
             else{
+                /*
                 // Do a step ... maybe.
                 uint r = rand() % 5;
                 if(r == 0){
@@ -406,6 +408,7 @@ public:
                     }
                     step(_dir);
                 }
+                */
             }
         }
     }

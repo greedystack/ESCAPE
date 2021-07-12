@@ -74,6 +74,7 @@ public:
 
         texsheets["wall"] = new Texsheet("../include/img/wall0.png");
         texsheets["arrow"] = new Texsheet("../include/img/arrow.png", 1, 4);
+        texsheets["kies"] = new Texsheet("../include/img/boden_kies.png");
     }
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -302,7 +303,6 @@ protected:
         // FKT bekommt insgesamt noch für die ganze AnimationQueue zur Abarbeitung zur Verfügung stehende Zeit
 
         if(!animated)return false;
-
         return animateStanding(available);
     };
 

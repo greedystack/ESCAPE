@@ -59,20 +59,14 @@ private:
 public:
     
     Level(uint64_t x, uint64_t y)
-        : mapsizex(x), mapsizey(y)
     {
-
-        allocateMap();
-
         Object::loadTexsheets();
-        createBackground();
         loadFonts();
         
-        
-
-        
-        dfs(sf::Vector2u(10, 10));
+        dfs(sf::Vector2u(x, y));
+        allocateMap();
         buildMap();
+        createBackground();
     }
 
     ~Level(){
@@ -223,13 +217,12 @@ void loadFonts() {
 }
 
 void buildOuterBorders(){
+    // seit dfs nur noch obere und linke kante erforderlich.
     for (int x=0; x<mapsizex; x++){
         new Barrier(map, x, 0);
-        new Barrier(map, x, mapsizey-1);
     }
-    for (int y=1; y<mapsizey-1; y++){
+    for (int y=1; y<mapsizey; y++){
         new Barrier(map, 0, y);
-        new Barrier(map, mapsizex-1, y);
     }
 }
 
@@ -256,6 +249,9 @@ void dfs(sf::Vector2u size){
     // Achtung: std::set geht mit sf::Vector2 nicht, weil angeblich nicht vergleichbar. Dummer Compiler. -.-
     // Daher wird hier mit std::arrays statt sf::Vector2 gearbeitet
     uint scalar = this->scalar;
+
+    mapsizex = ((size.x * (scalar+1)) + scalar + 1)-2; 
+    mapsizey = ((size.y * (scalar+1)) + scalar + 1)-2;
 
     std::set<std::array<uint, 2>> noWall; // durchgang, hier keine wall platzieren
     std::stack<std::array<uint, 2>> maxPath;
@@ -428,6 +424,13 @@ void dfs(sf::Vector2u size){
     for(uint i=0; i<3; i++) maxPath.pop();
     food.insert(getMapField(maxPath.top()));
     for(uint i=0; i<5; i++) maxPath.pop();
+    enemies.insert(getMapField(maxPath.top()));
+    enemies.insert(getMapField(maxPath.top()));
+    enemies.insert(getMapField(maxPath.top()));
+    enemies.insert(getMapField(maxPath.top()));
+    enemies.insert(getMapField(maxPath.top()));
+    maxPath.pop();
+    enemies.insert(getMapField(maxPath.top()));
     enemies.insert(getMapField(maxPath.top()));
     for(uint i=0; i<3; i++) maxPath.pop();
     enemies.insert(getMapField(maxPath.top()));

@@ -15,15 +15,17 @@ const std::string TITLE = "Escape!";
 
 const uint OBJECTUNIT = 20; // Pixel pro Map-Block
 const sf::Time UPDATE_TIME = sf::milliseconds(99);
+const sf::Vector2u MAX_VIEW_SIZE(25,25); // in Mapblocks - um keinen vorteil durch rauszommen oder resizen zu bekommen
 
-sf::Vector2u WIN_SIZE(2000, 2000); // in Pixel
-float zoom = 0.5f; // inverted (also im Sinne von Kehrwert)
-// const sf::Vector2u MAX_VIEW_SIZE(); // in Mapblocks - um keinen vorteil durch rauszommen oder resizen zu bekommen
-
-int lvl_count = 3;
 
 int main()
 {
+    sf::Vector2u WIN_SIZE(2000, 2000); // in Pixel
+    float zoom = 0.25; // inverted (also im Sinne von Kehrwert)
+    
+
+    int lvl_count = 3;
+
     sf::RenderWindow window(sf::VideoMode(WIN_SIZE.x, WIN_SIZE.y), TITLE);
     sf::View view;
 
@@ -37,7 +39,7 @@ int main()
     bool paused = false;
     bool drawAnimation = false;
 
-    Level* level = new Level(2000, 2000);
+    Level* level = new Level(25, 15);
     
 
     while (window.isOpen())
@@ -154,13 +156,13 @@ int main()
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Add) ||
                 sf::Keyboard::isKeyPressed(sf::Keyboard::M))
             {
-                zoom-=0.05;
+                zoom-=0.025;
                 updateView = true;
             }
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Subtract) ||
                 sf::Keyboard::isKeyPressed(sf::Keyboard::N))
             {
-                zoom+=0.05;
+                zoom+=0.025;
                 updateView=true;
             }
 
@@ -218,7 +220,11 @@ int main()
                 float xfrom, yfrom;
 
                 // x
-                if(playerpos.x < WIN_SIZE.x *zoom *0.5){
+                if(level->getMapX() * OBJECTUNIT < WIN_SIZE.x *zoom){
+                    zoom = ((float)(level->getMapX() * OBJECTUNIT)) / (float) WIN_SIZE.x;
+                    xfrom = 0;
+                }
+                else if(playerpos.x < WIN_SIZE.x *zoom *0.5){
                     // Player ist so weit links, dass er nicht mehr zentriert angezeigt werden kann.
                     xfrom=0;
                 }else if(playerpos.x > level->getMapX()*OBJECTUNIT - WIN_SIZE.x *zoom *0.5){
@@ -229,8 +235,13 @@ int main()
                     xfrom = playerpos.x - WIN_SIZE.x *zoom *0.5;
                 }
 
+
                 // y
-                if(playerpos.y < WIN_SIZE.y *zoom *0.5){
+                if(level->getMapY() * OBJECTUNIT < WIN_SIZE.y *zoom){
+                    zoom = ((float)(level->getMapY() * OBJECTUNIT)) / (float) WIN_SIZE.y;
+                    yfrom = 0;
+                }
+                else if(playerpos.y < WIN_SIZE.y *zoom *0.5){
                     // Player ist so weit oben, dass er nicht mehr zentriert angezeigt werden kann.
                     yfrom=0;
                 }else if(playerpos.y > level->getMapY()*OBJECTUNIT - WIN_SIZE.y *zoom *0.5){
@@ -243,6 +254,23 @@ int main()
                 }
 
 
+                // MAX_VIEW_SIZE (damit Player nicht zu viel sieht):
+                // TODO : Debuggen. Und vielleicht dirkt in zoom-befehl legen, damit es nicht ruckelt
+                /*
+                if((float)(WIN_SIZE.x*zoom - xfrom) / (float) OBJECTUNIT 
+                    > MAX_VIEW_SIZE.x)
+                {
+                    zoom = (float)(MAX_VIEW_SIZE.x*OBJECTUNIT + xfrom) / (float) WIN_SIZE.x;
+                }
+
+                if((float)(WIN_SIZE.y*zoom - yfrom) / (float) OBJECTUNIT 
+                    > MAX_VIEW_SIZE.y)
+                {
+                    zoom = (float)(MAX_VIEW_SIZE.y*OBJECTUNIT + yfrom) / (float) WIN_SIZE.y;
+                }
+                */
+
+
                 view.reset(sf::FloatRect(xfrom, yfrom, WIN_SIZE.x*zoom, WIN_SIZE.y*zoom ));
 
                 // Adjust Render from-to
@@ -251,18 +279,13 @@ int main()
                     yfrom/OBJECTUNIT
                 );
                 end= sf::Vector2u(
-                    ((xfrom + WIN_SIZE.x*zoom)/OBJECTUNIT)+1,
-                    ((yfrom + WIN_SIZE.y*zoom)/OBJECTUNIT)+1
+                    ((xfrom + WIN_SIZE.x*zoom)/OBJECTUNIT),
+                    ((yfrom + WIN_SIZE.y*zoom)/OBJECTUNIT)
                 );
-                //std::cout << "Drawing: ("<< start.x <<", "<< start.y<<") ";
-                //std::cout << "to ("<< end.x <<", "<< end.y<<")\n";
-                /*
-                std::cout << 
-                "Zoom*Pixel:\tx: " << zoom*WIN_SIZE.x << 
-                "\ty: " << zoom*WIN_SIZE.y << 
-                "\tPixel_x: " << WIN_SIZE.x << 
-                "\tPixel_y: " << WIN_SIZE.y << 
-                "\tzoom: " << zoom << std::endl;*/
+
+                // Überhangobjekt
+                if(end.x < level->getMapX() ) end.x++;
+                if(end.y < level->getMapY() ) end.y++;
             }
 
 
@@ -287,10 +310,12 @@ int main()
             // Render only Objects inside View
             for (uint x = start.x; x < end.x; x++){
                 for (uint y = start.y; y < end.y; y++){
+                    
                     if(level->getPlayer()->isMarked(x, y)){
                         Object marker = level->getMarkerTemplate(x, y);
                         window.draw(marker.sprite);
                     }
+                    
                     
                     Object* m = level->getObject(sf::Vector2u(x, y));
                     if (m == nullptr || m == level->getPlayer()) continue;
