@@ -276,10 +276,12 @@ int main()
 
             
             window.draw(level->getBackground());
-            sf::Sprite nav = level->getPlayer()->getNavi(
-                level->getDirection(level->getPlayer()->pos.x, level->getPlayer()->pos.y)
-            );
-            if(level->getPlayer()->getNaviSteps() > 0) window.draw(nav);
+            if(level->getPlayer()->getNaviSteps() > 0){
+                Object nav = level->getPlayer()->getNavi(
+                    level->getDirection(level->getPlayer()->pos.x, level->getPlayer()->pos.y)
+                );
+                window.draw(nav.sprite);
+            }
 
 
             // Render only Objects inside View

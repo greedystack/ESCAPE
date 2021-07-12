@@ -120,7 +120,7 @@ public:
             setDirection(d);
             
         }
-        place();
+        if(map != nullptr) place();
         sprite.setPosition((float)pos.x*OBJECTUNIT, (float)pos.y*OBJECTUNIT);
 
         if(tex->getImageCount().x > 1) animated=true;
@@ -241,21 +241,29 @@ protected:
     };
 
     // Objekte "teleportieren"
+    public:
     bool teleport(sf::Vector2<int> set_pos){
-        if(!setMapPosition(set_pos)){
-            return false;
+        if(map != nullptr){
+            if(!setMapPosition(set_pos)){
+                return false;
+            }
+        }else{
+            pos.x = set_pos.x;
+            pos.y = set_pos.y;
         }
 
         sprite.setPosition((float)pos.x*OBJECTUNIT, (float)pos.y*OBJECTUNIT);
         return true;
     };
 
+    protected:
     bool setMapPosition(sf::Vector2<int> set_pos){
         // map-ränder verkleben
         if(set_pos.x < 0) set_pos.x = getMapsizeX() +set_pos.x;
         else if(set_pos.x >= getMapsizeX()) set_pos.x = set_pos.x - getMapsizeX();
         if(set_pos.y < 0) set_pos.y = getMapsizeY() +set_pos.y;
         else if(set_pos.y >= getMapsizeY()) set_pos.y = set_pos.y - getMapsizeY();
+
 
         //printf("Moving Object to (%d, %d) \n", set_pos.x, set_pos.y);
         

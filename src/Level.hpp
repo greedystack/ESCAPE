@@ -52,6 +52,9 @@ private:
     std::array<uint, 2> start, end;
 
     std::map< std::array<uint, 2>, std::array<uint, 2> > navigation;
+    // Format: DFS-Pos -> DFS-Pos, näher am Ziel
+
+    uint scalar = 2; // wie viele Mapfields hat ein DFS-Node (zu deutsch: wie breit sind die Gänge)
     
 public:
     
@@ -165,9 +168,34 @@ public:
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
+    std::array<uint, 2> mapNodeToDfsNode(uint x, uint y, bool _round=false){
+        if(_round) 
+            return {(uint) round(((float)x-1.)/((float)scalar+1.)), 
+                (uint) round(((float)y-1.)/((float)scalar+1.))};
+        else 
+            return {(x-1)/(scalar+1), 
+            (y-1)/(scalar+1)};
+    }
+
+    
+
     sf::Vector2i getDirection(uint x, uint y){
-        sf::Vector2i next(navigation[{x, y}][0],  navigation[{x, y}][1]);
-        return next - sf::Vector2i(x, y);
+        std::array<uint, 2> dfsnode = mapNodeToDfsNode(x, y);
+        std::array<uint, 2> dfsnode_rounded = mapNodeToDfsNode(x, y, true);
+
+        std::array<uint, 2> newnode = navigation[dfsnode];
+        std::array<uint, 2> newnode_rounded = navigation[dfsnode_rounded];
+
+        if(dfsnode[0] < dfsnode_rounded[0] ||dfsnode[1] < dfsnode_rounded[1]){
+            // stehe zwischen zwei DFS-Feldern
+            if(newnode != dfsnode_rounded){
+                dfsnode = dfsnode_rounded;
+                newnode = newnode_rounded;
+            }
+        }
+        
+        
+        return sf::Vector2i(newnode[0]-dfsnode[0], newnode[1]-dfsnode[1]);
     }
 
 private:
@@ -223,9 +251,7 @@ void createBackground(){
 void dfs(sf::Vector2u size){
     // Achtung: std::set geht mit sf::Vector2 nicht, weil angeblich nicht vergleichbar. Dummer Compiler. -.-
     // Daher wird hier mit std::arrays statt sf::Vector2 gearbeitet
-
-    uint scalar = 2; // wie viele Mapfields hat ein DFS-Node (zu deutsch: wie breit sind die Gänge)
-
+    uint scalar = this->scalar;
 
     std::set<std::array<uint, 2>> noWall; // durchgang, hier keine wall platzieren
     std::stack<std::array<uint, 2>> maxPath;
@@ -314,7 +340,7 @@ void dfs(sf::Vector2u size){
         if(node[1] > 0) neighbors.insert({ node[0], node[1] -1 }); // up
 
         /*
-        // Wirft RAM Exception aus unerfimndlichen gründen ...?
+        // Wirft RAM Exception aus unerfindlichen gründen ...?
         // Gelernt: Man darf Sets beim iterieren natürlich nicht verändern!
         for(std::array<uint, 2> nb : neighbors) {
             if(visited.contains(nb)){
@@ -361,7 +387,7 @@ void dfs(sf::Vector2u size){
             std::array<uint, 2> from = stack.top();
             stack.pop();
             if(stack.size() >0){
-                navigation[getMapField(from)] = getMapField(stack.top());
+                navigation[from] = stack.top();
             }
             depth--;
         }else{

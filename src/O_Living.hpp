@@ -164,7 +164,7 @@ private:
     bool won = false;
     uint food, navis, marker;
     int navisteps, markersteps;
-    sf::Sprite navi;
+    Object navi = Object(nullptr, 0, 0, texsheets["arrow"]);
 public:
 
     Player(Object ** map, int x, int y) : 
@@ -178,12 +178,6 @@ public:
 
 
         ///////////////////////////////
-
-        navi.setTexture(texsheets["arrow"]->texture);
-        sf::Vector2f scale(
-            (float) OBJECTUNIT / texsheets["arrow"]->getSize().x,
-            (float) OBJECTUNIT / texsheets["arrow"]->getSize().y);
-        navi.scale(scale);
         
     };
     ~Player(){
@@ -288,17 +282,13 @@ public:
         won=true;
     }
 
-    //////////
+    //////////////////////////////
 
     int getNaviSteps(){return navisteps;}
 
-    // TODO: Objects ohne Mapverankerung bauen!
-    sf::Sprite getNavi(sf::Vector2i _dir){
-        sf::Vector2i texsize = (sf::Vector2i) texsheets["arrow"]->getSize();
-        sf::Vector2i position(0, texsize.y * dtm[{_dir.x, _dir.y}]);
-        navi.setTextureRect(sf::IntRect(position,texsize));
-        sf::Vector2i newpos = (pos + _dir);
-        navi.setPosition(newpos.x*OBJECTUNIT, newpos.y*OBJECTUNIT);
+    Object getNavi(sf::Vector2i _dir){
+        navi.teleport(pos+_dir);
+        navi.setDirection(_dir);
         return navi;
     }
 
@@ -308,7 +298,7 @@ public:
         navis--;
     }
 
-    //////////
+    //////////////////////////////
 
     void putInBag(Object* item){
         bag.push_back(item);
