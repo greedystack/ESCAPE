@@ -14,8 +14,8 @@
 #include <array>
 #include <cmath>
 #include "Object.hpp"
-#include "O_Living.hpp" // Living muss über Facility und Item, weil die den Player-Typ kennen müssen.
 #include "O_Facility.hpp"
+#include "O_Living.hpp"
 #include "O_Item.hpp"
 
 

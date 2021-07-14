@@ -41,6 +41,7 @@ const uint COLLECTABLE = 5;
 const uint FOOD = 51;
 const uint NAVI = 52;
 const uint MARKER = 53;
+const uint ARROW = 99;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -64,6 +65,9 @@ public:
         texsheets["panda_kill"] = new Texsheet("../include/img/panda_kill.png", 11, 4);
         texsheets["panda_killed"] = new Texsheet("../include/img/panda_killed.png", 19, 4);
 
+        texsheets["minotaurus_standing"] = new Texsheet("../include/img/minotaurus_standing.png", 4, 4);
+        texsheets["minotaurus_move"] = new Texsheet("../include/img/minotaurus_move.png", 3, 4);
+
         texsheets["portal"] = new Texsheet("../include/img/portal.png", 21, 2);
 
         texsheets["bambus"] = new Texsheet("../include/img/bambus.png", 1, 1);
@@ -71,9 +75,10 @@ public:
         texsheets["bread"] = new Texsheet("../include/img/bread.png", 1, 1);
         texsheets["breadcrumbs"] = new Texsheet("../include/img/breadcrumbs.png", 1, 1);
 
+        texsheets["arrow"] = new Texsheet("../include/img/arrow.png", 5, 4);
+
 
         texsheets["wall"] = new Texsheet("../include/img/wall0.png");
-        texsheets["arrow"] = new Texsheet("../include/img/arrow.png", 1, 4);
         texsheets["kies"] = new Texsheet("../include/img/boden_kies.png");
     }
 ////////////////////////////////////////////////////////////////////////////////

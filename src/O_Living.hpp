@@ -36,7 +36,10 @@ public:
     {
         identity.insert(LIVING);
     };
+
     bool wasKilled(){return killed;}
+
+
     // nur genau einen Schritt moven
     virtual void step(sf::Vector2i _dir, uint factor=1){
          // vorerst über teleport() -> Bei größeren objekten (also größer als 1x1) ist es aber sinnvoller, nicht alle Felder jedes Mal neu zu belegen, sondern immer nur das erste Feld in die zu bewegende richtung.
@@ -57,8 +60,8 @@ public:
             }
 
             
-            movementAnimation.frames = 11*factor;
-            movementAnimation.time = sf::milliseconds(9);
+            movementAnimation.frames = 8*factor;
+            movementAnimation.time = sf::milliseconds(13);
             movementAnimation.state = dtm[{dir.x, dir.y}];
             movementAnimation.endPos = sf::Vector2i(pos.x * OBJECTUNIT, pos.y * OBJECTUNIT);
 
@@ -164,7 +167,7 @@ private:
     bool won = false;
     uint food, navis, marker;
     int navisteps, markersteps;
-    Object navi = Object(nullptr, 0, 0, texsheets["arrow"]);
+    Object navi = Arrow();
     std::set<std::array<uint, 2>> markedFields;
 public:
 
@@ -174,8 +177,8 @@ public:
         identity.insert(PLAYER);
         tex_moving = texsheets["panda_move"];
 
-        food = 10;
-        navisteps = 20;
+        food = 100;
+        navisteps = 1000;
         markersteps = 20;
 
 
@@ -221,7 +224,7 @@ public:
                 if(food >= 5){
                     specialAnimation.tex=texsheets["panda_kill"];
                     specialAnimation.frames=11;
-                    specialAnimation.time = sf::milliseconds(30);
+                    specialAnimation.time = sf::milliseconds(20);
                     interactee->getInteracted(this);
                     food -= 5;
                 }else{
@@ -298,10 +301,20 @@ public:
         navis--;
     }
 
-    Object getNavi(sf::Vector2i _dir){
-        navi.teleport(pos+_dir);
-        navi.setDirection(_dir);
-        return navi;
+    bool animateNavi(sf::Time time){
+        if(navisteps > 0){
+            return navi.animate(time);
+        }
+        return false;
+    }
+
+    Object* getNavi(sf::Vector2i _dir){
+        if(navisteps > 0){
+            navi.teleport(pos+_dir);
+            navi.setDirection(_dir);
+            return &navi;
+        }
+        return nullptr;
     }
 
 
@@ -343,10 +356,12 @@ public:
 class Enemy : public LivingObject {
 public:
     Enemy(Object ** map, int x, int y) : 
-        LivingObject(map, x, y, texsheets["panda_standing"], UP)
+        LivingObject(map, x, y, texsheets["minotaurus_standing"], UP)
     {
         identity.insert(ENEMY);
-        tex_moving = texsheets["panda_move"];
+        tex_moving = texsheets["minotaurus_move"];
+        movementAnimation.frames=8;
+        movementAnimation.time= sf::milliseconds(13);
     };
 
     virtual bool interact(Object* interactee=nullptr) override{
@@ -357,7 +372,7 @@ public:
             
             specialAnimation.tex=texsheets["panda_kill"];
             specialAnimation.frames=11;
-            specialAnimation.time = sf::milliseconds(70);
+            specialAnimation.time = sf::milliseconds(20);
         }
     };
 
@@ -369,7 +384,7 @@ public:
 
             specialAnimation.tex=texsheets["panda_killed"];
             specialAnimation.frames=19;
-            specialAnimation.time = sf::milliseconds(80);
+            specialAnimation.time = sf::milliseconds(50);
             killed = true;
         }
     };
@@ -391,9 +406,9 @@ public:
                 del();
             }
             else{
-                /*
+                
                 // Do a step ... maybe.
-                uint r = rand() % 5;
+                uint r = rand() % 8;
                 if(r == 0){
                     sf::Vector2i _dir;
                     r = rand() % 2;
@@ -408,7 +423,7 @@ public:
                     }
                     step(_dir);
                 }
-                */
+                
             }
         }
     }

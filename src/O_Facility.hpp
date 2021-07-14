@@ -166,4 +166,18 @@ public:
 };
 
 
+class Arrow : public Object {
+public:
+    Arrow() : 
+        Object(nullptr, 0, 0, texsheets["arrow"])
+    {
+        identity.insert(ARROW);
+        setTexType(0);
+        animated=true;
+        standingAnimation.time = sf::milliseconds(175);
+        
+    };
+};
+
+
 #endif //O_FACILITY

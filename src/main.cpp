@@ -14,7 +14,7 @@
 const std::string TITLE = "Escape!";
 
 const uint OBJECTUNIT = 20; // Pixel pro Map-Block
-const sf::Time UPDATE_TIME = sf::milliseconds(99);
+const sf::Time UPDATE_TIME = sf::milliseconds(104);
 const sf::Vector2u MAX_VIEW_SIZE(25,25); // in Mapblocks - um keinen vorteil durch rauszommen oder resizen zu bekommen
 
 
@@ -27,7 +27,8 @@ int main()
     int lvl_count = 3;
 
     sf::RenderWindow window(sf::VideoMode(WIN_SIZE.x, WIN_SIZE.y), TITLE);
-    sf::View view;
+    sf::View view, statusview;
+    
 
     sf::Clock clock;
     sf::Time elapsed = clock.restart();
@@ -39,7 +40,7 @@ int main()
     bool paused = false;
     bool drawAnimation = false;
 
-    Level* level = new Level(25, 15);
+    Level* level = new Level(10, 10);
     
 
     while (window.isOpen())
@@ -100,7 +101,7 @@ int main()
                     }else{
                         std::cout << "init new level" << std::endl;
                         delete level;
-                        level = new Level(2000, 2000);
+                        level = new Level(20, 20);
                     }
                 }
                 ////////////////////////////////////////////////
@@ -196,6 +197,7 @@ int main()
                 
             }
         }
+        if(level->getPlayer()->animateNavi(UPDATE_TIME - elapsed)) updateView=true;
 
         
 
@@ -299,12 +301,11 @@ int main()
 
             
             window.draw(level->getBackground());
-            if(level->getPlayer()->getNaviSteps() > 0){
-                Object nav = level->getPlayer()->getNavi(
-                    level->getDirection(level->getPlayer()->pos.x, level->getPlayer()->pos.y)
-                );
-                window.draw(nav.sprite);
-            }
+            
+            Object* nav = level->getPlayer()->getNavi(
+                level->getDirection(level->getPlayer()->pos.x, level->getPlayer()->pos.y)
+            );
+            if( nav != nullptr) window.draw(nav->sprite);
 
 
             // Render only Objects inside View
@@ -332,12 +333,83 @@ int main()
                 }
             }
             window.draw(level->getPlayer()->sprite);
+
+            ////////////////////////////////////////////////
+            //// Status View
+            ////////////////////////////////////////////////
+
+            sf::Color status_bgcolor(100, 100, 100, 225);
+            sf::Color status_bordercolor(50, 50, 50, 255);
+            sf::Color status_bgcolorbambus(120, 120, 120, 150);
+            
+            statusview.reset(sf::FloatRect(0, 0, (float) WIN_SIZE.x, (float) WIN_SIZE.y));
+            window.setView(statusview);
+
+            sf::CircleShape inner;
+            // center: 80,80
+            inner.setRadius(60);
+            inner.setFillColor(status_bgcolor);
+            inner.setOutlineColor(status_bordercolor);
+            inner.setOutlineThickness(5);
+            inner.setPosition(20, 30);
+
+            sf::Sprite img;
+            float scalefactor;
+            scalefactor = (float) (90) / Object::texsheets["navi"]->getSize().x;
+            img.setTexture(Object::texsheets["navi"]->texture);
+            img.setPosition(35,45);
+            img.setScale(sf::Vector2f(scalefactor, scalefactor));
+
+
+            //window.draw(outer);
+            window.draw(inner);
+            window.draw(img);
+
+            /////////////////////
+
+            inner.setPosition(20, 200);
+            img.setTexture(Object::texsheets["bread"]->texture);
+            img.setPosition(35,215);
+            scalefactor = (float) (90) / Object::texsheets["bread"]->getSize().x;
+            img.setScale(sf::Vector2f(scalefactor, scalefactor));
             
 
-            // Draw the string
-            //window.draw(text);
+
+            window.draw(inner);
+            window.draw(img);
+
+            /////////////////////
+
+            sf::RectangleShape rect;
+            rect.setPosition(35, 360);
+            rect.setSize(sf::Vector2f(90, 480));
+            rect.setFillColor(status_bgcolorbambus);
+            rect.setOutlineColor(status_bordercolor);
+            rect.setOutlineThickness(1);
+
+            window.draw(rect);
+
+            sf::Sprite bambus;
+            bambus.setTexture(Object::texsheets["bambus"]->texture);
+            bambus.setPosition(40, 380);
+            scalefactor = (float) (80) / Object::texsheets["bambus"]->getSize().x;
+            bambus.setScale(sf::Vector2f(scalefactor, scalefactor));
+            window.draw(bambus);
+
+            bambus.setPosition(40, 470);
+            window.draw(bambus);
+
+            bambus.setPosition(40, 560);
+            window.draw(bambus);
+
+            bambus.setPosition(40, 650);
+            window.draw(bambus);
+
+            bambus.setPosition(40, 740);
+            window.draw(bambus);
 
 
+            ////////////////////////////////////////////////
             // Update the window
             window.display();
             updateView = false;

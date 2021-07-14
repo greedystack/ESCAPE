@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20.1) # CMAKE Version -> nicht erforderlich, aber sicherer
-project (first) # Projectname
+project (escape) # Projectname
 set(CMAKE_CXX_STANDARD 20)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pthread" )
@@ -7,7 +7,7 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 
 #######################
 
-add_executable(first ${CMAKE_SOURCE_DIR}/src/main.cpp src/Object.hpp src/Texsheet.hpp src/Level.hpp src/Bag.hpp src/O_Facility.hpp src/O_Living.hpp src/O_Item.hpp)
+add_executable(escape ${CMAKE_SOURCE_DIR}/src/main.cpp src/Object.hpp src/Texsheet.hpp src/Level.hpp src/Bag.hpp src/O_Facility.hpp src/O_Living.hpp src/O_Item.hpp)
 
 include_directories(${CMAKE_SOURCE_DIR}/lib ${CMAKE_SOURCE_DIR}/include) #HEADER
 
@@ -32,7 +32,7 @@ find_package(SFML 2.5.1 COMPONENTS network audio graphics window system REQUIRED
 
 
 ### LINKING:
-target_link_libraries(first sfml-system sfml-window sfml-graphics)
+target_link_libraries(escape sfml-system sfml-window sfml-graphics)
 
 
 
