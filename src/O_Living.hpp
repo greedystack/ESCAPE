@@ -1,6 +1,7 @@
 #ifndef O_LIVING
 #define O_LIVING
 #include "Object.hpp"
+#include "Itempanel.hpp"
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -41,12 +42,12 @@ public:
 
 
     // nur genau einen Schritt moven
-    virtual void step(sf::Vector2i _dir, uint factor=1){
+    virtual uint step(sf::Vector2i _dir, uint factor=1){
          // vorerst über teleport() -> Bei größeren objekten (also größer als 1x1) ist es aber sinnvoller, nicht alle Felder jedes Mal neu zu belegen, sondern immer nur das erste Feld in die zu bewegende richtung.
         if(dir != _dir){
             // erstmal nur in die gewünschte Richtung schauen. Noch kein Schritt.
             setDirection(_dir);
-            return;
+            return 0;
         }
 
         sf::Vector2i startpos = pos;
@@ -56,12 +57,12 @@ public:
                 std::cout << "interaction throgh touching " << std::endl;
                 interact(this);
                 std::cout << "interaction throgh touching done" << std::endl;
-                return;
+                return i;
             }
 
             
-            movementAnimation.frames = 8*factor;
-            movementAnimation.time = sf::milliseconds(13);
+            movementAnimation.frames = 5*factor;
+            movementAnimation.time = sf::milliseconds(18);
             movementAnimation.state = dtm[{dir.x, dir.y}];
             movementAnimation.endPos = sf::Vector2i(pos.x * OBJECTUNIT, pos.y * OBJECTUNIT);
 
@@ -70,6 +71,7 @@ public:
                 ((float)deltaPos.x * (float)OBJECTUNIT) / (float)movementAnimation.frames, 
                 ((float)deltaPos.y * (float)OBJECTUNIT) / (float)movementAnimation.frames);
         }
+        return factor;
     };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -161,193 +163,6 @@ public:
 // LAYER 2
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-class Player : public LivingObject {
-private:
-    std::list<Object*> bag;
-    bool won = false;
-    uint food, navis, marker;
-    int navisteps, markersteps;
-    Object navi = Arrow();
-    std::set<std::array<uint, 2>> markedFields;
-public:
-
-    Player(Object ** map, int x, int y) : 
-        LivingObject(map, x, y, texsheets["panda_standing"], DOWN)
-    {
-        identity.insert(PLAYER);
-        tex_moving = texsheets["panda_move"];
-
-        food = 100;
-        navisteps = 1000;
-        markersteps = 20;
-
-
-        ///////////////////////////////
-        
-    };
-    ~Player(){
-        for (Object* i : bag) {
-            free(i);
-            std::cout << i << " from BAG deleted.\n";
-        }
-    };
-
-    virtual void step(sf::Vector2i _dir, uint factor=1) override {
-        if(markersteps > 0) markedFields.insert({(uint)pos.x, (uint)pos.y});
-
-        LivingObject::step(_dir, factor);
-        for(auto d : {RIGHT, UP, LEFT, DOWN}){
-            if(neighbor(d) == nullptr) continue;
-            if(neighbor(d)->whoami().contains(ENEMY)){
-                setDirection(d);
-                interact(this);
-            }
-        }
-
-        if(navisteps > 0) navisteps -= factor;
-        if(navisteps < 0) navisteps = 0;
-        if(markersteps > 0) markersteps -= factor;
-        if(markersteps < 0) markersteps = 0;
-    }
-
-    // Hier und an der neighbor() scheitert aktuell die variable Objektgröße. Fix this!
-    // z.B. fixbar durch loop, in der dann mit alllen adjazenten, interactable Objects interagiert wird.
-    virtual bool interact(Object* interactee=nullptr) override {
-        if(interactee == nullptr || interactee == this){
-            interactee = neighbor(dir);
-        }
-        if(interactee == nullptr) return false;
-
-        // TODO: Animation queue! 
-        if(interactee->whoami().contains(ENEMY)){
-            if(!((LivingObject*)interactee)->wasKilled()){
-                if(food >= 5){
-                    specialAnimation.tex=texsheets["panda_kill"];
-                    specialAnimation.frames=11;
-                    specialAnimation.time = sf::milliseconds(20);
-                    interactee->getInteracted(this);
-                    food -= 5;
-                }else{
-                    specialAnimation.tex=texsheets["panda_killed"];
-                    specialAnimation.frames=19;
-                    specialAnimation.time = sf::milliseconds(50);
-                    
-                    interactee->interact(this);
-                    killed = true;
-                }
-            }
-            return true;
-        }
-        else if(interactee->whoami().contains(GOAL)){
-            win();
-            return interactee->getInteracted(this);
-        }
-        else if(interactee->whoami().contains(FOOD)){
-            if(food < 5) food++;
-            interactee->getInteracted(this);
-        }
-        else if(interactee->whoami().contains(NAVI)){
-            navis++;
-            interactee->getInteracted(this);
-        }
-        else if(interactee->whoami().contains(MARKER)){
-            marker++;
-            interactee->getInteracted(this);
-        } 
-        else {
-            return interactee->getInteracted(this);
-        }
-
-        return false;
-    };
-
-    virtual bool getInteracted(Object* interacter=nullptr) override {
-        if(interacter->whoami().contains(ENEMY)){
-            setDirection(invertDirection(interacter->dir));
-            interact(this);
-        }
-    }
-
-    
-    bool hasWon(){return won;}
-    bool isParalyzed(){return specialAnimation.frames > 0;}
-
-    void win(){
-        movementAnimation.frames = 3;
-        movementAnimation.time = sf::milliseconds(100);
-        movementAnimation.state = dtm[{dir.x, dir.y}];
-
-        sf::Vector2i endPos = pos + dir;
-        movementAnimation.endPos = sf::Vector2i(endPos.x * OBJECTUNIT, endPos.y * OBJECTUNIT);
-
-        sf::Vector2i deltaPos = endPos - pos;
-        movementAnimation.move = sf::Vector2f( 
-            ((float)deltaPos.x * (float)OBJECTUNIT) / (float)movementAnimation.frames, 
-            ((float)deltaPos.y * (float)OBJECTUNIT) / (float)movementAnimation.frames);
-
-        // Lähmen:
-        specialAnimation.tex=nullptr;
-        specialAnimation.frames = 3;
-        specialAnimation.time = sf::milliseconds(50);
-        won=true;
-    }
-
-    //////////////////////////////
-
-    int getNaviSteps(){return navisteps;}
-    void activateNavi(){
-        if(navis <= 0) return;
-        navisteps += 20;
-        navis--;
-    }
-
-    bool animateNavi(sf::Time time){
-        if(navisteps > 0){
-            return navi.animate(time);
-        }
-        return false;
-    }
-
-    Object* getNavi(sf::Vector2i _dir){
-        if(navisteps > 0){
-            navi.teleport(pos+_dir);
-            navi.setDirection(_dir);
-            return &navi;
-        }
-        return nullptr;
-    }
-
-
-    int getMarkerSteps(){return markersteps;}
-    void activateMarker(){
-        if(marker <= 0) return;
-        markersteps += 20;
-        marker--;
-    }
-
-    bool isMarked(uint x, uint y){return markedFields.contains({x, y});}
-
-    //////////////////////////////
-
-    void putInBag(Object* item){
-        bag.push_back(item);
-        std::cout << "added " << item << "\n\n";
-        for (Object* i : bag) {
-            std::cout << i << std::endl;
-        }
-    };
-    void removeFromBag(Object* item){
-        bag.remove(item);
-        std::cout << "removed " << item << "\n\n";
-        for (Object* i : bag) {
-            std::cout << i << std::endl;
-        }
-    }
-    void useItem(){
-        if(bag.empty()) return;
-        if(bag.front()->interact(this)) removeFromBag(bag.front());
-    }
-};
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -389,8 +204,8 @@ public:
         }
     };
 
-    virtual void step(sf::Vector2i _dir, uint factor=1) override {
-        LivingObject::step(_dir, factor);
+    virtual uint step(sf::Vector2i _dir, uint factor=1) override {
+        uint steps = LivingObject::step(_dir, factor);
         for(auto d : {RIGHT, UP, LEFT, DOWN}){
             if(neighbor(d) == nullptr) continue;
             if(neighbor(d)->whoami().contains(PLAYER)){
@@ -398,6 +213,7 @@ public:
                 neighbor(d)->getInteracted(this);
             }
         }
+        return steps;
     }
 
     virtual void update() override{
