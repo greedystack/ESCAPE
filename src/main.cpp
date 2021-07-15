@@ -200,7 +200,6 @@ int main()
                     {
                         if(level->getPlayer()->itempanel.use()){
                             chooseItemMode = false;
-                            level->getPlayer()->itempanel.disableSelection();
                             drawWindow=true;
                         }
                         elapsed=sf::milliseconds(0);
@@ -211,7 +210,11 @@ int main()
                 {
                     chooseItemMode = !chooseItemMode;
 
-                    if(chooseItemMode) level->getPlayer()->itempanel.enableSelection();
+                    if(chooseItemMode){
+                        if(!level->getPlayer()->itempanel.enableSelection()){
+                            chooseItemMode = false;
+                        }
+                    }
                     else level->getPlayer()->itempanel.disableSelection();
                     elapsed=sf::milliseconds(0);
                     drawWindow=true;

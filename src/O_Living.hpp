@@ -57,7 +57,7 @@ public:
                 std::cout << "interaction throgh touching " << std::endl;
                 interact(this);
                 std::cout << "interaction throgh touching done" << std::endl;
-                return i;
+                return i-1;
             }
 
             

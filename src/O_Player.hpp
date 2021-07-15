@@ -2,6 +2,7 @@
 #define O_PLAYER
 #include "O_Living.hpp"
 
+const uint FOOD_NEEDED_TO_KILL = 3;
 
 class Player : public LivingObject {
 private:
@@ -22,6 +23,7 @@ public:
 
         itempanel.add(Itempanel::NAVI, 3);
         itempanel.add(Itempanel::MARKER, 3);
+        itempanel.add(Itempanel::FOOD, 4);
 
 
         ///////////////////////////////
@@ -61,7 +63,7 @@ public:
         // TODO: Animation queue! 
         if(interactee->whoami().contains(ENEMY)){
             if(!((LivingObject*)interactee)->wasKilled()){
-                if(itempanel.use(Itempanel::FOOD, 5)){
+                if(itempanel.use(Itempanel::FOOD, FOOD_NEEDED_TO_KILL)){
                     specialAnimation.tex=texsheets["panda_kill"];
                     specialAnimation.frames=11;
                     specialAnimation.time = sf::milliseconds(20);

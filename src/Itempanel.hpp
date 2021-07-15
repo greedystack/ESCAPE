@@ -10,7 +10,8 @@ const sf::Color status_bordercolor(50, 50, 50, 255);
 const sf::Color status_bgcolor(100, 100, 100, 225);
 const sf::Color status_bgcolorselected(255, 50, 50, 225);
 
-const sf::Color status_bgcolorbambus(120, 120, 120, 150);
+const sf::Color status_bgcolornotselectable(120, 120, 120, 150);
+const sf::Color status_bordercolornotselectable(75, 75, 75, 255);
 
 const float radius = 60;
 
@@ -23,70 +24,116 @@ const float radius_amount = 18;
 const sf::Vector2f offset_amountbubble(70, 70);
 const float charactersize = 22;
 
+const float charactersize_inUse = 52;
+const float imagewidth_inUse = 30;
+const sf::Color status_bgcolorinUse(0, 175, 0, 235);
+const sf::Color status_bordercolorInUse(70, 70, 70, 235);
 
 class Panelobject{
 protected:
+    sf::Vector2f pos;
     Texsheet* tex;
     sf::CircleShape circle, amountcircle;
     sf::Sprite img;
     sf::Text text;
     int steps, amount, maxAmount, stepsAvailable;
+    bool selectable;
 
-    void updateAmount(){
+    void updateText(int num){
         std::string amnt = "99+";
-        if(amount <= 99){
-            amnt = std::to_string(amount);
+        if(num <= 99){
+            amnt = std::to_string(num);
+        }else if(num < 0){
+            amnt = "0";
         }
         text.setString(amnt);
         sf::FloatRect textRect = text.getLocalBounds();
         text.setOrigin(textRect.left + textRect.width/2.0f,
                textRect.top  + textRect.height/2.0f);
     }
-public:
-    static sf::Vector2f nextObject;
+    void setInuse(){
+        circle.setFillColor(status_bgcolorinUse);
+        circle.setOutlineColor(status_bordercolorInUse);
+        circle.setOutlineThickness(outlinethickness);
 
-    Panelobject(Texsheet* _tex = nullptr, int _stepsAvailable = 25, int _maxAmount = 0)
-        : tex(_tex), stepsAvailable(_stepsAvailable), maxAmount(_maxAmount)
+        text.setFont(STANDARDFONT);
+        text.setCharacterSize(charactersize_inUse);
+        text.setFillColor(sf::Color::White);
+        text.setStyle(sf::Text::Bold);
+        text.setPosition(pos + sf::Vector2f(radius, radius));
+        updateText(steps);
+        
+        img.setColor(sf::Color(200,200,200,150));
+        /*
+        float scalefactor = (float) (imagewidth_inUse) / tex->getSize().x;
+        img.setTexture(tex->texture);
+        //img.setPosition(pos.x + radius + (offset_amountbubble.x - (imagewidth_inUse)/2), 
+        //        pos.y + radius + ( offset_amountbubble.y - ((tex->getSize().y * scalefactor)/2)));
+        img.setPosition(pos + offset_amountbubble);
+        img.setScale(sf::Vector2f(scalefactor, scalefactor));
+        */
+        
+    }
+    void setUnused(){
+        circle.setFillColor(status_bgcolor);
+        circle.setOutlineColor(status_bordercolor);
+        circle.setOutlineThickness(outlinethickness);
+
+        text.setFont(STANDARDFONT);
+        text.setCharacterSize(charactersize);
+        text.setFillColor(sf::Color::White);
+        text.setStyle(sf::Text::Bold);
+        text.setPosition(pos + offset_amountbubble + sf::Vector2f(radius_amount, radius_amount));
+        updateText(amount);
+
+        img.setColor(sf::Color(255,255,255,255));
+        float scalefactor = (float) (imagewidth) / tex->getSize().x;
+        img.setTexture(tex->texture);
+        img.setPosition(pos.x + (radius - (imagewidth)/2), 
+                pos.y + ( radius - ((tex->getSize().y * scalefactor)/2)));
+        img.setScale(sf::Vector2f(scalefactor, scalefactor));
+    }
+    void setUnselectable(){
+        circle.setFillColor(status_bgcolornotselectable);
+        circle.setOutlineColor(status_bordercolornotselectable);
+    }
+
+public:
+
+    Panelobject(sf::Vector2f _pos = sf::Vector2f(0,0), 
+                Texsheet* _tex = nullptr, bool _selectable=true, int _stepsAvailable = 25, int _maxAmount = 0)
+        : pos(_pos), tex(_tex), stepsAvailable(_stepsAvailable), maxAmount(_maxAmount), selectable(_selectable)
     {
         amount=0;
         steps=0;
 
         if(tex != nullptr){
             circle.setRadius(radius);
-            circle.setFillColor(status_bgcolor);
-            circle.setOutlineColor(status_bordercolor);
-            circle.setOutlineThickness(outlinethickness);
-            circle.setPosition(nextObject.x, nextObject.y);
+            circle.setPosition(pos);
 
             amountcircle.setRadius(radius_amount);
             amountcircle.setFillColor(amount_bgcolor);
-            amountcircle.setPosition(nextObject.x + offset_amountbubble.x, nextObject.y + offset_amountbubble.y);
+            amountcircle.setPosition(pos + offset_amountbubble);
 
-            text.setFont(STANDARDFONT);
-            text.setCharacterSize(charactersize);
-            text.setFillColor(sf::Color::White);
-            text.setStyle(sf::Text::Bold);
-            text.setPosition(nextObject.x + offset_amountbubble.x + (radius_amount), 
-                nextObject.y + offset_amountbubble.y + (radius_amount));
-            updateAmount();
-
-            float scalefactor = (float) (imagewidth) / tex->getSize().x;
-            img.setTexture(tex->texture);
-            img.setPosition(nextObject.x + (radius - (imagewidth)/2), 
-                    nextObject.y + ( radius - ((tex->getSize().y * scalefactor)/2)));
-            img.setScale(sf::Vector2f(scalefactor, scalefactor));
-
-            nextObject += sf::Vector2f(0, 2*radius + abstand.y);
+            setUnused();
+            if(!selectable)setUnselectable();
         }
     };
 
-    
+
 
     void draw(sf::RenderWindow& w){
         w.draw(circle);
-        w.draw(img);
-        w.draw(amountcircle);
-        w.draw(text);
+        if(steps <= 0){
+            w.draw(img);
+            w.draw(amountcircle);
+            w.draw(text);
+        } else {
+            //w.draw(amountcircle);
+            w.draw(img);
+            w.draw(text);
+            
+        }
     }
 
     void select(){
@@ -98,32 +145,38 @@ public:
 
 
     bool use(int _amount=1){
-        if(amount <= _amount) return false;
+        if(amount < _amount) return false;
+        if(steps >0) return false;
         amount -= _amount;
-        steps += stepsAvailable;
-        updateAmount();
+        if(selectable){
+            steps += stepsAvailable;
+            unselect();
+            setInuse();
+        }else{
+            updateText(amount);
+        }
         return true;
     }
-    void step(uint _steps){
-        if(steps <= 0) return;
-        steps-=_steps;
+    void step(uint s){
+        steps-=s;
+        updateText(steps);
         if(steps <= 0){
-
+            steps = 0;
+            setUnused();
         }
     }
     bool add(int _amount=1){
         if(amount + _amount <= maxAmount || maxAmount <= 0){
             amount += _amount;
-            updateAmount();
+            updateText(amount);
             return true;
         } 
         return false;
     }
     int getamount(){return amount;}
     int getsteps(){return steps;}
+    bool isselectable(){return selectable && steps<=0 && amount > 0;}
 };
-
-sf::Vector2f Panelobject::nextObject;
 
 #endif //PANELOBJECT
 
@@ -139,10 +192,14 @@ protected:
 public:
     static const int NAVI, MARKER, FOOD;
     Itempanel(int t){
-        Panelobject::nextObject = sf::Vector2f(abstand.x,abstand.y);
-        panel[Itempanel::NAVI] = Panelobject(Object::texsheets["navi"], 25);
-        panel[Itempanel::MARKER] = Panelobject(Object::texsheets["bread"], 25);
-        panel[Itempanel::FOOD] = Panelobject(Object::texsheets["bambus"], 5);
+        sf::Vector2f pos = abstand;
+        panel[Itempanel::NAVI] = Panelobject(pos, Object::texsheets["navi"], true, 25);
+        pos += sf::Vector2f(0, 2*radius + abstand.y);
+        panel[Itempanel::MARKER] = Panelobject(pos, Object::texsheets["bread"], true, 25);
+        pos += sf::Vector2f(0, 2*radius + abstand.y);
+        panel[Itempanel::FOOD] = Panelobject(pos, Object::texsheets["bambus"], false, 0, 5);
+        pos += sf::Vector2f(0, 2*radius + abstand.y);
+
         it = panel.begin();
     }
 
@@ -152,22 +209,33 @@ public:
         }
     }
 
-    void enableSelection(){
+    bool enableSelection(){
+        int start = it->first;
+        while(!it->second.isselectable()){
+            it++;
+            if(it == panel.end()) it = panel.begin();
+            if(it->first == start) return false;
+        }
         it->second.select();
+        return true;
     }
     void disableSelection(){
         it->second.unselect();
     }
     void up(){
         it->second.unselect();
-        it--;
-        if(it == panel.end()) it--;
+        do{
+            if(it == panel.begin()) it = panel.end();
+            it--;
+        }while(!it->second.isselectable());
         it->second.select();
     }
     void down(){
         it->second.unselect();
-        it++;
-        if(it == panel.end()) it = panel.begin();
+        do{
+            it++;
+            if(it == panel.end()) it = panel.begin();
+        }while(!it->second.isselectable());
         it->second.select();
     }
 
@@ -183,7 +251,8 @@ public:
     void step(uint steps){
         
         for(auto p : panel){
-            p.second.step(steps);
+            if(getSteps(p.first))
+                panel[p.first].step(steps);
         }
     }
 
