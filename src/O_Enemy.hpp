@@ -29,7 +29,7 @@ public:
             // Wurde vom Player getötet.
             sf::Vector2i playerDir = interacter->pos - pos;
             //setDirection(playerDir);
-            enqueueSpecialAnimation(texsheets["minotaurus_killed"], 14, 50, playerDir);
+            enqueueSpecialAnimation(texsheets["minotaurus_killed"], 14, 42, playerDir);
             killed = true;
         }
     };
