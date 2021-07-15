@@ -17,6 +17,7 @@
 #include "O_Facility.hpp"
 #include "O_Living.hpp"
 #include "O_Player.hpp"
+#include "O_Enemy.hpp"
 #include "O_Item.hpp"
 
 
@@ -419,12 +420,13 @@ void dfs(sf::Vector2u size){
     food.insert(getMapField(maxPath.top()));
     for(uint i=0; i<5; i++) maxPath.pop();
     enemies.insert(getMapField(maxPath.top()));
-    enemies.insert(getMapField(maxPath.top()));
-    enemies.insert(getMapField(maxPath.top()));
-    enemies.insert(getMapField(maxPath.top()));
+    maxPath.pop();
     enemies.insert(getMapField(maxPath.top()));
     maxPath.pop();
     enemies.insert(getMapField(maxPath.top()));
+    maxPath.pop();
+    enemies.insert(getMapField(maxPath.top()));
+    maxPath.pop();
     enemies.insert(getMapField(maxPath.top()));
     for(uint i=0; i<3; i++) maxPath.pop();
     enemies.insert(getMapField(maxPath.top()));

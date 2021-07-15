@@ -2,7 +2,7 @@
 #define O_PLAYER
 #include "O_Living.hpp"
 
-const uint FOOD_NEEDED_TO_KILL = 3;
+const uint FOOD_NEEDED_TO_KILL = 5;
 
 class Player : public LivingObject {
 private:

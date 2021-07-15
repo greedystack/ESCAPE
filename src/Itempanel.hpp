@@ -28,6 +28,7 @@ const float charactersize_inUse = 52;
 const float imagewidth_inUse = 30;
 const sf::Color status_bgcolorinUse(0, 175, 0, 235);
 const sf::Color status_bordercolorInUse(70, 70, 70, 235);
+const sf::Color maxamountcolor = status_bgcolorselected;
 
 class Panelobject{
 protected:
@@ -154,6 +155,7 @@ public:
             setInuse();
         }else{
             updateText(amount);
+            amountcircle.setFillColor(amount_bgcolor);
         }
         return true;
     }
@@ -169,6 +171,9 @@ public:
         if(amount + _amount <= maxAmount || maxAmount <= 0){
             amount += _amount;
             updateText(amount);
+            if(amount == maxAmount){
+                amountcircle.setFillColor(maxamountcolor);
+            }
             return true;
         } 
         return false;
