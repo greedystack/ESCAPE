@@ -56,6 +56,17 @@ public:
     bool wasKilled(){return killed;}
 
 
+    uint getSAQduration(){
+        uint t = 0;
+        std::queue<SpecialAnimationStruct> copy = saq;
+        while(copy.size() > 0){
+            t += copy.front().frames * copy.front().time.asMilliseconds();
+            copy.pop();
+        }
+        return t;
+    }
+
+
     // nur genau einen Schritt moven
     virtual uint step(sf::Vector2i _dir, uint factor=1){
          // vorerst über teleport() -> Bei größeren objekten (also größer als 1x1) ist es aber sinnvoller, nicht alle Felder jedes Mal neu zu belegen, sondern immer nur das erste Feld in die zu bewegende richtung.

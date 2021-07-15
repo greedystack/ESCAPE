@@ -65,12 +65,14 @@ public:
             if(!((LivingObject*)interactee)->wasKilled()){
                 sf::Vector2i _dir = interactee->pos - pos;
                 if(itempanel.use(Itempanel::FOOD, FOOD_NEEDED_TO_KILL)){
+                    interactee->getInteracted(this);
                     enqueueSpecialAnimation(texsheets["panda_kill"], 11, 20, _dir);
                     enqueueSpecialAnimation(texsheets["panda_kill"], 11, 15, _dir, true);
-                    interactee->getInteracted(this);
+                    
                 }else{
-                    enqueueSpecialAnimation(texsheets["panda_killed"], 19, 70, _dir);
                     interactee->interact(this);
+                    enqueueSpecialAnimation(texsheets["panda_killed"], 19, 70, _dir);
+                    
                     killed = true;
                 }
             }

@@ -422,7 +422,9 @@ void dfs(sf::Vector2u size){
     enemies.insert(getMapField(maxPath.top()));
     //maxPath.pop();
     enemies.insert(getMapField(maxPath.top()));
-    //maxPath.pop();
+    enemies.insert(getMapField(maxPath.top()));
+    enemies.insert(getMapField(maxPath.top()));
+    maxPath.pop();
     enemies.insert(getMapField(maxPath.top()));
     //maxPath.pop();
     enemies.insert(getMapField(maxPath.top()));

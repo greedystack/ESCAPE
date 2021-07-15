@@ -18,6 +18,9 @@ public:
             sf::Vector2i playerDir = interactee->pos - pos;
             //setDirection(playerDir);
 
+            uint playerAniQueueDuration = ((LivingObject*)interactee)->getSAQduration();
+            if(playerAniQueueDuration > 0)
+                enqueueSpecialAnimation(nullptr, 1, playerAniQueueDuration, playerDir);
             enqueueSpecialAnimation(texsheets["minotaurus_kill"], 7, 30, playerDir);
             enqueueSpecialAnimation(texsheets["minotaurus_kill"], 7, 40, playerDir, true);
             enqueueSpecialAnimation(texsheets["minotaurus_kill"], 7, 30, playerDir);
