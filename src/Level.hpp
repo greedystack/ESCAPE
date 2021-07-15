@@ -420,13 +420,13 @@ void dfs(sf::Vector2u size){
     food.insert(getMapField(maxPath.top()));
     for(uint i=0; i<5; i++) maxPath.pop();
     enemies.insert(getMapField(maxPath.top()));
-    maxPath.pop();
+    //maxPath.pop();
     enemies.insert(getMapField(maxPath.top()));
-    maxPath.pop();
+    //maxPath.pop();
     enemies.insert(getMapField(maxPath.top()));
-    maxPath.pop();
+    //maxPath.pop();
     enemies.insert(getMapField(maxPath.top()));
-    maxPath.pop();
+    //maxPath.pop();
     enemies.insert(getMapField(maxPath.top()));
     for(uint i=0; i<3; i++) maxPath.pop();
     enemies.insert(getMapField(maxPath.top()));

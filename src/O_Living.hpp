@@ -14,7 +14,7 @@ protected:
     Texsheet* tex_moving;
     bool killed = false;
     // Animation:
-    struct movementAnimation {
+    struct MovementAnimationStruct {
         uint state; // reihe in Texsheet
         uint frames = 0; // also animationsiterationen
         //uint blockCycles = 0; // block Update-cycles
@@ -22,18 +22,33 @@ protected:
         sf::Vector2i endPos;
         sf::Vector2f move;
     } movementAnimation;
-    struct specialAnimation {
+    struct SpecialAnimationStruct {
         Texsheet* tex;
         uint frames=0;
+        sf::Vector2i dir;
         sf::Time time, last, passed;
+        bool reverse;
     }specialAnimation;
+
+    std::queue<SpecialAnimationStruct> saq;
+
+    void enqueueSpecialAnimation(Texsheet* _tex, uint _frames, uint ms, sf::Vector2i _dir = sf::Vector2i(0,0), bool _reverse = false){
+        if(_dir == sf::Vector2i(0,0)) _dir = dir;
+        SpecialAnimationStruct ani;
+        ani.tex = _tex;
+        ani.frames = _frames;
+        ani.time = sf::milliseconds(ms);
+        ani.dir = _dir;
+        ani.reverse = _reverse;
+        saq.push(ani);
+    }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////// 
 public:
-    LivingObject(Object ** map, int x, int y, Texsheet* tex=nullptr, sf::Vector2i d = DOWN) : 
-        Object(map, x, y, tex, d)
+    LivingObject(Object** m, int x, int y, Texsheet* t=nullptr, sf::Vector2i d = DOWN) : 
+        Object(m, x, y, t, d)
     {
         identity.insert(LIVING);
     };
@@ -84,7 +99,7 @@ public:
         if(movementAnimation.frames > 0){
             standingAnimation.passed = sf::milliseconds(0);
             return animateMovement(available); 
-        }else if(specialAnimation.frames > 0){
+        }else if(saq.size() > 0){
             standingAnimation.passed = sf::milliseconds(0);
             return animateSpecial(available);
         }
@@ -123,31 +138,42 @@ public:
     ///////////////////
 
     bool animateSpecial(sf::Time available){
-        if(available > specialAnimation.last){
-            specialAnimation.passed += specialAnimation.last + available - UPDATE_TIME;
+        if(available > saq.front().last){
+            saq.front().passed += saq.front().last + available - UPDATE_TIME;
         }else{
-            specialAnimation.passed += specialAnimation.last - available;
+            saq.front().passed += saq.front().last - available;
         } 
-        specialAnimation.last = available;
+        saq.front().last = available;
 
-        if(specialAnimation.passed < specialAnimation.time){
+        if(saq.front().passed < saq.front().time){
             return false;
         }
-        specialAnimation.passed = sf::milliseconds(0);
+        saq.front().passed = sf::milliseconds(0);
 
-        specialAnimation.frames--;
+        saq.front().frames--;
 
-        std::cout << "Remaining: "<< specialAnimation.frames << std::endl;
+        //std::cout << "Remaining: "<< saq.front().frames << std::endl;
 
-        if(specialAnimation.tex != nullptr){
+        if(dir != saq.front().dir) dir = saq.front().dir;
 
-            sprite.setTexture(specialAnimation.tex->texture);
-            sf::Vector2i texsize = (sf::Vector2i) specialAnimation.tex->getSize();
-            uint imgcount = specialAnimation.tex->getImageCount().x;
+        if(saq.front().tex != nullptr){
 
-            uint curFrame = imgcount -((specialAnimation.frames) % imgcount) -1;
+            sprite.setTexture(saq.front().tex->texture);
+            sf::Vector2i texsize = (sf::Vector2i) saq.front().tex->getSize();
+            uint imgcount = saq.front().tex->getImageCount().x;
+
+            uint curFrame;
+            if(saq.front().reverse)
+                curFrame = (saq.front().frames) % imgcount;
+            else
+                curFrame = imgcount -((saq.front().frames) % imgcount) -1;
+
             sf::Vector2i position(texsize.x * curFrame, texsize.y * dtm[{dir.x, dir.y}]);
             sprite.setTextureRect(sf::IntRect(position,texsize));
+        }
+
+        if(saq.front().frames <= 0){
+            saq.pop();
         }
 
         return true;

@@ -2,7 +2,7 @@
 #define O_PLAYER
 #include "O_Living.hpp"
 
-const uint FOOD_NEEDED_TO_KILL = 5;
+const uint FOOD_NEEDED_TO_KILL = 2;
 
 class Player : public LivingObject {
 private:
@@ -43,8 +43,8 @@ public:
         for(auto d : {RIGHT, UP, LEFT, DOWN}){
             if(neighbor(d) == nullptr) continue;
             if(neighbor(d)->whoami().contains(ENEMY)){
-                setDirection(d);
-                interact(this);
+                //setDirection(d);
+                interact(neighbor(d));
             }
         }
 
@@ -63,16 +63,13 @@ public:
         // TODO: Animation queue! 
         if(interactee->whoami().contains(ENEMY)){
             if(!((LivingObject*)interactee)->wasKilled()){
+                sf::Vector2i _dir = interactee->pos - pos;
                 if(itempanel.use(Itempanel::FOOD, FOOD_NEEDED_TO_KILL)){
-                    specialAnimation.tex=texsheets["panda_kill"];
-                    specialAnimation.frames=11;
-                    specialAnimation.time = sf::milliseconds(20);
+                    enqueueSpecialAnimation(texsheets["panda_kill"], 11, 20, _dir);
+                    enqueueSpecialAnimation(texsheets["panda_kill"], 11, 15, _dir, true);
                     interactee->getInteracted(this);
                 }else{
-                    specialAnimation.tex=texsheets["panda_killed"];
-                    specialAnimation.frames=19;
-                    specialAnimation.time = sf::milliseconds(50);
-                    
+                    enqueueSpecialAnimation(texsheets["panda_killed"], 19, 70, _dir);
                     interactee->interact(this);
                     killed = true;
                 }
@@ -104,14 +101,14 @@ public:
 
     virtual bool getInteracted(Object* interacter=nullptr) override {
         if(interacter->whoami().contains(ENEMY)){
-            setDirection(invertDirection(interacter->dir));
-            interact(this);
+            //setDirection(invertDirection(interacter->dir));
+            interact(interacter);
         }
     }
 
     
     bool hasWon(){return won;}
-    bool isParalyzed(){return specialAnimation.frames > 0;}
+    bool isParalyzed(){return saq.size() > 0;}
 
     void win(){
         movementAnimation.frames = 3;
@@ -127,9 +124,7 @@ public:
             ((float)deltaPos.y * (float)OBJECTUNIT) / (float)movementAnimation.frames);
 
         // Lähmen:
-        specialAnimation.tex=nullptr;
-        specialAnimation.frames = 3;
-        specialAnimation.time = sf::milliseconds(50);
+        enqueueSpecialAnimation(nullptr, 5, 50);
         won=true;
     }
 

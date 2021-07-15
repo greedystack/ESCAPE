@@ -5,11 +5,10 @@
 class Enemy : public LivingObject {
 public:
     Enemy(Object ** map, int x, int y) : 
-        LivingObject(map, x, y, texsheets["minotaurus_standing"], UP)
+        LivingObject(map, x, y, texsheets["minotaurus_standing"], DOWN)
     {
         identity.insert(ENEMY);
         tex_moving = texsheets["minotaurus_move"];
-        movementAnimation.frames=8;
         movementAnimation.time= sf::milliseconds(13);
     };
 
@@ -17,11 +16,11 @@ public:
         if(interactee->whoami().contains(PLAYER)){
             // Töte Player
             sf::Vector2i playerDir = interactee->pos - pos;
-            setDirection(playerDir);
-            
-            specialAnimation.tex=texsheets["minotaurus_kill"];
-            specialAnimation.frames=7;
-            specialAnimation.time = sf::milliseconds(35);
+            //setDirection(playerDir);
+
+            enqueueSpecialAnimation(texsheets["minotaurus_kill"], 7, 30, playerDir);
+            enqueueSpecialAnimation(texsheets["minotaurus_kill"], 7, 40, playerDir, true);
+            enqueueSpecialAnimation(texsheets["minotaurus_kill"], 7, 30, playerDir);
         }
     };
 
@@ -29,21 +28,19 @@ public:
         if(interacter->whoami().contains(PLAYER)){
             // Wurde vom Player getötet.
             sf::Vector2i playerDir = interacter->pos - pos;
-            setDirection(playerDir);
-
-            specialAnimation.tex=texsheets["panda_killed"];
-            specialAnimation.frames=19;
-            specialAnimation.time = sf::milliseconds(50);
+            //setDirection(playerDir);
+            enqueueSpecialAnimation(texsheets["minotaurus_killed"], 14, 50, playerDir);
             killed = true;
         }
     };
 
     virtual uint step(sf::Vector2i _dir, uint factor=1) override {
         uint steps = LivingObject::step(_dir, factor);
+        movementAnimation.frames=8;
         for(auto d : {RIGHT, UP, LEFT, DOWN}){
             if(neighbor(d) == nullptr) continue;
             if(neighbor(d)->whoami().contains(PLAYER)){
-                setDirection(d);
+                //setDirection(d);
                 neighbor(d)->getInteracted(this);
             }
         }
@@ -51,12 +48,12 @@ public:
     }
 
     virtual void update() override{
-        if(specialAnimation.frames < 1){
+        if(saq.size() < 1){
             if(killed){
                 del();
             }
             else{
-                
+                /*
                 // Do a step ... maybe.
                 uint r = rand() % 8;
                 if(r == 0){
@@ -73,7 +70,7 @@ public:
                     }
                     step(_dir);
                 }
-                
+                */
             }
         }
     }

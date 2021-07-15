@@ -68,6 +68,7 @@ public:
         texsheets["minotaurus_standing"] = new Texsheet("../include/img/minotaurus_standing.png", 4, 4);
         texsheets["minotaurus_move"] = new Texsheet("../include/img/minotaurus_move.png", 3, 4);
         texsheets["minotaurus_kill"] = new Texsheet("../include/img/minotaurus_kill.png", 7, 4);
+        texsheets["minotaurus_killed"] = new Texsheet("../include/img/minotaurus_killed.png", 19, 4);
 
         texsheets["portal"] = new Texsheet("../include/img/portal.png", 21, 2);
 

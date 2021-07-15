@@ -26,7 +26,7 @@ void loadFonts() {
 int main()
 {
     sf::Vector2u WIN_SIZE(2000, 2000); // in Pixel
-    float zoom = 0.25; // inverted (also im Sinne von Kehrwert)
+    float zoom = 0.15; // inverted (also im Sinne von Kehrwert)
     int lvl_count = 3;
 
     loadFonts();
