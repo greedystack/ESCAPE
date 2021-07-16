@@ -468,8 +468,8 @@ void wizard(){
     uint amountFoodPerEnemyOnMap = (FOOD_NEEDED_TO_KILL + (MAX_HARDNESS-hardness)/2);
     uint amountFood = ceil(amountEnemies * amountFoodPerEnemyOnMap);
 
-    uint amountMarker = ceil(((MAX_HARDNESS-hardness+1))*(mapsizeDFS/(30 + (1 + rand()%hardness))));
-    uint amountNavi = ceil(amountMarker*0.65);
+    uint amountMarker = ceil(((MAX_HARDNESS-hardness+1))*(mapsizeDFS/(35 +  rand()%hardness)));
+    uint amountNavi = ceil(((MAX_HARDNESS-hardness+1))*(mapsizeDFS/(55 +  rand()%hardness)));
 
     
     ///////////////////////////////////////////////////////////////////////////////////////////
