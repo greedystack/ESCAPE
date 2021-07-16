@@ -168,7 +168,7 @@ public:
         }
     }
     bool add(int _amount=1){
-        if(amount + _amount <= maxAmount || maxAmount <= 0){
+        if(amount + _amount <= maxAmount || maxAmount <= 0){
             amount += _amount;
             updateText(amount);
             if(amount == maxAmount){

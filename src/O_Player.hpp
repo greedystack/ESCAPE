@@ -42,7 +42,7 @@ public:
         uint steps = LivingObject::step(_dir, factor);
         for(auto d : {RIGHT, UP, LEFT, DOWN}){
             if(neighbor(d) == nullptr) continue;
-            if(neighbor(d)->whoami().contains(ENEMY)){
+            if(neighbor(d)->whoami().contains(ENEMY) || neighbor(d)->whoami().contains(COLLECTABLE)){
                 //setDirection(d);
                 interact(neighbor(d));
             }
@@ -106,6 +106,7 @@ public:
             //setDirection(invertDirection(interacter->dir));
             interact(interacter);
         }
+        return true;
     }
 
     

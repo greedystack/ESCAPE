@@ -454,15 +454,15 @@ void wizard(sf::Vector2u size, uint hardness = 1){
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    /////// Verteile Objekte
+    /////// Bestimme Anzahl
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Anzahl von Items / Gegnern abhängig von Mapsize und Hardness:
     uint amountEnemies = ceil(mapsizeDFS/(10 + (rand()%5) - hardness));
     uint amountFoodPerEnemyOnMap = (FOOD_NEEDED_TO_KILL + (MAX_HARDNESS-hardness)/2);
     uint amountFood = ceil(amountEnemies * amountFoodPerEnemyOnMap);
 
-    uint amountMarker = ceil((MAX_HARDNESS-hardness+1)*(mapsizeDFS/(15 + (rand()%hardness))));
-    uint amountNavi = amountMarker;
+    uint amountMarker = ceil(((MAX_HARDNESS-hardness+1)/2)*(mapsizeDFS/(20 + 2*(1 + rand()%hardness))));
+    uint amountNavi = amountMarker*0.75;
 
     
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -491,7 +491,7 @@ void wizard(sf::Vector2u size, uint hardness = 1){
     }
 
     for(auto ep : endpoints){
-        //if(ep == start || ep == end) continue;
+        if(ep == startDFS || ep == endDFS) continue;
         std::array<uint, 2> next = ep;
         std::stack<std::array<uint, 2>> tmp;
         while(! mainpathnodes_depth.contains(next)){
@@ -507,51 +507,104 @@ void wizard(sf::Vector2u size, uint hardness = 1){
     }
 
 
-
+    uint dice;
     while(maxPath.size() >= 1){
     // Gleichverteilung auf Hauptpfad
-        uint _remaining = maxPath.size();
-        uint _depth = _maxdepth - _remaining;
+        uint _depth = _maxdepth - maxPath.size();
         
 
         uint probability_enemy = ceil(((float)amountEnemies / (float)nodesToVisit) * 1000.);
-        uint probability_food = ceil(((float)amountFood / (float)nodesToVisit) * 1000.);
+        uint probability_food = ceil(((float)amountFood / (float)nodesToVisit)*0.8 * 1000.);
+        uint probability_navi = 
+            ceil(
+                ((float)amountNavi 
+                    / (float)mapsizeDFS)
+                *(1-((float)_depth/(float)_maxdepth)) *0.5
+                * 1000.
+            );
+        uint probability_marker = 
+            ceil(
+                ((float)amountMarker 
+                    / (float)mapsizeDFS)
+                *(1-((float)_depth/(float)_maxdepth))*0.75
+                * 1000.
+            );
 
         nodesToVisit--;
         
         
-        uint dice = rand()%1000;
-        
+        dice = rand()%1000;
         if(probability_enemy > dice && food_verteilt >= (enemies_verteilt+1)*amountFoodPerEnemyOnMap){
             enemies.insert(getMapField(maxPath.top()));
             amountEnemies--;
             enemies_verteilt++;
         }
+        dice = rand()%1000;
         if(probability_food > dice ){
             food.insert(getMapField(maxPath.top()));
             amountFood--;
             food_verteilt++;
         }
+        dice = rand()%1000;
+        if(probability_navi > dice ){
+            navis.insert(getMapField(maxPath.top()));
+            amountNavi--;
+        }
+        dice = rand()%1000;
+        if(probability_marker > dice ){
+            marker.insert(getMapField(maxPath.top()));
+            amountMarker--;
+        }
+
 
         // Iteriere durch an dieser Stelle abgehende Sackgassen
-
         for(auto d : deadend_connections[maxPath.top()]){
-            probability_enemy = ceil(((float)amountEnemies / (float)nodesToVisit) * 1000.);
-            probability_food = ceil(((float)amountFood / (float)nodesToVisit) * 1000.);
+            probability_enemy = ceil(((float)amountEnemies / (float)nodesToVisit) * 0.5 * 1000.);
+            probability_food = ceil(((float)amountFood / (float)nodesToVisit)*1.3 * 1000.);
+            probability_navi = 
+                ceil(
+                    ((float)amountNavi 
+                        / (float)mapsizeDFS)
+                    *(1-((float)_depth/(float)_maxdepth)) *1.5
+                    * 1000.
+                );
+            probability_marker = 
+                ceil(
+                    ((float)amountMarker 
+                        / (float)mapsizeDFS)
+                    *(1-((float)_depth/(float)_maxdepth))*1.5
+                    * 1000.
+                );
+            if(deadendnodes_depth[d] > _depth *0.5
+                || deadendnodes_depth[d] > maxPath.size()
+            ){
+                probability_navi*=1.5;
+                probability_marker*=1.25;
+            }
 
             nodesToVisit--;
 
             dice = rand()%1000;
-
             if(probability_enemy > dice && food_verteilt >= (enemies_verteilt+1)*amountFoodPerEnemyOnMap){
                 enemies.insert(getMapField(d));
                 amountEnemies--;
                 enemies_verteilt++;
             }
+            dice = rand()%1000;
             if(probability_food > dice ){
                 food.insert(getMapField(d));
                 amountFood--;
                 food_verteilt++;
+            }
+            dice = rand()%1000;
+            if(probability_navi > dice ){
+                navis.insert(getMapField(maxPath.top()));
+                amountNavi--;
+            }
+            dice = rand()%1000;
+            if(probability_marker > dice ){
+                marker.insert(getMapField(maxPath.top()));
+                amountMarker--;
             }
         }
 

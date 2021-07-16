@@ -25,6 +25,7 @@ public:
             enqueueSpecialAnimation(texsheets["minotaurus_kill"], 7, 40, playerDir, true);
             enqueueSpecialAnimation(texsheets["minotaurus_kill"], 7, 30, playerDir);
         }
+        return true;
     };
 
     virtual bool getInteracted(Object* interacter=nullptr) override{
@@ -35,6 +36,7 @@ public:
             enqueueSpecialAnimation(texsheets["minotaurus_killed"], 14, 42, playerDir);
             killed = true;
         }
+        return true;
     };
 
     virtual uint step(sf::Vector2i _dir, uint factor=1) override {
