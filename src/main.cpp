@@ -59,15 +59,18 @@ int main(int argc,char* argv[])
     uint hardness = 2;
 
     if(argc>=2){
-        levels_to_play = atoi(argv[0]);
+        levels_to_play = atoi(argv[1]);
     }
     if(argc>=3){
-        hardness = (uint)atoi(argv[1]);
+        hardness = (uint)atoi(argv[2]);
     }
+
 
     if(hardness >MAX_HARDNESS) hardness = MAX_HARDNESS;
     if(levels_to_play < 1) levels_to_play = 1;
     else if (levels_to_play > 50) levels_to_play = 50;
+
+    std::cout << "\tlevels to play: " << levels_to_play << "\tHardness: " << hardness << std::endl;
     
 
     loadFonts();
@@ -157,9 +160,9 @@ int main(int argc,char* argv[])
                         std::cout << "init new level" << std::endl;
                         sf::Vector2u lvlsize = level->getDFSSize();
                         delete level;
-                        displayText(window, "Loading new Level...");
+                        displayText(window, "Loading Level " +std::to_string(levels_to_play-lvl_count+1)+ " of " + std::to_string(levels_to_play));
                         srand (time(NULL));
-                        level = new Level(lvlsize.x+ 2*(1+rand()%5), lvlsize.y+ 2*(1+rand()%5), hardness);
+                        level = new Level(lvlsize.x+ 2*(1+rand()%3), lvlsize.y+ 2*(1+rand()%2), hardness);
                     }
                 }else if(level->getPlayer()->wasKilled()){
                     //////////////// Killed. Restart level
