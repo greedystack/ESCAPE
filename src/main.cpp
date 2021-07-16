@@ -46,7 +46,7 @@ int main()
     bool drawWindow = false;
     bool chooseItemMode = false;
 
-    Level* level = new Level(10, 10);
+    Level* level = new Level(5, 5);
     
 
     while (window.isOpen())

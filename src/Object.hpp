@@ -64,6 +64,7 @@ public:
         texsheets["panda_move"] = new Texsheet("../include/img/panda_move.png", 3, 4);
         texsheets["panda_kill"] = new Texsheet("../include/img/panda_kill.png", 11, 4);
         texsheets["panda_killed"] = new Texsheet("../include/img/panda_killed.png", 19, 4);
+        texsheets["panda_on_portal"] = new Texsheet("../include/img/panda_on_portal.png", 18, 4);
 
         texsheets["minotaurus_standing"] = new Texsheet("../include/img/minotaurus_standing.png", 4, 4);
         texsheets["minotaurus_move"] = new Texsheet("../include/img/minotaurus_move.png", 3, 4);
@@ -76,8 +77,10 @@ public:
         texsheets["navi"] = new Texsheet("../include/img/navi.png", 1, 1);
         texsheets["bread"] = new Texsheet("../include/img/bread.png", 1, 1);
         texsheets["breadcrumbs"] = new Texsheet("../include/img/breadcrumbs.png", 1, 1);
+        texsheets["blitz"] = new Texsheet("../include/img/blitz.png", 1, 1);
 
         texsheets["arrow"] = new Texsheet("../include/img/arrow.png", 5, 4);
+        
 
 
         texsheets["wall"] = new Texsheet("../include/img/wall0.png");

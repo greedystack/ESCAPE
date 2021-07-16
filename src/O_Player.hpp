@@ -113,8 +113,8 @@ public:
     bool isParalyzed(){return saq.size() > 0;}
 
     void win(){
-        movementAnimation.frames = 3;
-        movementAnimation.time = sf::milliseconds(10);
+        movementAnimation.frames = 5;
+        movementAnimation.time = sf::milliseconds(16);
         movementAnimation.state = dtm[{dir.x, dir.y}];
 
         sf::Vector2i endPos = pos + dir;
@@ -125,14 +125,15 @@ public:
             ((float)deltaPos.x * (float)OBJECTUNIT) / (float)movementAnimation.frames, 
             ((float)deltaPos.y * (float)OBJECTUNIT) / (float)movementAnimation.frames);
 
-        // Lähmen:
-        enqueueSpecialAnimation(nullptr, 5, 50);
+        
+        enqueueSpecialAnimation(texsheets["panda_on_portal"], 18, 50);
         won=true;
     }
 
     //////////////////////////////
 
     bool animateNavi(sf::Time time){
+        if(won) return false;
         if(itempanel.getSteps(Itempanel::NAVI) > 0){
             return navi.animate(time);
         }
@@ -140,6 +141,7 @@ public:
     }
 
     Object* getNavi(sf::Vector2i _dir){
+        if(won) return nullptr;
         if(itempanel.getSteps(Itempanel::NAVI) > 0){
             navi.teleport(pos+_dir);
             navi.setDirection(_dir);

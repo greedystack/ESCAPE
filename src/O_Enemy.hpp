@@ -39,7 +39,6 @@ public:
 
     virtual uint step(sf::Vector2i _dir, uint factor=1) override {
         uint steps = LivingObject::step(_dir, factor);
-        movementAnimation.frames=8;
         for(auto d : {RIGHT, UP, LEFT, DOWN}){
             if(neighbor(d) == nullptr) continue;
             if(neighbor(d)->whoami().contains(PLAYER)){
@@ -56,7 +55,7 @@ public:
                 del();
             }
             else{
-                /*
+                
                 // Do a step ... maybe.
                 uint r = rand() % 8;
                 if(r == 0){
@@ -73,7 +72,7 @@ public:
                     }
                     step(_dir);
                 }
-                */
+                
             }
         }
     }
