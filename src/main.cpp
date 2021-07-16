@@ -7,8 +7,7 @@
 #include "Level.hpp"
 #include <unistd.h>
 #include <iostream>
-
-
+#include <cstdlib>
 
 
 const std::string TITLE = "Escape!";
@@ -24,11 +23,52 @@ void loadFonts() {
         printf("ERROR: FONT NOT LOADED!");
 }
 
-int main()
+void displayText(sf::RenderWindow& window, std::string displaytext){
+    sf::View view;
+    sf::Text text;
+    sf::Sprite img;
+    sf::Vector2u WIN_SIZE = window.getSize();
+
+    text.setFont(STANDARDFONT);
+    text.setFillColor(sf::Color::White);
+    text.setStyle(sf::Text::Bold);
+
+    window.clear(sf::Color::Black);
+    view.reset(sf::FloatRect(0, 0, WIN_SIZE.x, WIN_SIZE.y ));
+    window.setView(view);
+
+    text.setString(displaytext);
+    text.setPosition(WIN_SIZE.x/2, WIN_SIZE.y/2);
+    text.setCharacterSize(WIN_SIZE.y/15);
+    sf::FloatRect textRect = text.getLocalBounds();
+    text.setOrigin(textRect.left + textRect.width/2.0f,
+        textRect.top  + textRect.height/2.0f);
+
+    window.draw(text);
+    
+
+    window.display();
+}
+
+int main(int argc,char* argv[])
 {
     sf::Vector2u WIN_SIZE(2000, 2000); // in Pixel
     float zoom = 0.15; // inverted (also im Sinne von Kehrwert)
-    int lvl_count = 3;
+
+    int levels_to_play = 3;
+    uint hardness = 2;
+
+    if(argc>=2){
+        levels_to_play = atoi(argv[0]);
+    }
+    if(argc>=3){
+        hardness = (uint)atoi(argv[1]);
+    }
+
+    if(hardness >MAX_HARDNESS) hardness = MAX_HARDNESS;
+    if(levels_to_play < 1) levels_to_play = 1;
+    else if (levels_to_play > 50) levels_to_play = 50;
+    
 
     loadFonts();
 
@@ -47,7 +87,14 @@ int main()
     bool drawWindow = false;
     bool chooseItemMode = false;
 
-    Level* level = new Level(10, 10);
+    bool won = false;
+    bool startmenu = false;
+    bool loading = false;
+
+    int lvl_count = levels_to_play;
+
+
+    Level* level = new Level(10, 10, hardness);
     
 
     while (window.isOpen())
@@ -87,7 +134,7 @@ int main()
         }
         
 
-        if(paused){
+        if(paused || won){
             usleep(250000); // Heizung aus! ;)
             continue;
         } 
@@ -95,7 +142,7 @@ int main()
         // make as many updates as needed for the elapsed time
         while (elapsed > UPDATE_TIME)
         {   
-            if(!level->getPlayer()->isParalyzed()){
+            if(!level->getPlayer()->isParalyzed() && !won){
                 ////////////////////////////////////////////////
                 //////////////// Level Won
                 ////////////////////////////////////////////////
@@ -104,123 +151,124 @@ int main()
                     if(lvl_count <= 0){
                         // WON GAME
                         std::cout << "HURRA! HURRA!" << std::endl;
-                        // TODO Win Animation
+                        displayText(window, "Congratulations!\nYOU WON!");
+                        won=true;
                     }else{
                         std::cout << "init new level" << std::endl;
+                        sf::Vector2u lvlsize = level->getDFSSize();
                         delete level;
-                        level = new Level(20, 20);
+                        displayText(window, "Loading new Level...");
+                        srand (time(NULL));
+                        level = new Level(lvlsize.x+ 2*(1+rand()%5), lvlsize.y+ 2*(1+rand()%5), hardness);
                     }
-                }
-                ////////////////////////////////////////////////
-                //////////////// Killed. Restart level
-                ////////////////////////////////////////////////
-                if(level->getPlayer()->wasKilled()){
+                }else if(level->getPlayer()->wasKilled()){
+                    //////////////// Killed. Restart level
                     level->reset();
-                }
-
-
-                ////////////////////////////////////////////////
-                ///// User Input
-                ////////////////////////////////////////////////
-
-                
-                if(!chooseItemMode){
-                    // Actions in Game
-                    uint speed = 1;
-                    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Period))speed++;
-                    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Comma))speed++;
-                    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
-                    {
-                        level->getPlayer()->step(LEFT, speed);
-                        updateView = true;
-                    }
-                    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
-                    {
-                        level->getPlayer()->step(RIGHT, speed);
-                        updateView = true;
-                    }
-                    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
-                    {
-                        level->getPlayer()->step(UP, speed);
-                        updateView = true;
-                    }
-                    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
-                    {
-                        level->getPlayer()->step(DOWN, speed);
-                        updateView = true;
-                    }
-                    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Return) 
-                    || sf::Keyboard::isKeyPressed(sf::Keyboard::Enter))
-                    {
-                        // Item Bag
-                        level->getPlayer()->useItem(); // temporarily
-                        updateView = true;
-                    }
-                    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Add) ||
-                        sf::Keyboard::isKeyPressed(sf::Keyboard::M))
-                    {
-                        zoom-=0.025;
-                        updateView = true;
-                    }
-                    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Subtract) ||
-                        sf::Keyboard::isKeyPressed(sf::Keyboard::N))
-                    {
-                        zoom+=0.025;
-                        updateView=true;
-                    }
+                }else {
 
                     ////////////////////////////////////////////////
-                    ///// Update (z.B. Enemies bewegen)
+                    ///// User Input
                     ////////////////////////////////////////////////
-                    for (uint x = start.x; x < end.x; x++){
-                        for (uint y = start.y; y < end.y; y++){
-                            Object* m = level->getObject(sf::Vector2u(x, y));
-                            if (m == nullptr) continue;
-                            m->update();
+
+                    
+                    if(!chooseItemMode){
+                        // Actions in Game
+                        uint speed = 1;
+                        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Period))speed++;
+                        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Comma))speed++;
+                        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
+                        {
+                            level->getPlayer()->step(LEFT, speed);
+                            updateView = true;
+                        }
+                        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+                        {
+                            level->getPlayer()->step(RIGHT, speed);
+                            updateView = true;
+                        }
+                        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+                        {
+                            level->getPlayer()->step(UP, speed);
+                            updateView = true;
+                        }
+                        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+                        {
+                            level->getPlayer()->step(DOWN, speed);
+                            updateView = true;
+                        }
+                        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Return) 
+                        || sf::Keyboard::isKeyPressed(sf::Keyboard::Enter))
+                        {
+                            // Item Bag
+                            level->getPlayer()->useItem(); // temporarily
+                            updateView = true;
+                        }
+                        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Add) ||
+                            sf::Keyboard::isKeyPressed(sf::Keyboard::M))
+                        {
+                            zoom-=0.025;
+                            updateView = true;
+                        }
+                        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Subtract) ||
+                            sf::Keyboard::isKeyPressed(sf::Keyboard::N))
+                        {
+                            zoom+=0.025;
+                            updateView=true;
+                        }
+
+                        ////////////////////////////////////////////////
+                        ///// Update (z.B. Enemies bewegen)
+                        ////////////////////////////////////////////////
+                        for (uint x = start.x; x < end.x; x++){
+                            for (uint y = start.y; y < end.y; y++){
+                                Object* m = level->getObject(sf::Vector2u(x, y));
+                                if (m == nullptr) continue;
+                                m->update();
+                            }
+                        }
+
+
+                    }else{
+                        // Actions in ItemBag
+                        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+                        {
+                            level->getPlayer()->itempanel.up();
+                            elapsed=sf::milliseconds(0);
+                            drawWindow=true;
+                        }
+                        
+                        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+                        {
+                            level->getPlayer()->itempanel.down();
+                            elapsed=sf::milliseconds(0);
+                            drawWindow=true;
+                        }
+                        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Return) 
+                        || sf::Keyboard::isKeyPressed(sf::Keyboard::Enter))
+                        {
+                            if(level->getPlayer()->itempanel.use()){
+                                chooseItemMode = false;
+                                drawWindow=true;
+                            }
+                            elapsed=sf::milliseconds(0);
                         }
                     }
 
-
-                }else{
-                    // Actions in ItemBag
-                    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+                    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
                     {
-                        level->getPlayer()->itempanel.up();
+                        chooseItemMode = !chooseItemMode;
+
+                        if(chooseItemMode){
+                            if(!level->getPlayer()->itempanel.enableSelection()){
+                                chooseItemMode = false;
+                            }
+                        }
+                        else level->getPlayer()->itempanel.disableSelection();
                         elapsed=sf::milliseconds(0);
                         drawWindow=true;
                     }
                     
-                    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
-                    {
-                        level->getPlayer()->itempanel.down();
-                        elapsed=sf::milliseconds(0);
-                        drawWindow=true;
-                    }
-                    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Return) 
-                    || sf::Keyboard::isKeyPressed(sf::Keyboard::Enter))
-                    {
-                        if(level->getPlayer()->itempanel.use()){
-                            chooseItemMode = false;
-                            drawWindow=true;
-                        }
-                        elapsed=sf::milliseconds(0);
-                    }
                 }
-
-                if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
-                {
-                    chooseItemMode = !chooseItemMode;
-
-                    if(chooseItemMode){
-                        if(!level->getPlayer()->itempanel.enableSelection()){
-                            chooseItemMode = false;
-                        }
-                    }
-                    else level->getPlayer()->itempanel.disableSelection();
-                    elapsed=sf::milliseconds(0);
-                    drawWindow=true;
-                }
-                
             }
 
 
@@ -231,7 +279,7 @@ int main()
         ////////////////////////////////////////////////
         ///// Animate
         ////////////////////////////////////////////////
-        if(!chooseItemMode){
+        if(!chooseItemMode && !won){
             for (uint x = start.x; x < end.x; x++){
                 for (uint y = start.y; y < end.y; y++){
                     Object* m = level->getObject(sf::Vector2u(x, y));
@@ -257,7 +305,7 @@ int main()
         ////////////////////////////////////////////////
         //////////////// Update Window
         ////////////////////////////////////////////////
-        if(updateView || drawWindow){
+        if((updateView || drawWindow) && !won){
             if(updateView){
                 //std::cout<< "Beschleunigung: " << updateTime.asSeconds() << "\n";
 

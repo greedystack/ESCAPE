@@ -30,14 +30,18 @@ const sf::Color status_bgcolorinUse(0, 175, 0, 235);
 const sf::Color status_bordercolorInUse(70, 70, 70, 235);
 const sf::Color maxamountcolor = status_bgcolorselected;
 
+const sf::Color sign_bgcolor(120, 120, 120, 170);
+const sf::Vector2f offset_signbubble(15, 15);
+
 class Panelobject{
 protected:
     sf::Vector2f pos;
     Texsheet* tex;
-    sf::CircleShape circle, amountcircle;
-    sf::Sprite img;
+    Texsheet* signtex;
+    sf::CircleShape circle, amountcircle, signcircle;
+    sf::Sprite img, signsprite;
     sf::Text text;
-    int steps, amount, maxAmount, stepsAvailable;
+    int steps, amount, maxAmount, stepsAvailable, showsignover;
     bool selectable;
 
     void updateText(int num){
@@ -102,8 +106,10 @@ protected:
 public:
 
     Panelobject(sf::Vector2f _pos = sf::Vector2f(0,0), 
-                Texsheet* _tex = nullptr, bool _selectable=true, int _stepsAvailable = 25, int _maxAmount = 0)
-        : pos(_pos), tex(_tex), stepsAvailable(_stepsAvailable), maxAmount(_maxAmount), selectable(_selectable)
+                Texsheet* _tex = nullptr, bool _selectable=true, int _stepsAvailable = 25, int _maxAmount = 0, 
+                Texsheet* _signtex = nullptr, int _showsignover = 0)
+        : pos(_pos), tex(_tex), stepsAvailable(_stepsAvailable), maxAmount(_maxAmount), selectable(_selectable), 
+            signtex(_signtex), showsignover(_showsignover)
     {
         amount=0;
         steps=0;
@@ -118,6 +124,18 @@ public:
 
             setUnused();
             if(!selectable)setUnselectable();
+        }
+        if(signtex != nullptr){
+            signcircle.setRadius(radius_amount);
+            signcircle.setFillColor(amount_bgcolor);
+            signcircle.setPosition(pos +offset_signbubble);
+
+            //signsprite.setColor(sf::Color(255,255,255,255));
+            int imagewidth = radius_amount*2;
+            float scalefactor = (float) (imagewidth) / signtex->getSize().x;
+            signsprite.setTexture(signtex->texture);
+            signsprite.setPosition(pos +offset_signbubble);
+            signsprite.setScale(sf::Vector2f(scalefactor, scalefactor));
         }
     };
 
@@ -134,6 +152,10 @@ public:
             w.draw(img);
             w.draw(text);
             
+        }
+        if(signtex != nullptr && amount >= showsignover){
+            w.draw(signcircle);
+            w.draw(signsprite);
         }
     }
 
@@ -199,11 +221,11 @@ public:
     static const int NAVI, MARKER, FOOD;
     Itempanel(int t){
         sf::Vector2f pos = abstand;
-        panel[Itempanel::NAVI] = Panelobject(pos, Object::texsheets["navi"], true, 25);
+        panel[Itempanel::NAVI] = Panelobject(pos, Object::texsheets["navi"], true, 50);
         pos += sf::Vector2f(0, 2*radius + abstand.y);
         panel[Itempanel::MARKER] = Panelobject(pos, Object::texsheets["bread"], true, 25);
         pos += sf::Vector2f(0, 2*radius + abstand.y);
-        panel[Itempanel::FOOD] = Panelobject(pos, Object::texsheets["bambus"], false, 0, 10);
+        panel[Itempanel::FOOD] = Panelobject(pos, Object::texsheets["bambus"], false, 0, 15, Object::texsheets["blitz"], 5);
         pos += sf::Vector2f(0, 2*radius + abstand.y);
 
         it = panel.begin();

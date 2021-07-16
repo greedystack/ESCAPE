@@ -21,10 +21,6 @@ public:
         identity.insert(PLAYER);
         tex_moving = texsheets["panda_move"];
 
-        itempanel.add(Itempanel::NAVI, 3);
-        itempanel.add(Itempanel::MARKER, 3);
-        itempanel.add(Itempanel::FOOD, 4);
-
 
         ///////////////////////////////
         

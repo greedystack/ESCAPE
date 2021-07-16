@@ -26,6 +26,8 @@ extern const sf::Time UPDATE_TIME;
 extern const uint FOOD_NEEDED_TO_KILL;
 extern const uint MAX_HARDNESS;
 
+uint LOADING = 0;
+
 // Stellt ein Level dar und verwaltet die Map etc.
 
 class Level {
@@ -41,6 +43,8 @@ private:
     int bgsize = 10;
     sf::Sprite bg;
 
+    sf::Vector2u dfsSize;
+    uint hardness;
     uint64_t mapsizex, mapsizey;
 
 
@@ -58,11 +62,11 @@ private:
     
 public:
     
-    Level(uint64_t x, uint64_t y)
+    Level(uint64_t x, uint64_t y, uint _hard = 1) : dfsSize(x, y), hardness(_hard)
     {
         Object::loadTexsheets();
         
-        wizard(sf::Vector2u(x, y));
+        wizard();
         allocateMap();
         buildMap();
         createBackground();
@@ -198,6 +202,8 @@ public:
         return Object(nullptr, x, y, Object::texsheets["breadcrumbs"]);
     }
 
+    sf::Vector2u getDFSSize(){return dfsSize;}
+
 private:
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -243,24 +249,24 @@ void createBackground(){
 */
 
 // size für dfs ist nicht size der Map! 1 dfs-feld ^= 4 map-feldern plus 1 Feld Zwischenraum für Borders.
-void wizard(sf::Vector2u size, uint hardness = 1){
+void wizard(){
     // Achtung: std::set geht mit sf::Vector2 nicht, weil angeblich nicht vergleichbar. Dummer Compiler. -.-
     // Daher wird hier mit std::arrays statt sf::Vector2 gearbeitet
     uint scalar = this->scalar;
 
-    mapsizex = ((size.x * (scalar+1)) + scalar + 1)-2; 
-    mapsizey = ((size.y * (scalar+1)) + scalar + 1)-2;
+    mapsizex = ((dfsSize.x * (scalar+1)) + scalar + 1)-2; 
+    mapsizey = ((dfsSize.y * (scalar+1)) + scalar + 1)-2;
 
     
     srand (time(NULL));
 
-    float mapsizeDFS = size.x*size.y;
+    float mapsizeDFS = dfsSize.x*dfsSize.y;
 
 
 
-    auto getRandomStartposition = [size]() -> std::array<uint, 2>
+    auto getRandomStartposition = [this]() -> std::array<uint, 2>
     {
-        return {rand()%size.x, rand()%size.y};
+        return {rand()%dfsSize.x, rand()%dfsSize.y};
     };
 
 
@@ -334,13 +340,13 @@ void wizard(sf::Vector2u size, uint hardness = 1){
     std::set<std::array<uint, 2>> noWall; // durchgang, hier keine wall platzieren
     std::stack<std::array<uint, 2>> maxPath; // Pfad von Goal (start, unten) zu Player (end, oben)
 
-    auto getUnvisitedNeighbors = [size](std::array<uint, 2> node, std::set<std::array<uint, 2>> visited) -> std::set<std::array<uint, 2>>
+    auto getUnvisitedNeighbors = [this](std::array<uint, 2> node, std::set<std::array<uint, 2>> visited) -> std::set<std::array<uint, 2>>
     {
         std::set<std::array<uint, 2>> neighbors; // possible neighbors
 
-        if(node[0] < size.x -1) neighbors.insert({ node[0] +1, node[1] }); // right
+        if(node[0] < dfsSize.x -1) neighbors.insert({ node[0] +1, node[1] }); // right
         if(node[0] > 0) neighbors.insert({ node[0] -1, node[1] }); // left
-        if(node[1] < size.y -1) neighbors.insert({ node[0], node[1] +1 }); // down
+        if(node[1] < dfsSize.y -1) neighbors.insert({ node[0], node[1] +1 }); // down
         if(node[1] > 0) neighbors.insert({ node[0], node[1] -1 }); // up
 
         /*
@@ -415,6 +421,7 @@ void wizard(sf::Vector2u size, uint hardness = 1){
             uint progressRaw = (((float)visited.size() / mapsizeDFS)*100.);
             if(progressRaw > progress){
                 progress = progressRaw;
+                LOADING = progress;
                 std::cout << progress << "%\n";
             }
         }
@@ -439,8 +446,8 @@ void wizard(sf::Vector2u size, uint hardness = 1){
 
 
     std::set<std::array<uint, 2>> possibleWalls;
-    for (uint x=0; x<size.x; x++){
-        for (uint y=0; y<size.y; y++){
+    for (uint x=0; x<dfsSize.x; x++){
+        for (uint y=0; y<dfsSize.y; y++){
             possibleWalls.merge(getBorderFields({x,y}, {x+1,y})); // rechts vom Feld
             possibleWalls.merge(getBorderFields({x,y}, {x,y+1})); // unterm Feld
             possibleWalls.insert({ (x* (scalar+1)) + (scalar+1),  (y* (scalar+1)) + (scalar+1)}); // die Ecke zwischen den Feldern
@@ -462,7 +469,7 @@ void wizard(sf::Vector2u size, uint hardness = 1){
     uint amountFood = ceil(amountEnemies * amountFoodPerEnemyOnMap);
 
     uint amountMarker = ceil(((MAX_HARDNESS-hardness+1)/2)*(mapsizeDFS/(20 + 2*(1 + rand()%hardness))));
-    uint amountNavi = amountMarker*0.75;
+    uint amountNavi = amountMarker*0.6;
 
     
     ///////////////////////////////////////////////////////////////////////////////////////////
