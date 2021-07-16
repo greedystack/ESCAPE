@@ -471,20 +471,22 @@ void wizard(sf::Vector2u size, uint hardness = 1){
 
     uint enemies_verteilt = 0;
     uint food_verteilt = 0;
+    uint marker_verteilt = 0;
+    uint navi_verteilt = 0;
 
 
     uint _maxdepth = maxPath.size();
-    uint deadendFields = 0;
+    uint nodesToVisit = mapsizeDFS;
 
-    //std::map<std::array<uint, 2>, std::array<uint, 3>> nodeclassification;
 
     // Sackgassen
-    std::multimap<std::array<uint, 2>, std::stack<std::array<uint, 2>>> deadends;
+    std::map<std::array<uint, 2>, uint> deadendnodes_depth;
+    std::map<std::array<uint, 2>, uint> mainpathnodes_depth;
+    std::map<std::array<uint, 2>, std::set<std::array<uint, 2>>> deadend_connections;
 
-    std::set<std::array<uint, 2>> pathnodes;
     std::stack<std::array<uint, 2>> copy = maxPath;
     while(copy.size() >= 1){
-        pathnodes.insert(copy.top());
+        mainpathnodes_depth[copy.top()] = copy.size();
         copy.pop();
     }
 
@@ -492,12 +494,16 @@ void wizard(sf::Vector2u size, uint hardness = 1){
         //if(ep == start || ep == end) continue;
         std::array<uint, 2> next = ep;
         std::stack<std::array<uint, 2>> tmp;
-        while(! pathnodes.contains(next)){
+        while(! mainpathnodes_depth.contains(next)){
             tmp.push(next);
             next = navigation[next];
         }
-        deadendFields += tmp.size();
-        deadends.insert({next, tmp});
+        
+        while(tmp.size() >= 1){
+            deadendnodes_depth[tmp.top()] = tmp.size();
+            deadend_connections[next].insert(tmp.top());
+            tmp.pop();
+        }
     }
 
 
@@ -508,8 +514,10 @@ void wizard(sf::Vector2u size, uint hardness = 1){
         uint _depth = _maxdepth - _remaining;
         
 
-        uint probability_enemy = ceil(((float)amountEnemies / (float)_remaining) * 1000.);
-        uint probability_food = ceil(((float)amountFood / (float)_remaining) * 1000.);
+        uint probability_enemy = ceil(((float)amountEnemies / (float)nodesToVisit) * 1000.);
+        uint probability_food = ceil(((float)amountFood / (float)nodesToVisit) * 1000.);
+
+        nodesToVisit--;
         
         
         uint dice = rand()%1000;
@@ -526,32 +534,34 @@ void wizard(sf::Vector2u size, uint hardness = 1){
         }
 
         // Iteriere durch an dieser Stelle abgehende Sackgassen
+
+        for(auto d : deadend_connections[maxPath.top()]){
+            probability_enemy = ceil(((float)amountEnemies / (float)nodesToVisit) * 1000.);
+            probability_food = ceil(((float)amountFood / (float)nodesToVisit) * 1000.);
+
+            nodesToVisit--;
+
+            dice = rand()%1000;
+
+            if(probability_enemy > dice && food_verteilt >= (enemies_verteilt+1)*amountFoodPerEnemyOnMap){
+                enemies.insert(getMapField(d));
+                amountEnemies--;
+                enemies_verteilt++;
+            }
+            if(probability_food > dice ){
+                food.insert(getMapField(d));
+                amountFood--;
+                food_verteilt++;
+            }
+        }
+
+        /*
         typedef  std::multimap<std::array<uint, 2>, std::stack<std::array<uint, 2>>>::iterator DeadIT;
         std::pair<DeadIT, DeadIT> it_range = deadends.equal_range(maxPath.top());
         for (DeadIT it = it_range.first; it != it_range.second; it++){
-            while(it->second.size() >= 1){
-
-                uint probability_enemy = ceil(((float)amountEnemies / (float)_remaining) * 1000.);
-                uint probability_food = ceil(((float)amountFood / (float)_remaining) * 1000.);
-                
-                
-                uint dice = rand()%1000;
-                
-                if(probability_enemy > dice && food_verteilt >= (enemies_verteilt+1)*amountFoodPerEnemyOnMap){
-                    enemies.insert(getMapField(maxPath.top()));
-                    amountEnemies--;
-                    enemies_verteilt++;
-                }
-                if(probability_food > dice ){
-                    food.insert(getMapField(maxPath.top()));
-                    amountFood--;
-                    food_verteilt++;
-                }
-                
-
-                it->second.pop();
-            }
+            
         }
+        */
 
         
         maxPath.pop();
