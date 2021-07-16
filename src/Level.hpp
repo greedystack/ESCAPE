@@ -465,10 +465,10 @@ void wizard(){
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Anzahl von Items / Gegnern abhängig von Mapsize und Hardness:
     uint amountEnemies = ceil(mapsizeDFS/(10 + (rand()%5) - hardness));
-    uint amountFoodPerEnemyOnMap = (FOOD_NEEDED_TO_KILL + (MAX_HARDNESS-hardness)/2);
+    uint amountFoodPerEnemyOnMap = ceil((float)FOOD_NEEDED_TO_KILL + (float)(MAX_HARDNESS-hardness)/1.5);
     uint amountFood = ceil(amountEnemies * amountFoodPerEnemyOnMap);
 
-    uint amountMarker = ceil(((MAX_HARDNESS-hardness+1))*(mapsizeDFS/(35 +  rand()%hardness)));
+    uint amountMarker = ceil(((MAX_HARDNESS-hardness+1))*(mapsizeDFS/(65 +  rand()%hardness)));
     uint amountNavi = ceil(((MAX_HARDNESS-hardness+1))*(mapsizeDFS/(55 +  rand()%hardness)));
 
     
@@ -521,7 +521,7 @@ void wizard(){
         
 
         uint probability_enemy = ceil(((float)amountEnemies / (float)nodesToVisit) * 1000.);
-        uint probability_food = ceil(((float)amountFood / (float)nodesToVisit)*0.8 * 1000.);
+        uint probability_food = ceil(((float)amountFood / (float)nodesToVisit)*0.9 * 1000.);
         uint probability_navi = 
             ceil(
                 ((float)amountNavi 
@@ -566,8 +566,8 @@ void wizard(){
 
         // Iteriere durch an dieser Stelle abgehende Sackgassen
         for(auto d : deadend_connections[maxPath.top()]){
-            probability_enemy = ceil(((float)amountEnemies / (float)nodesToVisit) * 0.5 * 1000.);
-            probability_food = ceil(((float)amountFood / (float)nodesToVisit)*1.3 * 1000.);
+            probability_enemy = ceil(((float)amountEnemies / (float)nodesToVisit) * 0.75 * 1000.);
+            probability_food = ceil(((float)amountFood / (float)nodesToVisit)*1.1 * 1000.);
             probability_navi = 
                 ceil(
                     ((float)amountNavi 

@@ -55,7 +55,7 @@ int main(int argc,char* argv[])
     sf::Vector2u WIN_SIZE(2000, 2000); // in Pixel
     float zoom = 0.15; // inverted (also im Sinne von Kehrwert)
 
-    int levels_to_play = 3;
+    int levels_to_play = 5;
     uint hardness = 2;
 
     if(argc>=2){
