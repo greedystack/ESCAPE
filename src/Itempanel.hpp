@@ -185,7 +185,8 @@ public:
 
 #endif //PANELOBJECT
 
-///////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #ifndef ITEMPANEL
 #define ITEMPANEL
@@ -202,7 +203,7 @@ public:
         pos += sf::Vector2f(0, 2*radius + abstand.y);
         panel[Itempanel::MARKER] = Panelobject(pos, Object::texsheets["bread"], true, 25);
         pos += sf::Vector2f(0, 2*radius + abstand.y);
-        panel[Itempanel::FOOD] = Panelobject(pos, Object::texsheets["bambus"], false, 0, 5);
+        panel[Itempanel::FOOD] = Panelobject(pos, Object::texsheets["bambus"], false, 0, 10);
         pos += sf::Vector2f(0, 2*radius + abstand.y);
 
         it = panel.begin();

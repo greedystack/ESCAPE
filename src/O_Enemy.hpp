@@ -57,7 +57,7 @@ public:
             else{
                 
                 // Do a step ... maybe.
-                uint r = rand() % 8;
+                uint r = rand() % 10;
                 if(r == 0){
                     sf::Vector2i _dir;
                     r = rand() % 2;

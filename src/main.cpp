@@ -16,6 +16,7 @@ const std::string TITLE = "Escape!";
 const uint OBJECTUNIT = 20; // Pixel pro Map-Block
 const sf::Time UPDATE_TIME = sf::milliseconds(90);
 const sf::Vector2u MAX_VIEW_SIZE(25,25); // in Mapblocks - um keinen vorteil durch rauszommen oder resizen zu bekommen
+const uint MAX_HARDNESS = 5;
 
 sf::Font STANDARDFONT;
 void loadFonts() {
@@ -46,7 +47,7 @@ int main()
     bool drawWindow = false;
     bool chooseItemMode = false;
 
-    Level* level = new Level(5, 5);
+    Level* level = new Level(10, 10);
     
 
     while (window.isOpen())

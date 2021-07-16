@@ -82,7 +82,6 @@ public:
                 // Living Obj. ist wogegen gelaufen. -> interact.
                 std::cout << "interaction throgh touching " << std::endl;
                 interact(this);
-                std::cout << "interaction throgh touching done" << std::endl;
                 return i-1;
             }
 
@@ -133,7 +132,7 @@ public:
 
         
 
-        std::cout << "Shifting to\tR: " << movementAnimation.state << "\tC: "<< curFrame << "\tRemaining: "<< movementAnimation.frames << "\tMove: "<< movementAnimation.move.x << ", " << movementAnimation.move.y << std::endl;
+        //std::cout << "Shifting to\tR: " << movementAnimation.state << "\tC: "<< curFrame << "\tRemaining: "<< movementAnimation.frames << "\tMove: "<< movementAnimation.move.x << ", " << movementAnimation.move.y << std::endl;
 
         sprite.move(movementAnimation.move);
 

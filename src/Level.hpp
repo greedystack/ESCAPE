@@ -23,6 +23,8 @@
 
 extern const uint OBJECTUNIT;
 extern const sf::Time UPDATE_TIME;
+extern const uint FOOD_NEEDED_TO_KILL;
+extern const uint MAX_HARDNESS;
 
 // Stellt ein Level dar und verwaltet die Map etc.
 
@@ -60,7 +62,7 @@ public:
     {
         Object::loadTexsheets();
         
-        dfs(sf::Vector2u(x, y));
+        wizard(sf::Vector2u(x, y));
         allocateMap();
         buildMap();
         createBackground();
@@ -105,9 +107,7 @@ public:
         new Goal(map, start[0], start[1]);
         player = new Player(map, end[0], end[1]);
     
-        for(auto e : enemies){
-            new Enemy(map, e[0], e[1]);
-        }
+        
         for(auto wall : walls) {
             new Barrier(map, wall[0], wall[1]);
         }
@@ -115,6 +115,11 @@ public:
         for(auto f : food) {
             new Food(map, f[0], f[1]);
         }
+
+        for(auto e : enemies){
+            new Enemy(map, e[0], e[1]);
+        }
+
         for(auto n : navis) {
             new Navi(map, n[0], n[1]);
         }
@@ -238,7 +243,7 @@ void createBackground(){
 */
 
 // size für dfs ist nicht size der Map! 1 dfs-feld ^= 4 map-feldern plus 1 Feld Zwischenraum für Borders.
-void dfs(sf::Vector2u size){
+void wizard(sf::Vector2u size, uint hardness = 1){
     // Achtung: std::set geht mit sf::Vector2 nicht, weil angeblich nicht vergleichbar. Dummer Compiler. -.-
     // Daher wird hier mit std::arrays statt sf::Vector2 gearbeitet
     uint scalar = this->scalar;
@@ -246,15 +251,16 @@ void dfs(sf::Vector2u size){
     mapsizex = ((size.x * (scalar+1)) + scalar + 1)-2; 
     mapsizey = ((size.y * (scalar+1)) + scalar + 1)-2;
 
-    std::set<std::array<uint, 2>> noWall; // durchgang, hier keine wall platzieren
-    std::stack<std::array<uint, 2>> maxPath;
+    
     srand (time(NULL));
+
+    float mapsizeDFS = size.x*size.y;
+
 
 
     auto getRandomStartposition = [size]() -> std::array<uint, 2>
     {
-        // Startposition soll am Rand sein, daher ist das Unterfangen etwas komplexer als ein Einzeiler.
-        return {1,1}; // TODO provisorisch
+        return {rand()%size.x, rand()%size.y};
     };
 
 
@@ -323,6 +329,11 @@ void dfs(sf::Vector2u size){
     std::stack<std::array<uint, 2>> stack;
     std::set<std::array<uint, 2>> visited;
 
+    std::set<std::array<uint, 2>> endpoints; // endpunkte von Sackgassen
+
+    std::set<std::array<uint, 2>> noWall; // durchgang, hier keine wall platzieren
+    std::stack<std::array<uint, 2>> maxPath; // Pfad von Goal (start, unten) zu Player (end, oben)
+
     auto getUnvisitedNeighbors = [size](std::array<uint, 2> node, std::set<std::array<uint, 2>> visited) -> std::set<std::array<uint, 2>>
     {
         std::set<std::array<uint, 2>> neighbors; // possible neighbors
@@ -347,21 +358,23 @@ void dfs(sf::Vector2u size){
             neighbors.begin(),neighbors.end(), 
             visited.begin(), visited.end(), 
             std::inserter(neighborsNotVisited, neighborsNotVisited.end())
-        ); // Junge, einfach nein, was ist das für 1 syntax?! -.-
+        );
         
 
         return neighborsNotVisited;
     };
 
-    start = getRandomStartposition();
+    std::array<uint, 2> startDFS, endDFS;
+    startDFS = getRandomStartposition();
 
-    stack.push(start);
-    visited.insert(start);
+    stack.push(startDFS);
+    visited.insert(startDFS);
 
     std::cout << "starting DFS.\n";
     uint maxdepth = 1;
     uint depth = 1;
     uint progress = 0;
+    bool forward = true;
     while(!stack.empty()){
         /*
         uint r = rand() % 10;
@@ -377,6 +390,12 @@ void dfs(sf::Vector2u size){
         std::set<std::array<uint, 2>> neighbors = getUnvisitedNeighbors(stack.top(), visited);
 
         if(neighbors.empty()){
+            if(forward){
+                // letztes Feld auf einer Sackgasse
+                endpoints.insert(stack.top());
+            }
+            forward = false;
+
             std::array<uint, 2> from = stack.top();
             stack.pop();
             if(stack.size() >0){
@@ -390,9 +409,10 @@ void dfs(sf::Vector2u size){
             noWall.merge(getBorderFields(stack.top(), *it));
             stack.push(*it); 
             visited.insert(*it);
+            forward = true;
 
             depth++;
-            uint progressRaw = (((float)visited.size() / (float)(size.x * size.y))*100.);
+            uint progressRaw = (((float)visited.size() / mapsizeDFS)*100.);
             if(progressRaw > progress){
                 progress = progressRaw;
                 std::cout << progress << "%\n";
@@ -404,40 +424,13 @@ void dfs(sf::Vector2u size){
         }
     }
 
+    endDFS = maxPath.top();
+
+    start = getMapField(startDFS);
+    end = getMapField(endDFS);
+
+
     std::cout << "DFS done. Starting Map creation.\n";
-
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /////// Player, Goal
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    start = getMapField(start);
-
-    end = maxPath.top();
-    end = getMapField(end);
-
-    for(uint i=0; i<3; i++) maxPath.pop();
-    food.insert(getMapField(maxPath.top()));
-    maxPath.pop();
-    food.insert(getMapField(maxPath.top()));
-    for(uint i=0; i<5; i++) maxPath.pop();
-    food.insert(getMapField(maxPath.top()));
-    enemies.insert(getMapField(maxPath.top()));
-    maxPath.pop();
-    //enemies.insert(getMapField(maxPath.top()));
-    food.insert(getMapField(maxPath.top()));
-    enemies.insert(getMapField(maxPath.top()));
-    maxPath.pop();
-    //enemies.insert(getMapField(maxPath.top()));
-    //maxPath.pop();
-    food.insert(getMapField(maxPath.top()));
-    food.insert(getMapField(maxPath.top()));
-    //maxPath.pop();
-    for(uint i=0; i<3; i++) maxPath.pop();
-    food.insert(getMapField(maxPath.top()));
-    maxPath.pop();
-    food.insert(getMapField(maxPath.top()));
-    enemies.insert(getMapField(maxPath.top()));
-
-    
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -460,13 +453,111 @@ void dfs(sf::Vector2u size){
 
 
 
-    // TODO Navi-Items, Brot, Bambus, Minotauren zufällig verteilen.
-    // TODO Navi-Item braucht DS, die für jedes Feld die Richtung des adjazenten Felds kennt, das zum Ziel führt. -> std::map<std::array<uint, 2>, sf::Vector2i>
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    /////// Verteile Objekte
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Anzahl von Items / Gegnern abhängig von Mapsize und Hardness:
+    uint amountEnemies = ceil(mapsizeDFS/(10 + (rand()%5) - hardness));
+    uint amountFoodPerEnemyOnMap = (FOOD_NEEDED_TO_KILL + (MAX_HARDNESS-hardness)/2);
+    uint amountFood = ceil(amountEnemies * amountFoodPerEnemyOnMap);
 
-    // Wichtig bei Bambus: genug verteilen, um an minotaurus vorbeizukommen
-    // Idee: Items schon bei DFS verteilen!!
-    //  Das ist effizient und pro 1 Minotaurus können danach (bei umgekehrter DFS, sonst halt andersrum) n Bambusse verteilt werden
-    // Navi und Brot: An den Anfang mehr, sonst aber gleichverteilt, an Ende weniger.
+    uint amountMarker = ceil((MAX_HARDNESS-hardness+1)*(mapsizeDFS/(15 + (rand()%hardness))));
+    uint amountNavi = amountMarker;
+
+    
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    /////// Verteile Objekte
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    uint enemies_verteilt = 0;
+    uint food_verteilt = 0;
+
+
+    uint _maxdepth = maxPath.size();
+    uint deadendFields = 0;
+
+    //std::map<std::array<uint, 2>, std::array<uint, 3>> nodeclassification;
+
+    // Sackgassen
+    std::multimap<std::array<uint, 2>, std::stack<std::array<uint, 2>>> deadends;
+
+    std::set<std::array<uint, 2>> pathnodes;
+    std::stack<std::array<uint, 2>> copy = maxPath;
+    while(copy.size() >= 1){
+        pathnodes.insert(copy.top());
+        copy.pop();
+    }
+
+    for(auto ep : endpoints){
+        //if(ep == start || ep == end) continue;
+        std::array<uint, 2> next = ep;
+        std::stack<std::array<uint, 2>> tmp;
+        while(! pathnodes.contains(next)){
+            tmp.push(next);
+            next = navigation[next];
+        }
+        deadendFields += tmp.size();
+        deadends.insert({next, tmp});
+    }
+
+
+
+    while(maxPath.size() >= 1){
+    // Gleichverteilung auf Hauptpfad
+        uint _remaining = maxPath.size();
+        uint _depth = _maxdepth - _remaining;
+        
+
+        uint probability_enemy = ceil(((float)amountEnemies / (float)_remaining) * 1000.);
+        uint probability_food = ceil(((float)amountFood / (float)_remaining) * 1000.);
+        
+        
+        uint dice = rand()%1000;
+        
+        if(probability_enemy > dice && food_verteilt >= (enemies_verteilt+1)*amountFoodPerEnemyOnMap){
+            enemies.insert(getMapField(maxPath.top()));
+            amountEnemies--;
+            enemies_verteilt++;
+        }
+        if(probability_food > dice ){
+            food.insert(getMapField(maxPath.top()));
+            amountFood--;
+            food_verteilt++;
+        }
+
+        // Iteriere durch an dieser Stelle abgehende Sackgassen
+        typedef  std::multimap<std::array<uint, 2>, std::stack<std::array<uint, 2>>>::iterator DeadIT;
+        std::pair<DeadIT, DeadIT> it_range = deadends.equal_range(maxPath.top());
+        for (DeadIT it = it_range.first; it != it_range.second; it++){
+            while(it->second.size() >= 1){
+
+                uint probability_enemy = ceil(((float)amountEnemies / (float)_remaining) * 1000.);
+                uint probability_food = ceil(((float)amountFood / (float)_remaining) * 1000.);
+                
+                
+                uint dice = rand()%1000;
+                
+                if(probability_enemy > dice && food_verteilt >= (enemies_verteilt+1)*amountFoodPerEnemyOnMap){
+                    enemies.insert(getMapField(maxPath.top()));
+                    amountEnemies--;
+                    enemies_verteilt++;
+                }
+                if(probability_food > dice ){
+                    food.insert(getMapField(maxPath.top()));
+                    amountFood--;
+                    food_verteilt++;
+                }
+                
+
+                it->second.pop();
+            }
+        }
+
+        
+        maxPath.pop();
+    }
+
+
 }
 
 
