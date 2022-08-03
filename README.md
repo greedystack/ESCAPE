@@ -5,4 +5,5 @@ Dafür mussten im Rahmen eines [Proposals](proposal.md) Features ausgewählt wer
 ![](kriterien.png)
 
 Zum Abschluss sollte noch ein Teaservideo für das Game erstellt werden:
-![]('ESCAPE Teaser.mp4')
+
+./'ESCAPE Teaser.mp4'
