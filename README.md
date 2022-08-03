@@ -6,4 +6,4 @@ Dafür mussten im Rahmen eines [Proposals](proposal.md) Features ausgewählt wer
 
 Zum Abschluss sollte noch ein Teaservideo für das Game erstellt werden:
 
-./'ESCAPE Teaser.mp4'
+https://youtu.be/LwKtjhGVBE4
